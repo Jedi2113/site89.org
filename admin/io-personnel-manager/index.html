@@ -125,8 +125,8 @@
   <!-- Main Content -->
   <section class="content">
     <div class="about-box" style="margin-bottom: 2rem;">
-      <h2>IO Personnel Manager</h2>
-      <p>Administrative Department Internal Affairs - Edit personnel records, ranks, class, and photographs.</p>
+      <h2>IA Personnel Manager</h2>
+      <p>Edit personnel records, ranks, class, and photographs.</p>
     </div>
 
     <div id="accessDenied" class="access-denied" style="display:none;">
@@ -359,10 +359,10 @@
         pageItems.forEach(p => {
           const card = document.createElement('div');
           card.className = 'personnel-card';
-          const photoUrl = p.profileImage || '#file:dataunavailable.png';
+          const photoUrl = p.profileImage || '/assets/img/dataunavailable.png';
           
           card.innerHTML = `
-            <img src="${photoUrl}" alt="${p.name}" class="personnel-card-image" onerror="this.src='#file:dataunavailable.png'">
+            <img src="${photoUrl}" alt="${p.name || 'Unknown'}" class="personnel-card-image" onerror="this.src='/assets/img/dataunavailable.png'">
             <div class="personnel-card-info">
               <h3 class="personnel-card-name">${p.name || "Unknown"}</h3>
               <p class="personnel-card-rank">${p.rank || "Unassigned"}</p>
@@ -404,7 +404,7 @@
         currentEditingPID = person.pid;
         document.getElementById('editPersonnelName').textContent = person.name || 'Unknown';
         document.getElementById('editPhotoUrl').value = person.profileImage || '';
-        document.getElementById('editPhotoPreview').src = person.profileImage || '#file:dataunavailable.png';
+        document.getElementById('editPhotoPreview').src = person.profileImage || '/assets/img/dataunavailable.png';
         document.getElementById('editName').value = person.name || '';
         document.getElementById('editRank').value = person.rank || '';
         document.getElementById('editDept').value = person.department || '';
