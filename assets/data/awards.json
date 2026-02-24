@@ -1,82 +1,77 @@
 [
   {
-    "id": "foundation-commendation",
-    "name": "Foundation Commendation Medal",
-    "image": "/assets/img/awards/foundation-commendation.svg"
-  },
-  {
-    "id": "sealed-clearance",
-    "name": "Sealed Clearance Commendation",
-    "image": "/assets/img/awards/sealed-clearance.svg"
-  },
-  {
-    "id": "safe-containment",
-    "name": "Safe Containment Excellence",
-    "image": "/assets/img/awards/safe-containment.svg"
-  },
-  {
-    "id": "euclid-response",
-    "name": "Euclid Class Response Medal",
-    "image": "/assets/img/awards/euclid-response.svg"
-  },
-  {
-    "id": "keter-threat",
-    "name": "Keter Threat Neutralization",
-    "image": "/assets/img/awards/keter-threat.svg"
-  },
-  {
-    "id": "anomaly-research",
-    "name": "Anomaly Research Achievement",
-    "image": "/assets/img/awards/anomaly-research.svg"
-  },
-  {
-    "id": "containment-protocol",
-    "name": "Containment Protocol Excellence",
-    "image": "/assets/img/awards/containment-protocol.svg"
-  },
-  {
-    "id": "mtf-valor",
-    "name": "Mobile Task Force Valor",
-    "image": "/assets/img/awards/mtf-valor.svg"
-  },
-  {
-    "id": "breach-response",
-    "name": "Containment Breach Response",
-    "image": "/assets/img/awards/breach-response.svg"
-  },
-  {
-    "id": "personnel-safety",
-    "name": "Personnel Safety Excellence",
-    "image": "/assets/img/awards/personnel-safety.svg"
-  },
-  {
-    "id": "cross-department",
-    "name": "Cross-Department Cooperation",
-    "image": "/assets/img/awards/cross-department.svg"
-  },
-  {
-    "id": "reality-anomaly",
-    "name": "Reality Anomaly Response",
-    "image": "/assets/img/awards/reality-anomaly.svg"
-  },
-  {
-    "id": "scp-documentation",
-    "name": "SCP Documentation Excellence",
-    "image": "/assets/img/awards/scp-documentation.svg"
-  },
-  {
-    "id": "field-agent-bravery",
-    "name": "Field Agent Bravery Medal",
-    "image": "/assets/img/awards/field-agent-bravery.svg"
-  },
-  {
-    "id": "security-clearance",
-    "name": "Security Clearance Excellence",
-    "image": "/assets/img/awards/security-clearance.svg"
-  },
-  {
     "id": "employee-month",
     "name": "Employee of the Month",
-    "image": "/assets/img/awards/employee-of-the-month.svg"
+    "image": "/assets/img/awards/ribbons/employee-month-ribbon.svg"
+  },
+  {
+    "id": "distinguished-service-cross",
+    "name": "Distinguished Service Cross",
+    "image": "/assets/img/awards/ribbons/distinguished-service-cross-ribbon.svg"
+  },
+  {
+    "id": "bronze-star",
+    "name": "Bronze Star",
+    "image": "/assets/img/awards/ribbons/bronze-star-ribbon.svg"
+  },
+  {
+    "id": "silver-star",
+    "name": "Silver Star",
+    "image": "/assets/img/awards/ribbons/silver-star-ribbon.svg"
+  },
+  {
+    "id": "foundation-service-ribbon",
+    "name": "Foundation Service Ribbon",
+    "image": "/assets/img/awards/ribbons/foundation-service-ribbon.svg"
+  },
+  {
+    "id": "operation-paranado-service-medal",
+    "name": "Operation Paranado Service Medal",
+    "image": "/assets/img/awards/ribbons/operation-paranado-ribbon.svg"
+  },
+  {
+    "id": "site-defense-service-medal",
+    "name": "Site Defense Service Medal",
+    "image": "/assets/img/awards/ribbons/site-defense-ribbon.svg"
+  },
+  {
+    "id": "nco-professional-development-ribbon",
+    "name": "NCO Professional Development Ribbon",
+    "image": "/assets/img/awards/ribbons/nco-development-ribbon.svg"
+  },
+  {
+    "id": "instructor-ribbon",
+    "name": "Instructor Ribbon",
+    "image": "/assets/img/awards/ribbons/instructor-ribbon.svg"
+  },
+  {
+    "id": "good-conduct-medal",
+    "name": "Good Conduct Medal",
+    "image": "/assets/img/awards/ribbons/good-conduct-ribbon.svg"
+  },
+  {
+    "id": "humanitarian-service-medal",
+    "name": "Humanatarian Service Medal",
+    "image": "/assets/img/awards/ribbons/humanitarian-service-ribbon.svg"
+  },
+  {
+    "id": "outstanding-volunteer-service-medal",
+    "name": "Outstanding Volunteer Service Medal",
+    "image": "/assets/img/awards/ribbons/outstanding-volunteer-ribbon.svg"
+  },
+  {
+    "id": "security-achievement-medal",
+    "name": "Security Achivement Medal",
+    "image": "/assets/img/awards/ribbons/security-achievement-ribbon.svg"
+  },
+  {
+    "id": "meritorious-service-medal",
+    "name": "Meritorious Service Medal",
+    "image": "/assets/img/awards/ribbons/meritorious-service-ribbon.svg"
+  },
+  {
+    "id": "mtf-recruiting-ribbon",
+    "name": "MTF Recruiting Ribbon",
+    "image": "/assets/img/awards/ribbons/mtf-recruiting-ribbon.svg"
   }
 ]

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50 80">
+  <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #1e90ff;
+      }
+
+      .st1 {
+        fill: gold;
+      }
+    </style>
+  </defs>
+  <rect class="st0" x="5" width="10" height="80"/>
+  <rect class="st1" x="15" width="4" height="80"/>
+  <rect class="st0" x="19" width="6" height="80"/>
+  <rect class="st1" x="25" width="4" height="80"/>
+  <rect class="st0" x="29" width="16" height="80"/>
+</svg>

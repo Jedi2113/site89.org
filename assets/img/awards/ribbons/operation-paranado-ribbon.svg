@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50 80">
+  <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: tomato;
+      }
+
+      .st1 {
+        fill: gold;
+      }
+    </style>
+  </defs>
+  <rect class="st0" x="5" width="10" height="80"/>
+  <rect class="st1" x="15" width="4" height="80"/>
+  <rect class="st0" x="19" width="4" height="80"/>
+  <rect class="st1" x="23" width="4" height="80"/>
+  <rect class="st0" x="27" width="4" height="80"/>
+  <rect class="st1" x="31" width="14" height="80"/>
+  <circle class="st0" cx="25" cy="19.92" r="8"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Left stripe -->
+  <rect x="5" y="0" width="12" height="80" fill="#8B4513"/>
+  <!-- Center stripe -->
+  <rect x="17" y="0" width="16" height="80" fill="#CD7F32"/>
+  <!-- Right stripe -->
+  <rect x="33" y="0" width="12" height="80" fill="#8B4513"/>
+  <!-- Star -->
+  <polygon points="25,15 28,25 38,25 30,32 33,42 25,36 17,42 20,32 12,25 22,25" fill="#FFD700"/>
+</svg>
