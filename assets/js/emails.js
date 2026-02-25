@@ -588,26 +588,25 @@ document.addEventListener('includesLoaded', () => {
     }).length;
 
     messagesContainer.innerHTML = '';
-    list.sort((a,b)=> (b.ts||0) - (a.ts||0));
-    list.forEach(async (m) => {
-      const el = document.createElement('div');
-      // Check if message is unread: neither m.read nor in locallyMarkedRead Set (case-insensitive)
+    
+    // Build all message HTML in correct order using Promise.all to wait for all async operations
+    Promise.all(list.map(async (m) => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
       const isUnread = !m.read && !locallyMarkedRead.has(m.id) && recipientsLower.includes(myAddressLower);
       const isSelected = selectedMessageId === m.id;
-      el.className = 'message-item'+ (isUnread ? ' unread' : '') + (isSelected ? ' selected' : '');
+      const className = 'message-item'+ (isUnread ? ' unread' : '') + (isSelected ? ' selected' : '');
       
       // Save contacts for autocomplete
       if(m.sender) saveContact(m.sender);
       if(m.recipients) m.recipients.forEach(r => saveContact(r));
       
-      // Try to get profile picture
+      // Get profile picture asynchronously
       const profileImage = await getCharacterImage(m.sender);
       const avatarHtml = profileImage && !profileImage.includes('placeholder') 
         ? `<div class="message-avatar"><img src="${profileImage}" alt="Profile"></div>`
         : `<div class="message-avatar">${(m.sender||'').charAt(0).toUpperCase()||'?'}</div>`;
       
-      // Get time display (relative for recent, date for older)
+      // Get time display
       const timeDisplay = formatMessageTime(m.ts);
       
       // Strip HTML tags for snippet if isHTML
@@ -617,7 +616,9 @@ document.addEventListener('includesLoaded', () => {
       }
       snippet = snippet.slice(0,100);
       
-      el.innerHTML = `${avatarHtml}
+      // Return object with HTML and metadata to preserve order
+      return {
+        html: `${avatarHtml}
         <div class="message-meta">
           <div class="message-header">
             <div class="message-sender">${m.sender}</div>
@@ -625,9 +626,19 @@ document.addEventListener('includesLoaded', () => {
           </div>
           <div class="message-subject">${m.subject}</div>
           <div class="message-snippet">${snippet}</div>
-        </div>`;
-      el.addEventListener('click', ()=> openMessage(m));
-      messagesContainer.appendChild(el);
+        </div>`,
+        className,
+        message: m
+      };
+    })).then((renderedMessages) => {
+      // Render all messages in order
+      renderedMessages.forEach(({html, className, message}) => {
+        const el = document.createElement('div');
+        el.className = className;
+        el.innerHTML = html;
+        el.addEventListener('click', () => openMessage(message));
+        messagesContainer.appendChild(el);
+      });
     });
     
     if(list.length === 0){
@@ -638,7 +649,18 @@ document.addEventListener('includesLoaded', () => {
   // Format message time (relative for recent, date for older)
   function formatMessageTime(ts){
     if(!ts) return '';
-    const date = ts && typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+    // Convert normalized timestamp to Date
+    let date;
+    if (typeof ts === 'number') {
+      date = new Date(ts);
+    } else if (ts && typeof ts.toDate === 'function') {
+      date = ts.toDate();
+    } else if (ts && typeof ts.getTime === 'function') {
+      date = ts;
+    } else {
+      return '';
+    }
+    
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
@@ -743,12 +765,31 @@ document.addEventListener('includesLoaded', () => {
   }
 
   // Real-time listener for emails collection
+  // Normalize Firestore timestamp to milliseconds
+  function normalizeTimestamp(ts) {
+    if (!ts) return 0;
+    if (typeof ts === 'number') return ts;
+    if (ts.toMillis && typeof ts.toMillis === 'function') return ts.toMillis();
+    if (ts.toDate && typeof ts.toDate === 'function') return ts.toDate().getTime();
+    if (ts.getTime && typeof ts.getTime === 'function') return ts.getTime();
+    return 0;
+  }
+
   function startRealtimeMessages(){
     if (emailsUnsubscribe) emailsUnsubscribe();
     const q = query(collection(db,'emails'), orderBy('ts','desc'));
     emailsUnsubscribe = onSnapshot(q, (snapshot) => {
       allMessages = [];
-      snapshot.forEach(s => { allMessages.push({ id: s.id, ...s.data() }); });
+      snapshot.forEach(s => {
+        const data = s.data();
+        // Normalize timestamp immediately when loading
+        if (data.ts) {
+          data._tsMs = normalizeTimestamp(data.ts);
+        } else {
+          data._tsMs = 0;
+        }
+        allMessages.push({ id: s.id, ...data });
+      });
       
       // Preload character images for all senders
       const senders = [...new Set(allMessages.map(m => m.sender).filter(Boolean))];

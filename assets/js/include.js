@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const includes = Array.from(document.querySelectorAll("[data-include]"));
-  const INCLUDE_VERSION = '2026-02-24-1';
+  const INCLUDE_VERSION = '2026-02-25-4';
   if (!includes.length) {
     // still dispatch to allow listeners
     document.dispatchEvent(new Event("includesLoaded"));

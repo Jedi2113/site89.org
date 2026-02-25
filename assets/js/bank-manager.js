@@ -116,25 +116,71 @@ async function sendBankNotification(char, txType, amount, balanceAfter, note) {
     const recipient = await resolveCharacterEmail(char);
     if (!recipient) return;
 
-    const typeLabel = (txType || 'transaction').toString().replace(/_/g, ' ');
-    const subject = `Site-89 Bank: ${typeLabel}`;
+    const typeLabel = (txType || 'transaction').toString().replace(/_/g, ' ').toUpperCase();
+    const subject = `Transaction Alert: ${typeLabel}`;
     const amountText = formatCurrency(amount);
     const balanceText = formatCurrency(balanceAfter);
+    const accountName = char.name || `Personnel ${char.pid}`;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-    const bodyLines = [
-      `Account: ${char.name || char.pid}`,
-      `Transaction: ${typeLabel}`,
-      `Amount: ${amountText}`,
-      `Balance: ${balanceText}`,
-      note ? `Note: ${note}` : ''
-    ].filter(Boolean).join('\n');
+    // Determine transaction type icon and color
+    let txIcon = '💰';
+    let txColor = '#00D9FF'; // mint
+    if (txType === 'deposit' || txType === 'payroll') {
+      txIcon = '✅';
+      txColor = '#00D9FF';
+    } else if (txType === 'withdraw') {
+      txIcon = '⚠️';
+      txColor = '#FF6B6B';
+    }
+
+    const body = `---
+
+## ${txIcon} SITE-89 FINANCIAL DEPARTMENT
+
+**Transaction Notification**
+
+---
+
+### Account Activity Summary
+
+**Account Holder:** ${accountName}  
+**Personnel ID:** \`${char.pid || 'N/A'}\`  
+**Date & Time:** ${dateStr} at ${timeStr}
+
+---
+
+### Transaction Details
+
+| Field | Value |
+|-------|-------|
+| **Transaction Type** | ${typeLabel} |
+| **Amount** | **${amountText}** |
+| **New Balance** | **${balanceText}** |
+${note ? `| **Notes** | ${note} |` : ''}
+
+---
+
+${txType === 'payroll' ? '### 💼 Payroll Information\n\nYour bi-weekly salary has been automatically deposited into your account. Thank you for your continued service to the Foundation.\n\n---\n\n' : ''}
+${txType === 'deposit' ? '### ✅ Deposit Confirmation\n\nA deposit has been credited to your account. Your updated balance is reflected above.\n\n---\n\n' : ''}
+${txType === 'withdraw' ? '### ⚠️ Withdrawal Notice\n\nA withdrawal has been processed on your account. Please verify this transaction was authorized.\n\n---\n\n' : ''}
+> **Security Notice:** If you did not authorize this transaction, please contact the Financial Department immediately at \`fd.mgmt@site89.org\` or visit your nearest Site-89 Financial Office.
+
+---
+
+*This is an automated notification from the Site-89 Financial Department. Please do not reply to this email.*
+
+**Foundation Banking Services** | Site-89 Financial Operations  
+*Secure • Contain • Protect • Pay*`;
 
     await addDoc(collection(db, 'emails'), {
       sender: 'fd.mgmt@site89.org',
       senderEmail: 'fd.mgmt@site89.org',
       recipients: [recipient],
       subject,
-      body: bodyLines,
+      body,
       isHTML: false,
       format: 'markdown',
       status: 'sent',
@@ -289,6 +335,7 @@ async function applyTransaction({ pid, type, amount, note, char }) {
   const accountRef = doc(db, 'bank_accounts', pid);
   const txRef = doc(collection(db, 'bank_accounts', pid, 'transactions'));
   const actorName = auth.currentUser?.email || 'system';
+  let finalBalance = 0;
 
   await runTransaction(db, async (tx) => {
     const accSnap = await tx.get(accountRef);
@@ -303,6 +350,8 @@ async function applyTransaction({ pid, type, amount, note, char }) {
     } else if (type === 'withdraw') {
       newBalance = previousBalance - amount;
     }
+
+    finalBalance = newBalance;
 
     const basePayload = {
       pid,
@@ -340,7 +389,7 @@ async function applyTransaction({ pid, type, amount, note, char }) {
   });
 
   // Send notification email after transaction completes
-  await sendBankNotification(char, type, amount, newBalance, note);
+  await sendBankNotification(char, type, amount, finalBalance, note);
 }
 
 async function forcePayrollNow(char) {
@@ -348,6 +397,8 @@ async function forcePayrollNow(char) {
   const accountRef = doc(db, 'bank_accounts', pid);
   const txRef = doc(collection(db, 'bank_accounts', pid, 'transactions'));
   const actorName = auth.currentUser?.email || 'system';
+  let finalBalance = 0;
+  let payAmount = 0;
 
   await runTransaction(db, async (tx) => {
     const accSnap = await tx.get(accountRef);
@@ -359,12 +410,15 @@ async function forcePayrollNow(char) {
       throw new Error('Payroll amount must be greater than 0. Set a pay amount first.');
     }
 
+    payAmount = amount;
+
     const intervalDays = Number(existing?.recurring?.intervalDays || 14);
     const now = new Date();
     const nextPayAt = Timestamp.fromDate(new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000));
 
     const previousBalance = Number(existing?.balance || 0);
     const newBalance = previousBalance + amount;
+    finalBalance = newBalance;
 
     const basePayload = {
       pid,
@@ -401,7 +455,7 @@ async function forcePayrollNow(char) {
   });
 
   // Send notification email after payroll completes
-  await sendBankNotification(char, 'payroll', amount, newBalance, 'Manual payroll payout');
+  await sendBankNotification(char, 'payroll', payAmount, finalBalance, 'Manual payroll payout');
 }
 
 async function savePayrollSettings(char) {
