@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-89 Events — RP & Operations Schedule</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    :root {
+      --font-head: 'Montserrat', sans-serif;
+      --font-body: 'Roboto', sans-serif;
+      --event-mint: #4EFAAA;
+      --event-teal: #007C6B;
+      --event-ink: #E5E5E5;
+      --event-dark: #0D0D0E;
+      --event-card-bg: #1A1A1C;
+    }
+
+    .events-hero {
+      position: relative;
+      padding: 3.5rem 1rem 3rem;
+      background: radial-gradient(circle at 15% 20%, rgba(78, 250, 170, 0.15), transparent 55%),
+                  linear-gradient(135deg, var(--event-dark), #050505);
+      border-bottom: 1px solid rgba(78, 250, 170, 0.12);
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .events-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(120deg, rgba(78, 250, 170, 0.04), rgba(78, 250, 170, 0.04) 1px, transparent 1px, transparent 32px);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .events-hero .hero-title {
+      font-family: var(--font-head);
+      font-size: clamp(2.3rem, 4vw, 3.2rem);
+      color: var(--event-mint);
+      letter-spacing: 0.02em;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .events-hero .hero-sub {
+      color: var(--muted);
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .events-wrap {
+      padding: 2.5rem 0 4rem;
+    }
+
+    .events-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 0.55rem 1.2rem;
+      border-radius: 999px;
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      background: rgba(26, 26, 28, 0.7);
+      color: var(--event-ink);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-btn.active {
+      border-color: var(--event-mint);
+      box-shadow: 0 0 20px rgba(78, 250, 170, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .rsvp-identity {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      background: rgba(26, 26, 28, 0.6);
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      padding: 0.6rem 0.9rem;
+      border-radius: 12px;
+    }
+
+    .rsvp-identity span {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .rsvp-identity .badge {
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(78, 250, 170, 0.15);
+      color: var(--event-mint);
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .rsvp-identity .rsvp-link {
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      color: var(--event-ink);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .admin-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(26, 26, 28, 0.65);
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      padding: 0.55rem 0.9rem;
+      border-radius: 12px;
+    }
+
+    .admin-btn {
+      background: var(--event-mint);
+      color: var(--event-dark);
+      border: none;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .admin-note {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.6rem;
+    }
+
+    .event-card {
+      background: var(--event-card-bg);
+      border: 1px solid rgba(78, 250, 170, 0.12);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      transform: translateY(8px);
+      opacity: 0;
+      animation: cardIn 0.6s ease forwards;
+    }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .event-banner {
+      position: relative;
+      height: 160px;
+      overflow: hidden;
+    }
+
+    .event-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.1) contrast(1.05);
+    }
+
+    .event-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 45%, rgba(13, 13, 14, 0.95) 100%);
+    }
+
+    .event-body {
+      padding: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .event-title {
+      font-size: 1.2rem;
+      color: var(--event-ink);
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .event-times {
+      display: grid;
+      gap: 0.5rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .time-row strong {
+      color: var(--event-mint);
+    }
+
+    .event-desc {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .meta-chip {
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      color: var(--event-mint);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .event-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: auto;
+    }
+
+    .event-actions button {
+      border: none;
+      background: transparent;
+      color: var(--event-ink);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-details {
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid rgba(78, 250, 170, 0.3);
+    }
+
+    .btn-details:hover {
+      border-color: var(--accent-mint);
+    }
+
+    .rsvp-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 2px solid var(--event-mint);
+      background: transparent;
+      color: var(--event-mint);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .rsvp-btn:hover {
+      background: rgba(78, 250, 170, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .rsvp-btn.active {
+      background: var(--event-mint);
+      color: var(--event-dark);
+      box-shadow: 0 0 12px rgba(78, 250, 170, 0.4);
+    }
+
+    .rsvp-btn.active:hover {
+      box-shadow: 0 0 20px rgba(78, 250, 170, 0.6);
+    }
+
+    .empty-state {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed rgba(78, 250, 170, 0.25);
+      border-radius: 16px;
+      background: rgba(26, 26, 28, 0.5);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 13, 14, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1rem;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-card {
+      background: var(--event-card-bg);
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      border-radius: 18px;
+      max-width: 860px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .modal-banner {
+      height: 220px;
+      position: relative;
+    }
+
+    .modal-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .modal-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(13, 13, 14, 0.2) 40%, rgba(13, 13, 14, 0.96) 100%);
+    }
+
+    .modal-content {
+      padding: 2rem;
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    .modal-admin {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .modal-title {
+      font-size: 1.8rem;
+      color: var(--event-mint);
+      margin: 0;
+    }
+
+    .modal-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      color: var(--muted);
+    }
+
+    .modal-meta strong { color: var(--event-mint); }
+
+    .modal-section {
+      background: rgba(26, 26, 28, 0.7);
+      border: 1px solid rgba(78, 250, 170, 0.18);
+      padding: 1rem 1.2rem;
+      border-radius: 12px;
+    }
+
+    .modal-section h4 {
+      margin: 0 0 0.6rem 0;
+      color: var(--event-mint);
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .attendees {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .attendee-pill {
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(78, 250, 170, 0.15);
+      color: var(--event-ink);
+      font-size: 0.85rem;
+      display: inline-block;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .attendee-pill:hover {
+      background: rgba(78, 250, 170, 0.25);
+      text-decoration: underline;
+      transform: translateY(-1px);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(26, 26, 28, 0.8);
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      color: var(--event-ink);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .editor-card {
+      max-width: 720px;
+    }
+
+    .editor-grid {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .editor-grid label {
+      color: var(--event-mint);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .editor-grid input,
+    .editor-grid textarea {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      background: rgba(26, 26, 28, 0.8);
+      color: var(--event-ink);
+      font-family: var(--font-body);
+      box-sizing: border-box;
+    }
+
+    .editor-grid textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+      padding: 0.55rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--event-mint);
+      color: var(--event-dark);
+    }
+
+    .btn-secondary {
+      background: rgba(78, 250, 170, 0.12);
+      color: var(--event-ink);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+    }
+
+    .btn-danger {
+      background: rgba(146, 0, 0, 0.15);
+      color: #920000;
+      border: 1px solid rgba(146, 0, 0, 0.5);
+    }
+
+    .editor-status {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 0.2rem 0 0;
+    }
+
+    html[data-theme="light"] .editor-status {
+      color: #666;
+    }
+
+    @media (max-width: 720px) {
+      .events-controls { flex-direction: column; align-items: flex-start; }
+      .event-actions { flex-direction: column; align-items: flex-start; }
+      .modal-content { padding: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="events-hero">
+    <div class="hero-title">Event Operations Grid</div>
+    <div class="hero-sub">Track every Site-89 RP, live operation, and narrative arc. RSVP to lock in your squad and sync to your local time instantly.</div>
+  </section>
+
+  <main class="events-wrap">
+    <div class="container">
+      <div class="events-controls">
+        <div class="filter-group" id="filterGroup">
+          <button class="filter-btn active" data-filter="upcoming">Upcoming</button>
+          <button class="filter-btn" data-filter="past-3">Past 3 Months</button>
+          <button class="filter-btn" data-filter="past-6">Past 6 Months</button>
+          <button class="filter-btn" data-filter="all">All Time</button>
+        </div>
+
+        <div class="admin-actions" id="adminActions" style="display:none;">
+          <button class="admin-btn" id="addEventBtn"><i class="fa-solid fa-plus"></i> New Event</button>
+          <span class="admin-note">Event control enabled</span>
+        </div>
+
+        <div class="rsvp-identity" id="rsvpIdentity">
+          <span>RSVP identity:</span>
+          <span class="badge" id="rsvpBadge"></span>
+          <a href="/character-select/" class="rsvp-link" id="rsvpSelectLink" style="display:none;">Select character</a>
+          <a href="/login/" class="rsvp-link" id="rsvpLoginLink" style="display:none;">Login to RSVP</a>
+        </div>
+      </div>
+
+      <div id="eventsGrid" class="events-grid"></div>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <h3>No events found</h3>
+        <p>Switch filters or check back later for new operations.</p>
+      </div>
+    </div>
+  </main>
+
+  <div id="eventModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button class="close-modal" id="closeModal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-banner"><img id="modalBanner" alt="Event banner"></div>
+      <div class="modal-content">
+        <h3 id="modalTitle" class="modal-title"></h3>
+        <div class="modal-admin" id="modalAdmin" style="display:none;">
+          <button class="btn-secondary" id="editEventBtn">Edit Event</button>
+        </div>
+        <div id="modalTimes" class="modal-meta"></div>
+        <p id="modalLong" class="event-desc"></p>
+
+        <div class="modal-section">
+          <h4>Operation Intel</h4>
+          <div id="modalIntel" class="modal-meta"></div>
+        </div>
+
+        <div class="modal-section">
+          <h4>Confirmed Attendance</h4>
+          <div id="modalAttendees" class="attendees"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="eventEditorModal" class="modal" aria-hidden="true">
+    <div class="modal-card editor-card" role="dialog" aria-modal="true">
+      <button class="close-modal" id="closeEditor" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-content">
+        <h3 id="editorTitle" class="modal-title">New Event</h3>
+        <div class="editor-grid">
+          <label for="eventTitle">Title *</label>
+          <input id="eventTitle" type="text" placeholder="Operation name">
+
+          <label for="eventStart">Site Time (ET) *</label>
+          <input id="eventStart" type="datetime-local">
+
+          <label for="eventShort">Brief Description *</label>
+          <textarea id="eventShort" placeholder="2-3 sentence summary"></textarea>
+
+          <label for="eventLong">Long Description *</label>
+          <textarea id="eventLong" placeholder="Full event briefing"></textarea>
+
+          <label for="eventZone">Zone *</label>
+          <input id="eventZone" type="text" placeholder="Where it happens">
+
+          <label for="eventDepartments">Departments *</label>
+          <input id="eventDepartments" type="text" placeholder="Comma-separated, e.g. SD, IA, IO">
+
+          <label for="eventManager">RP Manager *</label>
+          <input id="eventManager" type="text" placeholder="Event lead">
+
+          <label for="eventBanner">Banner URL * <span style="font-weight:400;font-size:0.85rem;color:var(--muted);">(use catbox.moe)</span></label>
+          <input id="eventBanner" type="text" placeholder="https://files.catbox.moe/...">
+        </div>
+
+        <div class="editor-actions">
+          <button class="btn-primary" id="saveEventBtn">Save Event</button>
+          <button class="btn-secondary" id="cancelEventBtn">Cancel</button>
+          <button class="btn-danger" id="deleteEventBtn" style="display:none;">Delete Event</button>
+        </div>
+        <p class="editor-status" id="editorStatus"></p>
+      </div>
+    </div>
+  </div>
+
+  <div data-include="/components/footer.html"></div>
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/events.js"></script>
+</body>
+</html>

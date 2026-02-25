@@ -738,6 +738,44 @@
     // Load on page load
     loadPersonnel();
 
+    // Check for direct character link in URL (e.g., ?character=<characterId>)
+    async function openCharacterFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const characterId = params.get('character');
+      
+      if (characterId) {
+        // Wait a moment for personnel to load, then find and open the character
+        const checkInterval = setInterval(() => {
+          if (allPersonnel.length > 0) {
+            clearInterval(checkInterval);
+            const character = allPersonnel.find(char => char.id === characterId);
+            if (character) {
+              openPersonnelModal(character);
+            }
+          }
+        }, 100);
+        
+        // Timeout after 3 seconds
+        setTimeout(() => clearInterval(checkInterval), 3000);
+      }
+    }
+
+    // Call after page loads
+    setTimeout(openCharacterFromUrl, 500);
+
+    // Update close modal function to clear URL parameter
+    const originalClose = window.closePersonnelModal;
+    window.closePersonnelModal = function() {
+      originalClose();
+      // Clear the character parameter from URL
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('character')) {
+        params.delete('character');
+        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    };
+
     // Sticky nav
     document.addEventListener("scroll", () => {
       const nav = document.getElementById("main-nav");

@@ -205,6 +205,34 @@ service cloud.firestore {
       );
     }
 
+    // Events - IO personnel and Directors can manage
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && (isADIOPersonnel() || isAdmin())
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.start is timestamp
+        && request.resource.data.shortDesc is string
+        && request.resource.data.longDesc is string
+        && request.resource.data.zone is string
+        && request.resource.data.departments is list
+        && request.resource.data.manager is string
+        && request.resource.data.banner is string;
+      allow update, delete: if request.auth != null && (isADIOPersonnel() || isAdmin());
+
+      match /rsvps/{rsvpId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.createdByUid == request.auth.uid
+          && request.resource.data.characterId is string
+          && request.resource.data.characterName is string;
+        allow delete: if request.auth != null
+          && request.auth.uid == resource.data.createdByUid;
+        allow update: if false;
+      }
+    }
+
     // Groups of Interest - RAISA personnel (L2+) and Directors can write
     match /groups-of-interest/{goiId} {
       allow read: if true; // Everyone can read

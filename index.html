@@ -138,6 +138,113 @@
       opacity: 0.9;
     }
 
+    .hero-top {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .hero-title-block {
+      text-align: center;
+    }
+
+    .hero-event-card {
+      background: rgba(13, 13, 14, 0.6);
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+      position: fixed;
+      right: 2.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(360px, 90vw);
+      z-index: 30;
+    }
+
+    .hero-event-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem 0.6rem;
+      border-bottom: 1px solid rgba(78, 250, 170, 0.1);
+      background: linear-gradient(90deg, rgba(0, 124, 107, 0.25), rgba(78, 250, 170, 0.08));
+    }
+
+    .hero-event-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--accent-mint);
+    }
+
+    .hero-event-link {
+      color: var(--accent-teal);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: color 0.2s ease;
+    }
+
+    .hero-event-link:hover {
+      color: var(--accent-mint);
+    }
+
+    .hero-event-banner {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+      background: linear-gradient(135deg, rgba(0, 124, 107, 0.4), rgba(13, 13, 14, 0.6));
+    }
+
+    .hero-event-body {
+      padding: 1rem 1.1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .hero-event-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-mint);
+    }
+
+    .hero-event-time {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      opacity: 0.85;
+    }
+
+    .hero-event-desc {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-light);
+      opacity: 0.9;
+    }
+
+    .hero-event-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--accent-teal);
+    }
+
+    .hero-event-empty {
+      padding: 1.2rem 1.1rem 1.4rem;
+      color: var(--text-light);
+      opacity: 0.75;
+      font-size: 0.9rem;
+    }
+
     .status-bar {
       display: inline-flex;
       gap: 2rem;
@@ -632,6 +739,24 @@
     }
 
     @media (max-width: 768px) {
+      .hero-top {
+        gap: 1.5rem;
+        text-align: center;
+      }
+
+      .hero-title-block {
+        text-align: center;
+      }
+
+      .hero-event-card {
+        position: static;
+        max-width: 520px;
+        margin: 0 auto 1.5rem;
+        width: 100%;
+        order: -1;
+        transform: none;
+      }
+
       .status-bar {
         flex-direction: column;
         gap: 1rem;
@@ -1699,19 +1824,6 @@
     </div>
   </div>
 
-  <!-- Welcome Modal (shown first to first-time visitors) -->
-  <div id="betaWarningModal" class="beta-warning-modal-overlay">
-    <div class="beta-warning-modal-content">
-      <h1>
-        <i class="fas fa-globe"></i> WELCOME TO SITE-89
-      </h1>
-      <p>Welcome to the new Site-89 platform! We've migrated from Wikidot to provide you with an enhanced experience. If you encounter any issues, please let us know via the feedback page.</p>
-      <button class="beta-warning-button" onclick="closeBetaWarningModal()">
-        Continue
-      </button>
-    </div>
-  </div>
-
   <!-- First-time visitor modal -->
   <div id="firstTimeModal" class="first-time-modal-overlay">
     <div class="first-time-modal-content">
@@ -1735,8 +1847,28 @@
   <section class="hero-section">
     <div class="hero-content">
 
-      <h1 class="main-title">SITE-89</h1>
-      <p class="subtitle">Secure Foundation Portal | Access Level Required</p>
+      <div class="hero-top">
+        <div class="hero-title-block">
+          <h1 class="main-title">SITE-89</h1>
+          <p class="subtitle">Secure Foundation Portal</p>
+        </div>
+        <div class="hero-event-card" id="heroEventCard">
+          <div class="hero-event-header">
+            <span class="hero-event-label">Closest Event</span>
+            <a class="hero-event-link" href="/events/">View all</a>
+          </div>
+          <img class="hero-event-banner" id="heroEventBanner" src="/assets/img/dataunavailable.png" alt="Event banner">
+          <div class="hero-event-body" id="heroEventBody">
+            <div class="hero-event-title" id="heroEventTitle">Loading events...</div>
+            <div class="hero-event-time" id="heroEventTime">—</div>
+            <div class="hero-event-desc" id="heroEventDesc">Checking the event roster.</div>
+            <div class="hero-event-footer">
+              <i class="fas fa-user-group"></i>
+              <span id="heroEventCount">— attending</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="status-bar" onclick="window.location.href='/status/'" style="cursor: pointer;" title="View detailed status">
         <div class="status-item" id="status-mc">
@@ -2209,6 +2341,9 @@
         
         // Load activity data
         loadActivityDashboard();
+
+        // Load closest event
+        loadClosestEvent();
         
         // Load personnel count
         const charactersSnap = await getDocs(collection(db, "characters"));
@@ -2226,6 +2361,73 @@
     }
 
     loadStats();
+
+    function resolveEventStart(value) {
+      if (!value) return null;
+      if (typeof value.toDate === 'function') return value.toDate();
+      if (value.seconds) return new Date(value.seconds * 1000);
+      return new Date(value);
+    }
+
+    function formatEventDate(date) {
+      if (!date) return 'Start time TBD';
+      return `Starts ${date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`;
+    }
+
+    async function loadClosestEvent() {
+      const card = document.getElementById('heroEventCard');
+      const banner = document.getElementById('heroEventBanner');
+      const body = document.getElementById('heroEventBody');
+      const title = document.getElementById('heroEventTitle');
+      const time = document.getElementById('heroEventTime');
+      const desc = document.getElementById('heroEventDesc');
+      const count = document.getElementById('heroEventCount');
+
+      if (!card || !banner || !body || !title || !time || !desc || !count) return;
+
+      try {
+        const eventsQuery = query(collection(db, 'events'), orderBy('start', 'asc'));
+        const eventsSnap = await getDocs(eventsQuery);
+        const now = new Date();
+        let nextEvent = null;
+
+        eventsSnap.forEach((docSnap) => {
+          if (nextEvent) return;
+          const data = docSnap.data();
+          const startDate = resolveEventStart(data.start);
+          if (!startDate || startDate < now) return;
+          nextEvent = { id: docSnap.id, ...data, startDate };
+        });
+
+        if (!nextEvent) {
+          banner.style.display = 'none';
+          body.innerHTML = '<div class="hero-event-empty">No upcoming events scheduled right now.</div>';
+          return;
+        }
+
+        banner.style.display = 'block';
+        banner.src = nextEvent.banner || '/assets/img/dataunavailable.png';
+        banner.alt = `${nextEvent.title || 'Event'} banner`;
+
+        title.textContent = nextEvent.title || 'Untitled Event';
+        time.textContent = formatEventDate(nextEvent.startDate);
+        desc.textContent = nextEvent.shortDesc || 'Details available on the events page.';
+
+        let rsvpCount = 0;
+        try {
+          const rsvpSnap = await getDocs(collection(db, 'events', nextEvent.id, 'rsvps'));
+          rsvpCount = rsvpSnap.size;
+        } catch (err) {
+          console.warn('Could not load RSVP count:', err);
+        }
+
+        count.textContent = `${rsvpCount} attending`;
+      } catch (err) {
+        console.warn('Could not load closest event:', err);
+        banner.style.display = 'none';
+        body.innerHTML = '<div class="hero-event-empty">Unable to load events right now.</div>';
+      }
+    }
 
     // Load Featured Article
     async function loadFeaturedArticle() {
