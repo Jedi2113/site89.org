@@ -39,6 +39,20 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email in adioEmails;
     }
 
+    // Helper function to check if user can manage banking (AD/FD or Site Director)
+    function isBankAdmin() {
+      // Add emails of AD/FD or Site Director personnel here
+      let bankAdminEmails = [
+        'jedi21132@gmail.com',
+        'mason@millerzoo.com',
+        'usxafiy@gmail.com',
+        'redbridge7242@gmail.com',
+        'o5councilfoundation@gmail.com'
+        // Add more bank admin emails as needed
+      ];
+      return request.auth != null && request.auth.token.email in bankAdminEmails;
+    }
+
     // ===== ANALYTICS =====
     // Public read, admin-only write
     match /settings/analytics {
@@ -67,6 +81,29 @@ service cloud.firestore {
     match /personnel/{personnelId} {
       allow read: if request.auth != null;
       allow create, update, delete: if request.auth != null;
+    }
+
+    // ===== BANKING =====
+    match /bank_accounts/{pid} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.linkedUID || isBankAdmin()
+      );
+      allow create: if request.auth != null && (
+        request.resource.data.linkedUID == request.auth.uid || isBankAdmin()
+      );
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.linkedUID || isBankAdmin()
+      );
+      allow delete: if request.auth != null && isBankAdmin();
+    }
+
+    match /bank_accounts/{pid}/transactions/{txId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == get(/databases/$(database)/documents/bank_accounts/$(pid)).data.linkedUID ||
+        isBankAdmin()
+      );
+      allow create: if request.auth != null && isBankAdmin();
+      allow update, delete: if false;
     }
 
     // Emails collection - character-based email system with director support

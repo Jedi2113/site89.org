@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-89 Bank Manager</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .bank-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .bank-card {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-teal);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      padding: 1.2rem;
+    }
+
+    .bank-card:hover {
+      border-color: var(--accent-mint);
+      box-shadow: 0 0 16px rgba(78, 250, 170, 0.2);
+      transform: translateY(-4px);
+    }
+
+    .bank-card h3 {
+      margin: 0 0 0.4rem 0;
+      color: var(--accent-mint);
+      font-size: 1.2rem;
+    }
+
+    .bank-card p {
+      margin: 0.2rem 0;
+      color: var(--muted);
+    }
+
+    .bank-card .balance {
+      font-size: 1.2rem;
+      color: var(--accent-mint);
+      font-weight: 700;
+      margin-top: 0.6rem;
+    }
+
+    .bank-muted {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .access-denied {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+    }
+
+    .bank-toolbar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .bank-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.6rem;
+      background: var(--bg-card);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-family: var(--font-body);
+    }
+
+    .bank-select {
+      padding: 0.6rem;
+      background: var(--bg-card);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+    }
+
+    .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); animation: fadeIn 0.3s ease; }
+    .modal.show { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: var(--bg-card); border: 2px solid var(--accent-mint); border-radius: 10px; padding: 2rem; width: 92%; max-width: 860px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(78, 250, 170, 0.15); animation: slideIn 0.3s ease; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--accent-teal); padding-bottom: 0.8rem; }
+    .modal-header h2 { margin: 0; color: var(--accent-mint); font-size: 1.6rem; }
+    .modal-close { background: none; border: none; font-size: 2rem; cursor: pointer; color: var(--accent-mint); transition: color 0.2s ease; }
+    .modal-close:hover { color: var(--accent-teal); }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .modal-card {
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      background: var(--bg-soft);
+    }
+
+    .modal-card h4 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: var(--accent-mint);
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 0.6rem;
+      margin: 0.4rem 0 0.8rem 0;
+      background: var(--bg-card);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-family: var(--font-body);
+      box-sizing: border-box;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--accent-mint);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-light);
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+    }
+
+    .feedback {
+      margin-top: 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .feedback.success { color: var(--accent-mint); }
+    .feedback.error { color: #ff6b6b; }
+
+    @media (max-width: 960px) {
+      .bank-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .bank-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="content">
+    <div class="about-box" style="margin-bottom: 1.5rem;">
+      <h2>Bank Manager</h2>
+      <p>Manage balances, deposits, withdrawals, and payroll for all characters.</p>
+    </div>
+
+    <div id="accessDenied" class="access-denied" style="display:none;">
+      <i class="fas fa-lock" style="font-size:3rem;margin-bottom:1rem;opacity:0.5;display:block;"></i>
+      <h2>Access Denied</h2>
+      <p>Only AD/FD staff or the Site Director can access this page.</p>
+    </div>
+
+    <div id="managementContainer" style="display:none;">
+      <div class="bank-toolbar">
+        <input id="searchInput" class="bank-input" type="text" placeholder="Search by name, PID, or department...">
+        <select id="sortSelect" class="bank-select">
+          <option value="name">Sort by: Name</option>
+          <option value="department">Sort by: Department</option>
+          <option value="balance">Sort by: Balance</option>
+        </select>
+      </div>
+
+      <div id="bankGrid" class="bank-grid">
+        <div class="access-denied">Loading accounts...</div>
+      </div>
+    </div>
+  </main>
+
+  <div id="bankModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Manage Account</h2>
+        <button class="modal-close" onclick="window.closeBankModal()">&times;</button>
+      </div>
+
+      <div id="modalMeta" class="bank-muted"></div>
+
+      <div class="modal-grid">
+        <div class="modal-card">
+          <h4>Balance Actions</h4>
+          <label>Set Balance</label>
+          <input id="setBalanceInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 1200.00">
+          <button id="setBalanceBtn" class="btn-primary" type="button">Apply Balance</button>
+
+          <label style="margin-top:0.8rem;display:block;">Deposit</label>
+          <input id="depositInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 250.00">
+          <button id="depositBtn" class="btn-primary" type="button">Deposit</button>
+
+          <label style="margin-top:0.8rem;display:block;">Withdraw</label>
+          <input id="withdrawInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 100.00">
+          <button id="withdrawBtn" class="btn-primary" type="button">Withdraw</button>
+        </div>
+
+        <div class="modal-card">
+          <h4>Direct Deposit</h4>
+          <label>Bi-Weekly Pay Amount</label>
+          <input id="payAmountInput" class="modal-input" type="text" inputmode="decimal" placeholder="e.g., $11,538">
+
+          <label>Next Pay Date</label>
+          <input id="nextPayInput" class="modal-input" type="date">
+
+          <label style="display:flex;align-items:center;gap:0.5rem;">
+            <input id="payEnabledInput" type="checkbox">
+            Enable recurring deposit
+          </label>
+
+          <div class="modal-actions" style="margin-top:0.8rem;">
+            <button id="savePayBtn" class="btn-primary" type="button">Save Payroll</button>
+            <button id="forcePayBtn" class="btn-secondary" type="button">Force Pay Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-card" style="margin-top:1rem;">
+        <h4>Notes</h4>
+        <input id="noteInput" class="modal-input" placeholder="Optional memo for this transaction">
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" onclick="window.closeBankModal()">Close</button>
+        </div>
+        <div id="modalFeedback" class="feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/bank-manager.js"></script>
+</body>
+</html>

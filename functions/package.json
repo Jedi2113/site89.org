@@ -1,0 +1,12 @@
+{
+  "name": "site89-functions",
+  "private": true,
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^4.6.0"
+  }
+}

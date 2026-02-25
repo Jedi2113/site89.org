@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-89 Bank</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .bank-hero {
+      background: linear-gradient(135deg, rgba(0, 163, 137, 0.2), rgba(62, 225, 163, 0.08));
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .bank-balance {
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      color: var(--accent-mint);
+      font-weight: 800;
+      margin: 0.25rem 0 0;
+    }
+
+    .bank-sub {
+      color: var(--muted);
+      margin: 0.5rem 0 0;
+    }
+
+    .bank-meta {
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .bank-meta h3 {
+      margin-bottom: 0.4rem;
+    }
+
+    .bank-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bank-card {
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      box-shadow: var(--shadow-strong);
+    }
+
+    .bank-card h3 {
+      margin-bottom: 0.6rem;
+    }
+
+    .bank-card p {
+      margin: 0.4rem 0;
+    }
+
+    .bank-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .bank-table th,
+    .bank-table td {
+      padding: 0.7rem 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: left;
+    }
+
+    .bank-table th {
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+    }
+
+    .bank-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(78, 250, 170, 0.12);
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      color: var(--accent-mint);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .bank-actions {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 0.6rem;
+    }
+
+    .bank-input {
+      width: 96%;
+      padding: 0.6rem;
+      margin-top: 0.4rem;
+      background: var(--bg-soft);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-family: var(--font-body);
+    }
+
+    .bank-btn {
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent-mint);
+      color: var(--bg-dark);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bank-btn:hover {
+      background: var(--accent-teal);
+    }
+
+    .bank-muted {
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+
+    .auth-required,
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .bank-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .bank-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="content">
+    <div class="about-box" style="margin-bottom: 1.5rem;">
+      <h2>Site-89 Banking</h2>
+      <p>View your character account balance, payroll status, and transaction history.</p>
+      <p class="bank-muted" style="margin-top:0.6rem;">Note: This is fictional, in-universe currency only. It is not real money and cannot be exchanged for real-world value.</p>
+    </div>
+
+    <div id="authRequired" class="auth-required" style="display:none;">
+      <i class="fas fa-lock" style="font-size:2.4rem;margin-bottom:1rem;opacity:0.5;display:block;"></i>
+      <h2>Authentication Required</h2>
+      <p>Please log in to view your bank account.</p>
+    </div>
+
+    <div id="characterRequired" class="auth-required" style="display:none;">
+      <i class="fas fa-user-circle" style="font-size:2.4rem;margin-bottom:1rem;opacity:0.5;display:block;"></i>
+      <h2>Select a Character</h2>
+      <p>You need to select a character before accessing banking.</p>
+      <a href="/character-select/" class="bank-btn" style="display:inline-block;margin-top:0.8rem;">Select Character</a>
+    </div>
+
+    <div id="bankContainer" style="display:none;">
+      <section class="bank-hero">
+        <div>
+          <div class="bank-pill"><i class="fas fa-shield-alt"></i> Account Status: Active</div>
+          <h1 id="bankCharacterName">Character Account</h1>
+          <p class="bank-sub" id="bankCharacterMeta">PID | Department | Rank</p>
+          <div class="bank-balance" id="bankBalance">$0.00</div>
+          <p class="bank-sub" id="bankBalanceUpdated">Last updated: --</p>
+        </div>
+        <div class="bank-meta">
+          <h3>Direct Deposit</h3>
+          <p id="bankPayAmount" class="bank-sub">Pay amount: --</p>
+          <p id="bankPayNext" class="bank-sub">Next pay date: --</p>
+          <p class="bank-muted">Payroll is managed by Site Administration.</p>
+        </div>
+      </section>
+
+      <section class="bank-grid">
+        <div class="bank-card">
+          <h3>Character Mailbox</h3>
+          <p class="bank-sub">Alerts are delivered to your Site-89 character email.</p>
+          <input id="bankNotifyEmail" class="bank-input" type="email" readonly>
+          <div class="bank-actions">
+            <span id="bankNotifyStatus" class="bank-muted">Assigned automatically.</span>
+          </div>
+        </div>
+        <div class="bank-card">
+          <h3>Account Details</h3>
+          <p id="bankAccountPid">PID: --</p>
+          <p id="bankAccountDept">Department: --</p>
+          <p id="bankAccountRank">Rank: --</p>
+          <p id="bankAccountUid" class="bank-muted">Linked UID: --</p>
+        </div>
+      </section>
+
+      <section class="bank-card">
+        <h3>Transaction History</h3>
+        <div id="bankTransactions" class="bank-muted" style="margin-top:1rem;">Loading transactions...</div>
+      </section>
+    </div>
+  </main>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/bank.js"></script>
+</body>
+</html>

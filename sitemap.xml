@@ -82,6 +82,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://site89.github.io/bank/</loc>
+    <lastmod>2026-02-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://site89.github.io/roadmap/</loc>
     <lastmod>2026-01-07</lastmod>
     <changefreq>weekly</changefreq>
