@@ -116,9 +116,16 @@ service cloud.firestore {
       // - Frontend validates director permissions via character.directorOf array before sending
       // - Mailing lists (e.g., SD@site89.org) are expanded on frontend to individual character emails
       // - Backend trusts frontend validation since user auth ties to email
-      allow create: if request.auth != null
-        && request.resource.data.senderEmail == request.auth.token.email
-        && (request.resource.data.sender.matches('.*@site89\\.org$') || request.resource.data.sender == request.auth.token.email)
+      // System senders (fd.mgmt@, bank@) are allowed without auth for automated notifications
+      allow create: if (
+        // System senders: automated emails from Cloud Functions
+        (request.resource.data.senderEmail in ['fd.mgmt@site89.org', 'bank@site89.org'])
+        ||
+        // User senders: must match auth email
+        (request.auth != null
+          && request.resource.data.senderEmail == request.auth.token.email
+          && (request.resource.data.sender.matches('.*@site89\\.org$') || request.resource.data.sender == request.auth.token.email))
+      )
         && request.resource.data.recipients is list
         && request.resource.data.recipients.size() > 0
         && request.resource.data.subject is string

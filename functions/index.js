@@ -174,8 +174,8 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
   ].filter(Boolean).join('\n');
 
   await db.collection('emails').add({
-    sender: 'bank@site89.org',
-    senderEmail: 'bank@site89.org',
+    sender: 'fd.mgmt@site89.org',
+    senderEmail: 'fd.mgmt@site89.org',
     recipients: [recipient],
     subject,
     body: bodyLines,
