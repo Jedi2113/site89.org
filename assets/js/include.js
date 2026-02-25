@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const includes = Array.from(document.querySelectorAll("[data-include]"));
+  const INCLUDE_VERSION = '2026-02-24-1';
   if (!includes.length) {
     // still dispatch to allow listeners
     document.dispatchEvent(new Event("includesLoaded"));
@@ -9,7 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let remaining = includes.length;
 
   includes.forEach(el => {
-    fetch(el.dataset.include)
+    const url = new URL(el.dataset.include, window.location.origin);
+    url.searchParams.set('v', INCLUDE_VERSION);
+    fetch(url.toString(), { cache: 'no-store' })
       .then(res => res.text())
       .then(html => {
         el.innerHTML = html;
