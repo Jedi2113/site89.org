@@ -149,16 +149,31 @@ exports.processPayroll = onSchedule('every day 06:00', async () => {
 });
 
 exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/{txId}', async (event) => {
+  console.log('🔔 Transaction trigger fired!', { pid: event.params.pid, txId: event.params.txId });
+  
   const txData = event.data?.data();
-  if (!txData) return;
+  if (!txData) {
+    console.log('❌ No transaction data found');
+    return;
+  }
+  console.log('📝 Transaction data:', txData);
 
   const pid = event.params.pid;
   const accountSnap = await db.doc(`bank_accounts/${pid}`).get();
-  if (!accountSnap.exists) return;
+  if (!accountSnap.exists) {
+    console.log('❌ Account not found:', pid);
+    return;
+  }
 
   const account = accountSnap.data() || {};
+  console.log('👤 Account found:', { name: account.name, pid });
+  
   const recipient = await resolveCharacterEmail(account);
-  if (!recipient) return;
+  if (!recipient) {
+    console.log('❌ Could not resolve email for:', account.name);
+    return;
+  }
+  console.log('📧 Recipient resolved:', recipient);
 
   const typeLabel = (txData.type || 'transaction').toString().replace(/_/g, ' ');
   const subject = `Site-89 Bank: ${typeLabel}`;
@@ -173,16 +188,24 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
     txData.note ? `Note: ${txData.note}` : ''
   ].filter(Boolean).join('\n');
 
-  await db.collection('emails').add({
-    sender: 'fd.mgmt@site89.org',
-    senderEmail: 'fd.mgmt@site89.org',
-    recipients: [recipient],
-    subject,
-    body: bodyLines,
-    isHTML: false,
-    format: 'markdown',
-    status: 'sent',
-    folder: '',
-    ts: admin.firestore.FieldValue.serverTimestamp()
-  });
+  console.log('✉️ Creating email:', { sender: 'fd.mgmt@site89.org', recipient, subject });
+  
+  try {
+    await db.collection('emails').add({
+      sender: 'fd.mgmt@site89.org',
+      senderEmail: 'fd.mgmt@site89.org',
+      recipients: [recipient],
+      subject,
+      body: bodyLines,
+      isHTML: false,
+      format: 'markdown',
+      status: 'sent',
+      folder: '',
+      ts: admin.firestore.FieldValue.serverTimestamp()
+    });
+    console.log('✅ Email created successfully!');
+  } catch (error) {
+    console.error('❌ Error creating email:', error);
+    throw error;
+  }
 });

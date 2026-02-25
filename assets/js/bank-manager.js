@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
   runTransaction,
   serverTimestamp,
   Timestamp
@@ -33,6 +34,116 @@ function parseAmount(rawValue) {
   const cleaned = String(rawValue || '').replace(/[^0-9.-]/g, '');
   const parsed = parseFloat(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function baseLocalFromName(name) {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0] ? parts[0].toLowerCase().replace(/[^a-z]/g, '') : '';
+  const last = parts.length > 1 ? parts[parts.length - 1].toLowerCase().replace(/[^a-z]/g, '') : first;
+  return last && first ? `${last}.${first}` : '';
+}
+
+function makeUniqueEmail(baseLocal, counts) {
+  if (!baseLocal) return '';
+  const current = counts.get(baseLocal) || 0;
+  const next = current + 1;
+  counts.set(baseLocal, next);
+  const localPart = next === 1 ? baseLocal : `${baseLocal}${next}`;
+  return `${localPart}@site89.org`.toLowerCase();
+}
+
+async function resolveCharacterEmail(targetChar) {
+  if (!targetChar || !targetChar.name) return '';
+
+  const snap = await getDocs(collection(db, 'characters'));
+  const raw = [];
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    if (data && data.name) raw.push(data);
+  });
+
+  raw.sort((a, b) => {
+    const aName = (a.name || '').toLowerCase();
+    const bName = (b.name || '').toLowerCase();
+    if (aName !== bName) return aName.localeCompare(bName);
+    const aPid = (a.pid || '').toString();
+    const bPid = (b.pid || '').toString();
+    return aPid.localeCompare(bPid);
+  });
+
+  const counts = new Map();
+  const entries = raw.map(char => {
+    const baseLocal = baseLocalFromName(char.name);
+    const email = makeUniqueEmail(baseLocal, counts);
+    return {
+      email,
+      baseLocal,
+      pid: char.pid ? String(char.pid) : '',
+      department: char.department || '',
+      name: char.name || ''
+    };
+  }).filter(entry => !!entry.email);
+
+  const byPid = new Map();
+  const byBase = new Map();
+  entries.forEach(entry => {
+    if (entry.pid) byPid.set(entry.pid, entry.email);
+    const list = byBase.get(entry.baseLocal) || [];
+    list.push(entry);
+    byBase.set(entry.baseLocal, list);
+  });
+
+  const baseLocal = baseLocalFromName(targetChar.name);
+  const pidKey = targetChar.pid ? String(targetChar.pid) : '';
+  if (pidKey && byPid.has(pidKey)) return byPid.get(pidKey);
+
+  const bucket = byBase.get(baseLocal);
+  if (bucket && bucket.length) {
+    if (bucket.length === 1) return bucket[0].email;
+    const dept = (targetChar.department || '').toLowerCase();
+    const match = bucket.find(entry => (entry.department || '').toLowerCase() === dept);
+    return match ? match.email : bucket[0].email;
+  }
+
+  const snapshotCount = (counts.get(baseLocal) || 0) + 1;
+  const localPart = snapshotCount === 1 ? baseLocal : `${baseLocal}${snapshotCount}`;
+  return `${localPart}@site89.org`.toLowerCase();
+}
+
+async function sendBankNotification(char, txType, amount, balanceAfter, note) {
+  try {
+    const recipient = await resolveCharacterEmail(char);
+    if (!recipient) return;
+
+    const typeLabel = (txType || 'transaction').toString().replace(/_/g, ' ');
+    const subject = `Site-89 Bank: ${typeLabel}`;
+    const amountText = formatCurrency(amount);
+    const balanceText = formatCurrency(balanceAfter);
+
+    const bodyLines = [
+      `Account: ${char.name || char.pid}`,
+      `Transaction: ${typeLabel}`,
+      `Amount: ${amountText}`,
+      `Balance: ${balanceText}`,
+      note ? `Note: ${note}` : ''
+    ].filter(Boolean).join('\n');
+
+    await addDoc(collection(db, 'emails'), {
+      sender: 'fd.mgmt@site89.org',
+      senderEmail: 'fd.mgmt@site89.org',
+      recipients: [recipient],
+      subject,
+      body: bodyLines,
+      isHTML: false,
+      format: 'markdown',
+      status: 'sent',
+      folder: '',
+      ts: serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Failed to send bank notification:', err);
+  }
 }
 
 function hasBankAccess(char) {
@@ -227,6 +338,9 @@ async function applyTransaction({ pid, type, amount, note, char }) {
       balanceAfter: newBalance
     });
   });
+
+  // Send notification email after transaction completes
+  await sendBankNotification(char, type, amount, newBalance, note);
 }
 
 async function forcePayrollNow(char) {
@@ -285,6 +399,9 @@ async function forcePayrollNow(char) {
       balanceAfter: newBalance
     });
   });
+
+  // Send notification email after payroll completes
+  await sendBankNotification(char, 'payroll', amount, newBalance, 'Manual payroll payout');
 }
 
 async function savePayrollSettings(char) {
