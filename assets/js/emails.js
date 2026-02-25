@@ -408,6 +408,12 @@ document.addEventListener('includesLoaded', () => {
   async function getCharacterImage(email){
     // Normalize email to lowercase for case-insensitive lookup
     const normalizedEmail = email ? email.toLowerCase() : '';
+    
+    // Special case for system sender
+    if(normalizedEmail === 'fd.mgmt@site89.org') {
+      return 'fa-mgmt-special';
+    }
+    
     // Check cache first
     if(charactersCache[normalizedEmail]) return charactersCache[normalizedEmail];
 
@@ -602,9 +608,14 @@ document.addEventListener('includesLoaded', () => {
       
       // Get profile picture asynchronously
       const profileImage = await getCharacterImage(m.sender);
-      const avatarHtml = profileImage && !profileImage.includes('placeholder') 
-        ? `<div class="message-avatar"><img src="${profileImage}" alt="Profile"></div>`
-        : `<div class="message-avatar">${(m.sender||'').charAt(0).toUpperCase()||'?'}</div>`;
+      let avatarHtml;
+      if(profileImage === 'fa-mgmt-special') {
+        avatarHtml = `<div class="message-avatar fa-mgmt-avatar"><img src="/assets/img/FA.png" alt="FA Department" class="fa-mgmt-img"></div>`;
+      } else if(profileImage && !profileImage.includes('placeholder')) {
+        avatarHtml = `<div class="message-avatar"><img src="${profileImage}" alt="Profile"></div>`;
+      } else {
+        avatarHtml = `<div class="message-avatar">${(m.sender||'').charAt(0).toUpperCase()||'?'}</div>`;
+      }
       
       // Get time display
       const timeDisplay = formatMessageTime(m.ts);
@@ -709,9 +720,14 @@ document.addEventListener('includesLoaded', () => {
     
     // Try to get profile picture
     const profileImage = await getCharacterImage(m.sender);
-    const avatarHtml = profileImage && !profileImage.includes('placeholder') 
-      ? `<div class="mail-sender-avatar"><img src="${profileImage}" alt="Profile"></div>`
-      : `<div class="mail-sender-avatar">${(m.sender||'').charAt(0).toUpperCase()||'?'}</div>`;
+    let avatarHtml;
+    if(profileImage === 'fa-mgmt-special') {
+      avatarHtml = `<div class="mail-sender-avatar fa-mgmt-avatar"><img src="/assets/img/FA.png" alt="FA Department" class="fa-mgmt-img"></div>`;
+    } else if(profileImage && !profileImage.includes('placeholder')) {
+      avatarHtml = `<div class="mail-sender-avatar"><img src="${profileImage}" alt="Profile"></div>`;
+    } else {
+      avatarHtml = `<div class="mail-sender-avatar">${(m.sender||'').charAt(0).toUpperCase()||'?'}</div>`;
+    }
     
     // Format body content (handle HTML vs Markdown)
     const bodyContent = m.isHTML
