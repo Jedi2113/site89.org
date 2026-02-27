@@ -133,6 +133,7 @@ function getDirectorDivisions(){
       if(deptUpper.includes('AD/BOD')) divisions.push('bod');
       if(deptUpper.includes('IA/') || deptUpper.includes('IA')) divisions.push('ia');
       if(deptUpper.includes('RAISA')) divisions.push('raisa');
+      if(deptUpper.includes('SD/') || deptUpper.includes('SD')) divisions.push('sd');
       
       return [...new Set(divisions)];
     }
@@ -142,6 +143,37 @@ function getDirectorDivisions(){
     console.error('getDirectorDivisions error:', e);
     return []; 
   }
+}
+
+function getSecurityDirectorAliases(selectedCharacter, user){
+  const securityAliases = [
+    'sd.mgmt@site89.org',
+    'sd.cmd.mgmt@site89.org',
+    'sd.sis.mgmt@site89.org',
+    'sd.sdu.mgmt@site89.org',
+    'sd.seccont.mgmt@site89.org'
+  ];
+
+  const authEmail = ((user && user.email) || '').toLowerCase();
+  if(authEmail === 'andrews.alyx@site89.org') return securityAliases;
+
+  const selectedName = ((selectedCharacter && selectedCharacter.name) || '').toLowerCase();
+  if(selectedName.includes('alyx') && selectedName.includes('andrews')) return securityAliases;
+
+  return [];
+}
+
+function buildSendAsAddresses(divisions, selectedCharacter, user){
+  const divisionAddresses = (divisions || []).map(div => `${div}.mgmt@site89.org`.toLowerCase());
+  const securityAliases = getSecurityDirectorAliases(selectedCharacter, user);
+  return [...new Set([...divisionAddresses, ...securityAliases])];
+}
+
+function getOwnedAddresses(primaryAddress, sendAsAddresses){
+  const addresses = [primaryAddress, ...(sendAsAddresses || [])]
+    .map(addr => (addr || '').toLowerCase())
+    .filter(Boolean);
+  return new Set(addresses);
 }
 
 // Helper: Validate email format
@@ -228,6 +260,7 @@ document.addEventListener('includesLoaded', () => {
   let emailsUnsubscribe = null;
   let directorDivisions = [];
   let directorSendAddr = '';
+  let sendAsAddresses = [];
   let locallyMarkedRead = new Set();
   let contactsList = new Set();
   let charactersCache = {};
@@ -283,20 +316,24 @@ document.addEventListener('includesLoaded', () => {
   // Update Send As dropdown when compose opens
   function updateSendAsOptions(){
     composeSendAs.innerHTML = '<option value="">Send as personal account</option>';
-    if(directorDivisions && directorDivisions.length > 0){
-      const divisionMap = {
-        'bod': 'Board of Directors (bod.mgmt@site89.org)',
-        'ia': 'Internal Affairs (ia.mgmt@site89.org)',
-        'raisa': 'RAISA (raisa.mgmt@site89.org)',
-        'sd': 'Security Department (sd.mgmt@site89.org)',
-        'scd': 'Scientific Department (scd.mgmt@site89.org)',
-        'mtf': 'Mobile Task Force (mtf.mgmt@site89.org)'
+    if(sendAsAddresses && sendAsAddresses.length > 0){
+      const addressMap = {
+        'bod.mgmt@site89.org': 'Board of Directors (bod.mgmt@site89.org)',
+        'ia.mgmt@site89.org': 'Internal Affairs (ia.mgmt@site89.org)',
+        'raisa.mgmt@site89.org': 'RAISA (raisa.mgmt@site89.org)',
+        'sd.mgmt@site89.org': 'Security Department (sd.mgmt@site89.org)',
+        'scd.mgmt@site89.org': 'Scientific Department (scd.mgmt@site89.org)',
+        'mtf.mgmt@site89.org': 'Mobile Task Force (mtf.mgmt@site89.org)',
+        'sd.cmd.mgmt@site89.org': 'Security Command (sd.cmd.mgmt@site89.org)',
+        'sd.sis.mgmt@site89.org': 'Security Intelligence Service (sd.sis.mgmt@site89.org)',
+        'sd.sdu.mgmt@site89.org': 'Specialized Divisions Unit (sd.sdu.mgmt@site89.org)',
+        'sd.seccont.mgmt@site89.org': 'Security & Containment (sd.seccont.mgmt@site89.org)'
       };
-      directorDivisions.forEach(div => {
+      sendAsAddresses.forEach(addr => {
         const opt = document.createElement('option');
-        const mgmtAddr = div + '.mgmt@site89.org';
-        opt.value = mgmtAddr;
-        opt.textContent = divisionMap[div] || mgmtAddr;
+        const normalized = (addr || '').toLowerCase();
+        opt.value = normalized;
+        opt.textContent = addressMap[normalized] || normalized;
         composeSendAs.appendChild(opt);
       });
     }
@@ -456,8 +493,8 @@ document.addEventListener('includesLoaded', () => {
     
     // Validate director is allowed to send from chosen address
     if(directorSendAddr){
-      const sendCode = directorSendAddr.split('@')[0].replace('.mgmt','').toLowerCase();
-      if(!directorDivisions.includes(sendCode)){
+      const normalizedSendAs = directorSendAddr.toLowerCase();
+      if(!sendAsAddresses.includes(normalizedSendAs)){
       return alert('You do not have permission to send from ' + directorSendAddr);
     }
     }
@@ -556,21 +593,24 @@ document.addEventListener('includesLoaded', () => {
   // Render list depending on folder
   function renderList(){
     const q = globalMailSearch ? (globalMailSearch.value||'').toLowerCase() : '';
+    const ownedAddresses = getOwnedAddresses(myAddress, sendAsAddresses);
     const myAddressLower = myAddress.toLowerCase();
     const list = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
       const senderLower = (m.sender || '').toLowerCase();
-      if (currentFolder === 'inbox') return recipientsLower.includes(myAddressLower) && m.folder !== 'trash' && m.status !== 'draft';
-      if (currentFolder === 'drafts') return m.status === 'draft' && senderLower === myAddressLower;
-      if (currentFolder === 'sent') return senderLower === myAddressLower && m.folder !== 'trash' && m.status !== 'draft';
-      if (currentFolder === 'trash') return m.folder === 'trash' && (senderLower === myAddressLower || recipientsLower.includes(myAddressLower));
+      const isRecipient = recipientsLower.some(r => ownedAddresses.has(r));
+      const isSender = ownedAddresses.has(senderLower);
+      if (currentFolder === 'inbox') return isRecipient && m.folder !== 'trash' && m.status !== 'draft';
+      if (currentFolder === 'drafts') return m.status === 'draft' && isSender;
+      if (currentFolder === 'sent') return isSender && m.folder !== 'trash' && m.status !== 'draft';
+      if (currentFolder === 'trash') return m.folder === 'trash' && (isSender || isRecipient);
       return false;
     }).filter(m => (m.subject||'').toLowerCase().includes(q) || (m.body||'').toLowerCase().includes(q) || (m.sender||'').toLowerCase().includes(q));
 
     // counts and unread badge on navbar
     const inboxMsgs = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
-      return recipientsLower.includes(myAddressLower) && m.folder !== 'trash' && m.status !== 'draft';
+      return recipientsLower.some(r => ownedAddresses.has(r)) && m.folder !== 'trash' && m.status !== 'draft';
     });
     // Count unread: neither m.read nor in locallyMarkedRead
     const unreadCount = inboxMsgs.filter(m => !m.read && !locallyMarkedRead.has(m.id)).length;
@@ -585,12 +625,12 @@ document.addEventListener('includesLoaded', () => {
         navMailBadge.style.display = 'none';
       }
     }
-    document.getElementById('countDrafts').textContent = allMessages.filter(m => m.status === 'draft' && (m.sender || '').toLowerCase() === myAddressLower).length;
-    document.getElementById('countSent').textContent = allMessages.filter(m => (m.sender || '').toLowerCase() === myAddressLower && m.folder !== 'trash').length;
+    document.getElementById('countDrafts').textContent = allMessages.filter(m => m.status === 'draft' && ownedAddresses.has((m.sender || '').toLowerCase())).length;
+    document.getElementById('countSent').textContent = allMessages.filter(m => ownedAddresses.has((m.sender || '').toLowerCase()) && m.folder !== 'trash').length;
     document.getElementById('countTrash').textContent = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
       const senderLower = (m.sender || '').toLowerCase();
-      return m.folder === 'trash' && (senderLower === myAddressLower || recipientsLower.includes(myAddressLower));
+      return m.folder === 'trash' && (ownedAddresses.has(senderLower) || recipientsLower.some(r => ownedAddresses.has(r)));
     }).length;
 
     messagesContainer.innerHTML = '';
@@ -598,7 +638,7 @@ document.addEventListener('includesLoaded', () => {
     // Build all message HTML in correct order using Promise.all to wait for all async operations
     Promise.all(list.map(async (m) => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
-      const isUnread = !m.read && !locallyMarkedRead.has(m.id) && recipientsLower.includes(myAddressLower);
+      const isUnread = !m.read && !locallyMarkedRead.has(m.id) && recipientsLower.some(r => ownedAddresses.has(r));
       const isSelected = selectedMessageId === m.id;
       const className = 'message-item'+ (isUnread ? ' unread' : '') + (isSelected ? ' selected' : '');
       
@@ -760,8 +800,8 @@ document.addEventListener('includesLoaded', () => {
 
     // mark read if I'm recipient and not already read or locally marked (case-insensitive)
     const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
-    const myAddressLower = myAddress.toLowerCase();
-    if (recipientsLower.includes(myAddressLower) && !m.read && !locallyMarkedRead.has(m.id)){
+    const ownedAddresses = getOwnedAddresses(myAddress, sendAsAddresses);
+    if (recipientsLower.some(r => ownedAddresses.has(r)) && !m.read && !locallyMarkedRead.has(m.id)){
       // Immediately add to locally marked set for optimistic UI update
       locallyMarkedRead.add(m.id);
       // Re-render to update UI immediately
@@ -850,13 +890,16 @@ document.addEventListener('includesLoaded', () => {
         const directory = await getEmailDirectory(db);
         myAddress = resolveEmailForCharacter(selected, directory);
         directorDivisions = getDirectorDivisions();
+        sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user);
         updateSendAsOptions();
       } else if (user && user.email){
         myAddress = user.email;
         directorDivisions = [];
+        sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user);
       } else {
         myAddress = '';
         directorDivisions = [];
+        sendAsAddresses = [];
       }
     } catch(err){
       console.error('Failed to resolve character email:', err);
@@ -868,6 +911,7 @@ document.addEventListener('includesLoaded', () => {
         myAddress = user && user.email ? user.email : '';
       }
       directorDivisions = selected ? getDirectorDivisions() : [];
+      sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user);
       updateSendAsOptions();
     }
 
