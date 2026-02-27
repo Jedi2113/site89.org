@@ -6,13 +6,22 @@
       <img src="/assets/img/Site89wide.png" alt="Site-89 Logo" style="height:40px; vertical-align:middle;">
     </a>
 
-    <a href="/departments/">Departments</a>
-
-    <!-- Dropdown for Foundation Archives -->
+    <!-- Departments Dropdown -->
     <div class="nav-dropdown-parent">
-      <a href="#">Foundation Archives <i class="fa-solid fa-caret-down"></i></a>
+      <a href="/departments/">Departments <i class="fa-solid fa-caret-down"></i></a>
       <div class="nav-dropdown-content">
-        <a href="/archives/">Archives Hub</a>
+        <a href="/departments/AD/">Administrative Department</a>
+        <a href="/departments/TSD/">Technical Services Department</a>
+        <a href="/departments/IA/">Internal Affairs</a>
+        <a href="/departments/ScD/">Scientific Department</a>
+        <a href="/departments/SD/">Security Department</a>
+      </div>
+    </div>
+
+    <!-- Foundation Archives Dropdown -->
+    <div class="nav-dropdown-parent">
+      <a href="/archives/">Foundation Archives <i class="fa-solid fa-caret-down"></i></a>
+      <div class="nav-dropdown-content">
         <a href="/personnel-files/">Personnel Files</a>
         <a href="/anomalies/">Anomalies</a>
         <a href="/research-logs/">Research Logs</a>
@@ -22,11 +31,32 @@
       </div>
     </div>
 
-    <a href="/newsletter/">Newsletter</a>
-    <a href="/events/">Events</a>
-    <a href="/forum/">Forum</a>
-    <a href="/guides/">Guides</a>
-    <a href="/about/">About</a>
+    <!-- Community Dropdown -->
+    <div class="nav-dropdown-parent">
+      <a href="/forum/">Community <i class="fa-solid fa-caret-down"></i></a>
+      <div class="nav-dropdown-content">
+        <a href="/forum/">Forum</a>
+        <a href="/events/">Events</a>
+        <a href="/newsletter/">Newsletter</a>
+        <a href="/feedback/">Feedback</a>
+      </div>
+    </div>
+
+    <!-- Resources Dropdown -->
+    <div class="nav-dropdown-parent">
+      <a href="/guides/">Resources <i class="fa-solid fa-caret-down"></i></a>
+      <div class="nav-dropdown-content">
+        <a href="/guides/">All Guides</a>
+        <a href="/guides/newcomer-guide/">Newcomer Guide</a>
+        <a href="/guides/installation-guide/">Installation Guide</a>
+        <a href="/guides/character-guide/">Character Guide</a>
+        <a href="/guides/skins-guide/">Skins Guide</a>
+        <a href="/guides/roleplay-guide/">Roleplay Guide</a>
+        <a href="/status/">Status</a>
+        <a href="/roadmap/">Roadmap</a>
+        <a href="/about/">About</a>
+      </div>
+    </div>
   </div>
 
   <!-- Clocks -->
@@ -50,23 +80,18 @@
 
   <!-- Mobile Accounts Dropdown -->
   <div id="mobileAccountsDropdown" class="mobile-accounts-dropdown hidden" aria-hidden="true">
+    <a href="/bank/" class="mobile-accounts-item">
+      <i class="fa-solid fa-wallet"></i>
+      <span>Bank</span>
+    </a>
     <a href="/accounts/" class="mobile-accounts-item">
       <i class="fa-solid fa-gear"></i>
       <span>Manage Account</span>
-    </a>
-    <a href="/character-select/" class="mobile-accounts-item">
-      <i class="fa-solid fa-masks-theater"></i>
-      <span>Manage Characters</span>
     </a>
     <a href="/orientation/" class="mobile-accounts-item" id="mobileOrientationLink" style="display:none;">
       <i class="fa-solid fa-graduation-cap"></i>
       <span>Orientation</span>
     </a>
-    <div class="mobile-accounts-divider"></div>
-    <button id="mobileThemeToggleBtn" class="mobile-accounts-item theme-toggle">
-      <i class="fa-solid fa-sun" id="mobileThemeIcon"></i>
-      <span id="mobileThemeText">Dark Mode</span>
-    </button>
     <div class="mobile-accounts-divider"></div>
     <button id="mobileLogoutBtn" class="mobile-accounts-item logout-item" style="display:none;">
       <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -79,21 +104,73 @@
   </div>
 
   <div id="mobileMenu" class="mobile-menu hidden" aria-hidden="true">
-    <!-- Navigation links -->
-    <div class="mobile-menu-section">
-      <a href="/departments/">Departments</a>
-      <a href="/archives/">Archives Hub</a>
+    <!-- Quadrant grid view -->
+    <div id="mobileMenuGrid" class="mobile-menu-grid">
+      <button class="mobile-menu-quadrant" data-category="departments">
+        <span>Departments</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <button class="mobile-menu-quadrant" data-category="archives">
+        <span>Foundation Archives</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <button class="mobile-menu-quadrant" data-category="community">
+        <span>Community</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <button class="mobile-menu-quadrant" data-category="resources">
+        <span>Resources</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Fullscreen category view -->
+    <div id="mobileMenuFullscreen" class="mobile-menu-fullscreen hidden">
+      <div class="mobile-fullscreen-header">
+        <button id="mobileMenuBackBtn" class="mobile-back-btn">
+          <i class="fa-solid fa-chevron-left"></i>
+          <span id="mobileFullscreenTitle">Back</span>
+        </button>
+      </div>
+      <div id="mobileFullscreenContent" class="mobile-fullscreen-content">
+        <!-- Content populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen menu category data -->
+  <div id="mobileMenuData" style="display:none;">
+    <div data-category="departments">
+      <a href="/departments/AD/">Administrative Department</a>
+      <a href="/departments/TSD/">Technical Services Department</a> 
+      <a href="/departments/IA/">Internal Affairs</a>
+      <a href="/departments/ScD/">Scientific Department</a>
+      <a href="/departments/SD/">Security Department</a>
+    </div>
+    <div data-category="archives">
       <a href="/personnel-files/">Personnel Files</a>
       <a href="/anomalies/">Anomalies</a>
       <a href="/research-logs/">Research Logs</a>
       <a href="/incident-reports/">Incident Reports</a>
-      <a href="/emails/">Emails</a>
-      <a href="/newsletter/">Newsletter</a>
-      <a href="/events/">Events</a>
-      <a href="/forum/">Forum</a>
+      <a href="/gallery/">Gallery</a>
       <a href="/rules/">Rules & Guidelines</a>
+    </div>
+    <div data-category="community">
+      <a href="/forum/">Forum</a>
+      <a href="/events/">Events</a>
+      <a href="/newsletter/">Newsletter</a>
+      <a href="/feedback/">Feedback</a>
+    </div>
+    <div data-category="resources">
+      <a href="/guides/">All Guides</a>
+      <a href="/guides/newcomer-guide/">Newcomer Guide</a>
+      <a href="/guides/installation-guide/">Installation Guide</a>
+      <a href="/guides/character-guide/">Character Guide</a>
+      <a href="/guides/skins-guide/">Skins Guide</a>
+      <a href="/guides/roleplay-guide/">Roleplay Guide</a>
+      <a href="/status/">Status</a>
+      <a href="/roadmap/">Roadmap</a>
       <a href="/about/">About</a>
-      <a href="/guides/">Guides</a>
     </div>
   </div>
 
@@ -105,47 +182,31 @@
     </div>
 
     <div class="nav-mail-wrapper" style="position:relative;display:flex;align-items:center;gap:10px;">
-      <a href="/bank/" id="navBankBtn" class="nav-mail" title="Bank">
-        <i class="fa-solid fa-wallet"></i>
-      </a>
       <a href="/emails/" id="navMailBtn" class="nav-mail" title="Mail">
         <i class="fa-solid fa-envelope"></i>
         <span id="navMailBadge" style="position:absolute;top:-6px;right:-6px;background:var(--accent-mint);color:#081413;border-radius:50%;width:20px;height:20px;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;line-height:1;min-width:20px;text-align:center;display:none"></span>
       </a>
     </div>
 
+    <!-- Mobile Emails Button (shown on mobile) -->
+    <a href="/emails/" id="mobileMailBtn" class="mobile-mail-btn" title="Mail" style="display:none;">
+      <i class="fa-solid fa-envelope"></i>
+    </a>
+
     <!-- ACCOUNTS BUTTON WITH DROPDOWN -->
     <div class="nav-accounts" id="navAccounts">
-      <button class="nav-accounts-btn" id="navAccountsBtn">
+      <a href="/character-select/" class="nav-accounts-btn" id="navAccountsBtn">
         <i class="fa-solid fa-user"></i>
         <span id="navAccountsText">Login</span>
         <i class="fa-solid fa-chevron-down" style="font-size:0.8rem;"></i>
-      </button>
+      </a>
 
       <!-- Accounts Dropdown -->
       <div class="nav-dropdown-content nav-dropdown-accounts hidden" id="navAccountsDropdown">
-        <a href="/accounts/" class="accounts-dropdown-item">
-          <i class="fa-solid fa-gear"></i>
-          <span>Manage Account</span>
-        </a>
-        <a href="/character-select/" class="accounts-dropdown-item">
-          <i class="fa-solid fa-masks-theater"></i>
-          <span>Manage Characters</span>
-        </a>
-        <a href="/orientation/" class="accounts-dropdown-item" id="orientationLink" style="display:none;">
-          <i class="fa-solid fa-graduation-cap"></i>
-          <span>Orientation</span>
-        </a>
-        <div class="accounts-dropdown-divider"></div>
-        <button id="themeToggleBtn" class="accounts-dropdown-item theme-toggle">
-          <i class="fa-solid fa-sun" id="themeIcon"></i>
-          <span id="themeText">Dark Mode</span>
-        </button>
-        <div class="accounts-dropdown-divider"></div>
-        <button id="logoutBtn" class="accounts-dropdown-item logout-item">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          <span>Logout</span>
-        </button>
+        <a href="/bank/">Bank</a>
+        <a href="/accounts/">Manage Account</a>
+        <a href="/orientation/" id="orientationLink" style="display:none;">Orientation</a>
+        <a href="/login/" id="logoutBtn" class="logout-item" style="display:none;">Logout</a>
       </div>
     </div>
   </div>
@@ -155,16 +216,22 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-  /* Navbar layout */
+  /* Navbar layout - FIXED at top */
   #main-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
-    background-color: var(--bg-soft);
+    background-color: rgba(14, 17, 19, 0.95);
     border-bottom: 1px solid var(--card-border);
-    position: relative;
-    z-index: 100;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
   }
 
   .nav-left, .nav-right {
@@ -216,8 +283,47 @@
     color: var(--accent-mint);
   }
 
+  /* Dropdown animations */
+  @keyframes accentLineIn {
+    from {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+    to {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes dropdownItemIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .nav-dropdown-parent {
     position: relative;
+  }
+
+  /* Invisible bridge to prevent dropdown from disappearing */
+  .nav-dropdown-parent::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: transparent;
+    display: none;
+  }
+
+  .nav-dropdown-parent:hover::after {
+    display: block;
   }
 
   /* Default dropdown style */
@@ -232,6 +338,20 @@
     z-index: 1000;
     padding: 8px 0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  /* Accent line at the top of dropdown */
+  .nav-dropdown-parent > .nav-dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
+    transform-origin: left;
+    animation: accentLineIn 0.25s ease-out forwards;
   }
 
   .nav-dropdown-parent > .nav-dropdown-content a {
@@ -240,22 +360,38 @@
     white-space: nowrap;
     color: var(--text-light);
     text-decoration: none;
+    opacity: 0;
+    animation: dropdownItemIn 0.2s ease-out forwards;
   }
+
+  /* Staggered animation delays for dropdown items (up to 12 items) */
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(1) { animation-delay: 0.25s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(2) { animation-delay: 0.30s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(3) { animation-delay: 0.35s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(4) { animation-delay: 0.40s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(5) { animation-delay: 0.45s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(6) { animation-delay: 0.50s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(7) { animation-delay: 0.55s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(8) { animation-delay: 0.60s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(9) { animation-delay: 0.65s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(10) { animation-delay: 0.70s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(11) { animation-delay: 0.75s; }
+  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(12) { animation-delay: 0.80s; }
 
   .nav-dropdown-parent > .nav-dropdown-content a:hover {
     background: rgba(78, 250, 170, 0.1);
     color: var(--accent-mint);
   }
 
-  /* Archives open on hover */
-  .nav-dropdown-parent:hover > .nav-dropdown-content {
+  /* Archives open on hover - keep open when hovering dropdown too */
+  .nav-dropdown-parent:hover > .nav-dropdown-content,
+  .nav-dropdown-content:hover {
     display: block;
   }
 
   /* LOGIN/ACCOUNTS DROPDOWN FIXES */
   .nav-accounts {
     position: relative;
-    cursor: pointer;
     overflow: visible;
   }
 
@@ -272,6 +408,7 @@
     font-size: 0.95rem;
     transition: all 0.2s ease;
     font-family: var(--font-body);
+    text-decoration: none;
   }
 
   .nav-accounts-btn:hover {
@@ -281,79 +418,96 @@
 
   /* Accounts dropdown specific styling */
   .nav-dropdown-accounts {
-    display: none !important;
+    display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% + 8px);
     right: 0;
     left: auto;
     width: min(320px, calc(100vw - 24px));
     min-width: 240px;
-    margin-top: 8px;
     padding: 0.5rem 0;
     background: var(--bg-card);
     border: 1px solid var(--card-border);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
+    z-index: 1001;
     box-sizing: border-box;
+    overflow: hidden;
   }
 
-  .nav-dropdown-accounts.hidden {
-    display: none !important;
+  /* Invisible bridge to prevent dropdown from disappearing */
+  .nav-accounts::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: transparent;
   }
 
-  .nav-dropdown-accounts:not(.hidden) {
-    display: block !important;
+  /* Accent line at the top of accounts dropdown */
+  .nav-dropdown-accounts::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
+    transform-origin: left;
+    animation: accentLineIn 0.25s ease-out forwards;
   }
 
-  .accounts-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    width: 100%;
-    padding: 0.7rem 1rem;
-    background: none;
-    border: none;
+  /* Style accounts dropdown links same as archives dropdown */
+  .nav-dropdown-accounts a {
+    display: block;
+    padding: 8px 12px;
+    white-space: nowrap;
     color: var(--text-light);
     text-decoration: none;
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: 0.95rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    text-align: left;
+    opacity: 0;
+    animation: dropdownItemIn 0.2s ease-out forwards;
   }
 
-  .accounts-dropdown-item:hover {
-    background-color: rgba(78, 250, 170, 0.1);
+  /* Staggered animation delays */
+  .nav-dropdown-accounts a:nth-child(1) { animation-delay: 0.25s; }
+  .nav-dropdown-accounts a:nth-child(2) { animation-delay: 0.30s; }
+  .nav-dropdown-accounts a:nth-child(3) { animation-delay: 0.35s; }
+  .nav-dropdown-accounts a:nth-child(4) { animation-delay: 0.40s; }
+
+  .nav-dropdown-accounts a:hover {
+    background: rgba(78, 250, 170, 0.1);
     color: var(--accent-mint);
   }
 
-  .accounts-dropdown-item i {
-    width: 1.2rem;
-    text-align: center;
-  }
-
-  .accounts-dropdown-item span {
-    flex: 1;
-  }
-
-  .accounts-dropdown-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 0.3rem 0;
-  }
-
+  /* Logout link styling */
   .logout-item {
-    color: var(--accent-red);
+    color: var(--accent-red) !important;
   }
 
   .logout-item:hover {
     background-color: rgba(176, 0, 0, 0.1) !important;
-    color: #ff6b6b;
+    color: #ff6b6b !important;
   }
 
-  .theme-toggle {
-    position: relative;
+  /* Show on hover - more specific than hidden class on desktop */
+  @media (min-width: 769px) {
+    .nav-accounts:hover .nav-dropdown-accounts,
+    .nav-dropdown-accounts:hover {
+      display: block !important;
+    }
+  }
+
+  /* For mobile, keep the toggle behavior with hidden class */
+  @media (max-width: 768px) {
+    .nav-dropdown-accounts.hidden {
+      display: none !important;
+    }
+
+    .nav-dropdown-accounts:not(.hidden) {
+      display: block !important;
+    }
   }
 
   /* Hide old login styling */
@@ -401,20 +555,28 @@
     bottom: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    padding: 5rem 1rem 2rem 1rem;
+    background: rgba(0, 0, 0, 0.98);
     z-index: 1000;
     flex-direction: column;
-    gap: 0;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     animation: slideDownMenu 0.3s ease-out;
+    overflow: hidden;
+  }
+
+  .mobile-menu-grid, .mobile-menu-fullscreen {
+    flex: 1;
     overflow-y: auto;
   }
 
-  .mobile-menu-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
+  @keyframes slideDownMenu {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .mobile-menu-top {
@@ -456,15 +618,22 @@
     transform: translateX(4px);
   }
 
-  @keyframes slideDownMenu {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* Hide menu data */
+  #mobileMenuData {
+    display: none !important;
+  }
+
+  .mobile-mail-btn {
+    display: none;
+    color: var(--text-light);
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    order: 9;
+  }
+
+  .mobile-mail-btn:hover {
+    color: var(--accent-mint);
   }
 
   .mobile-menu a {
@@ -483,6 +652,234 @@
     text-align: left;
     font-weight: 500;
     cursor: pointer;
+  }
+
+  /* Mobile Menu Quadrant Grid */
+  .mobile-menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 2rem 1rem;
+    height: fit-content;
+    padding-top: 5rem;
+  }
+
+  .mobile-menu-grid.hidden {
+    display: none !important;
+  }
+
+  /* Mobile Menu Quadrant Grid - Vertical fullscreen quadrants */
+  .mobile-menu-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    height: 100%;
+    padding-top: 5rem;
+  }
+
+  .mobile-menu-grid.hidden {
+    display: none !important;
+  }
+
+  .mobile-menu-quadrant {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0;
+    padding: 2.5rem 1.5rem;
+    color: var(--text-light);
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+    letter-spacing: 0.3px;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mobile-menu-quadrant::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .mobile-menu-quadrant:hover::before {
+    opacity: 0.5;
+  }
+
+  .mobile-menu-quadrant:hover {
+    color: var(--accent-mint);
+  }
+
+  .mobile-menu-quadrant i {
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    flex-shrink: 0;
+    order: 2;
+  }
+
+  .mobile-menu-quadrant:hover i {
+    color: var(--accent-mint);
+  }
+
+  .mobile-menu-quadrant span {
+    order: 1;
+    flex: 1;
+  }
+
+  /* Mobile Menu Fullscreen View */
+  .mobile-menu-fullscreen {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .mobile-menu-fullscreen.hidden {
+    display: none !important;
+  }
+
+  .mobile-menu-fullscreen:not(.hidden) {
+    display: flex !important;
+  }
+
+  .mobile-fullscreen-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .mobile-fullscreen-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
+    animation: accentLineIn 0.3s ease-out forwards;
+  }
+
+  .mobile-back-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.5rem 0;
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mobile-back-btn:hover {
+    color: var(--accent-mint);
+  }
+
+  .mobile-fullscreen-content {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-fullscreen-content a {
+    color: var(--text-light);
+    padding: 1.8rem 1.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    font-weight: 400;
+    cursor: pointer;
+    opacity: 0;
+    animation: dropdownItemIn 0.2s ease-out forwards;
+  }
+
+  /* Staggered animation delays for fullscreen items */
+  .mobile-fullscreen-content a:nth-child(1) { animation-delay: 0.15s; }
+  .mobile-fullscreen-content a:nth-child(2) { animation-delay: 0.20s; }
+  .mobile-fullscreen-content a:nth-child(3) { animation-delay: 0.25s; }
+  .mobile-fullscreen-content a:nth-child(4) { animation-delay: 0.30s; }
+  .mobile-fullscreen-content a:nth-child(5) { animation-delay: 0.35s; }
+  .mobile-fullscreen-content a:nth-child(6) { animation-delay: 0.40s; }
+  .mobile-fullscreen-content a:nth-child(7) { animation-delay: 0.45s; }
+  .mobile-fullscreen-content a:nth-child(8) { animation-delay: 0.50s; }
+  .mobile-fullscreen-content a:nth-child(9) { animation-delay: 0.55s; }
+  .mobile-fullscreen-content a:nth-child(10) { animation-delay: 0.60s; }
+
+  .mobile-fullscreen-content a:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-fullscreen-content a:hover {
+    color: var(--accent-mint);
+    padding-left: 2.2rem;
+  }
+
+  /* Hide old accordion styles */
+  .mobile-accordion-item {
+    display: none !important;
+  }
+
+  .mobile-menu-direct-link {
+    display: none !important;
+  }
+
+  .mobile-menu-direct-link {
+    color: var(--text-light);
+    padding: 2rem 1.6rem;
+    border-radius: 0;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 1.3rem;
+    background: transparent;
+    border: none;
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    font-weight: 700;
+    cursor: pointer;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: none;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .mobile-menu-direct-link:hover {
+    color: var(--accent-mint);
+    border-color: transparent;
+    background: transparent;
+    transform: none;
+    box-shadow: none;
   }
 
   .mobile-menu-section a {
@@ -553,17 +950,13 @@
     border-color: #D0D0D0;
   }
 
-  html[data-theme="light"] .accounts-dropdown-item {
+  html[data-theme="light"] .nav-dropdown-accounts a {
     color: #1A1A1A;
   }
 
-  html[data-theme="light"] .accounts-dropdown-item:hover {
+  html[data-theme="light"] .nav-dropdown-accounts a:hover {
     background-color: rgba(0, 163, 137, 0.08);
     color: var(--accent-teal);
-  }
-
-  html[data-theme="light"] .accounts-dropdown-divider {
-    background: #D0D0D0;
   }
 
   html[data-theme="light"] .mobile-menu {
@@ -725,12 +1118,37 @@
       order: 9;
     }
 
+    .mobile-mail-btn {
+      display: block !important;
+    }
+
     .mobile-menu.hidden {
       display: none !important;
     }
 
     .mobile-menu:not(.hidden) {
       display: flex !important;
+    }
+
+    .mobile-menu {
+      padding-top: 5rem;
+    }
+
+    .mobile-menu-grid {
+      gap: 0;
+      padding: 0;
+      padding-top: 5rem;
+    }
+
+    .mobile-menu-quadrant {
+      padding: 2.5rem 1.5rem;
+      font-size: 1.25rem;
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mobile-menu-quadrant:last-child {
+      border-bottom: none;
     }
   }
 
@@ -750,17 +1168,35 @@
       font-size: 1rem;
     }
 
-    .mobile-menu {
-      padding: 3.5rem 0.8rem 1rem 0.8rem;
-    }
-
-    .mobile-menu a {
-      padding: 0.9rem 1rem;
+    .mobile-mail-btn {
+      padding: 0.25rem 0.5rem;
       font-size: 1rem;
     }
 
-    .mobile-menu a:hover {
-      padding-left: 1.4rem;
+    .mobile-menu {
+      padding-top: 5rem;
+    }
+
+    .mobile-menu-grid {
+      gap: 0;
+      padding: 0;
+      padding-top: 5rem;
+    }
+
+    .mobile-menu-quadrant {
+      padding: 2rem 1rem;
+      font-size: 1.1rem;
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mobile-fullscreen-content a {
+      padding: 1.5rem 1rem;
+      font-size: 1rem;
+    }
+
+    .mobile-fullscreen-content a:hover {
+      padding-left: 1.5rem;
     }
   }
 </style>
@@ -771,59 +1207,11 @@
   // Initialize theme on load
   document.addEventListener('DOMContentLoaded', () => {
     ThemeManager.init();
-    updateThemeUI();
   });
 
-  // Update UI to reflect current theme
-  function updateThemeUI() {
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-    if (!themeIcon || !themeText) return;
-
-    if (ThemeManager.isDark()) {
-      themeIcon.className = 'fa-solid fa-moon';
-      themeText.textContent = 'Light Mode';
-    } else {
-      themeIcon.className = 'fa-solid fa-sun';
-      themeText.textContent = 'Dark Mode';
-    }
-  }
-
-  // Theme toggle button
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      ThemeManager.toggle();
-      updateThemeUI();
-    });
-  }
-
-  // Listen for theme changes from other tabs/windows
-  window.addEventListener('themechange', () => {
-    updateThemeUI();
-  });
-
-  // Accounts dropdown - handle closing and reposition on resize
-  // Note: Click handler and positioning is in auth.js
-  const navAccounts = document.getElementById('navAccounts');
-  const navAccountsDropdown = document.getElementById('navAccountsDropdown');
-
-  if (navAccountsDropdown) {
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (navAccounts && !navAccounts.contains(e.target)) {
-        navAccountsDropdown.classList.add('hidden');
-      }
-    });
-
-    // Close dropdown when clicking a link inside it
-    navAccountsDropdown.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        navAccountsDropdown.classList.add('hidden');
-      });
-    });
-  }
+  // Accounts dropdown - now hover-based on desktop
+  // No special handling needed for desktop, CSS handles it
+  // Mobile click behavior still works with the hidden class toggle
 
 
   // Mobile accounts dropdown toggle
@@ -854,6 +1242,13 @@
   // Mobile menu toggle
   const navToggle = document.getElementById('navToggle');
   const mobileMenu = document.getElementById('mobileMenu');
+  const mobileMenuGrid = document.getElementById('mobileMenuGrid');
+  const mobileMenuFullscreen = document.getElementById('mobileMenuFullscreen');
+  const mobileBackBtn = document.getElementById('mobileMenuBackBtn');
+  const mobileFullscreenContent = document.getElementById('mobileFullscreenContent');
+  const mobileFullscreenTitle = document.getElementById('mobileFullscreenTitle');
+  const mobileMenuData = document.getElementById('mobileMenuData');
+
   if (navToggle && mobileMenu) {
     navToggle.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -861,6 +1256,10 @@
       const expanded = navToggle.getAttribute('aria-expanded') === 'true';
       navToggle.setAttribute('aria-expanded', (!expanded).toString());
       mobileMenu.setAttribute('aria-hidden', (!expanded).toString());
+      
+      // Reset to grid view
+      mobileMenuGrid.classList.remove('hidden');
+      mobileMenuFullscreen.classList.add('hidden');
       
       // Prevent scrolling when menu is open
       if (!expanded) {
@@ -880,6 +1279,56 @@
       }
     });
   }
+
+  // Mobile quadrant menu handlers
+  const quadrantButtons = document.querySelectorAll('.mobile-menu-quadrant');
+  quadrantButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const category = btn.getAttribute('data-category');
+      const categoryData = mobileMenuData.querySelector(`[data-category="${category}"]`);
+      
+      // Populate fullscreen content
+      mobileFullscreenContent.innerHTML = '';
+      mobileFullscreenTitle.textContent = btn.querySelector('span').textContent;
+      
+      if (categoryData) {
+        const links = categoryData.querySelectorAll('a');
+        links.forEach(link => {
+          const newLink = link.cloneNode(true);
+          mobileFullscreenContent.appendChild(newLink);
+        });
+      }
+      
+      // Switch to fullscreen view
+      mobileMenuGrid.classList.add('hidden');
+      mobileMenuFullscreen.classList.remove('hidden');
+    });
+  });
+
+  // Mobile back button handler
+  if (mobileBackBtn) {
+    mobileBackBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mobileMenuGrid.classList.remove('hidden');
+      mobileMenuFullscreen.classList.add('hidden');
+    });
+  }
+
+  // Close fullscreen when clicking a link
+  mobileFullscreenContent.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') {
+      // Navigation will happen naturally
+      setTimeout(() => {
+        mobileMenu.classList.add('hidden');
+        navToggle.setAttribute('aria-expanded', 'false');
+        mobileMenu.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        mobileMenuGrid.classList.remove('hidden');
+        mobileMenuFullscreen.classList.add('hidden');
+      }, 100);
+    }
+  });
 
   // Handle mobile logout button
   const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
@@ -907,30 +1356,6 @@
         console.error('Logout error:', err);
       }
     });
-  }
-
-  // Handle mobile theme toggle
-  const mobileThemeToggleBtn = document.getElementById('mobileThemeToggleBtn');
-  if (mobileThemeToggleBtn) {
-    mobileThemeToggleBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      ThemeManager.toggle();
-      updateMobileThemeUI();
-    });
-  }
-
-  function updateMobileThemeUI() {
-    const themeIcon = document.getElementById('mobileThemeIcon');
-    const themeText = document.getElementById('mobileThemeText');
-    if (!themeIcon || !themeText) return;
-
-    if (ThemeManager.isDark()) {
-      themeIcon.className = 'fa-solid fa-moon';
-      themeText.textContent = 'Light Mode';
-    } else {
-      themeIcon.className = 'fa-solid fa-sun';
-      themeText.textContent = 'Dark Mode';
-    }
   }
 
   // Update mobile auth UI based on login state
@@ -1021,15 +1446,27 @@
 
   onAuthStateChanged(auth, async (user) => {
     const orientationLink = document.getElementById("orientationLink");
-    if (user && orientationLink) {
-      try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().needsOrientation === true) {
-          orientationLink.style.display = "block";
+    const logoutBtn = document.getElementById("logoutBtn");
+    
+    if (user) {
+      // User is logged in - show logout button
+      if (logoutBtn) logoutBtn.style.display = "block";
+      
+      // Check if user needs orientation
+      if (orientationLink) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists() && userDoc.data().needsOrientation === true) {
+            orientationLink.style.display = "block";
+          }
+        } catch (err) {
+          console.error("Error checking orientation status:", err);
         }
-      } catch (err) {
-        console.error("Error checking orientation status:", err);
       }
+    } else {
+      // User is not logged in - hide logout button
+      if (logoutBtn) logoutBtn.style.display = "none";
+      if (orientationLink) orientationLink.style.display = "none";
     }
   });
 </script>

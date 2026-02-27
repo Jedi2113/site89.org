@@ -74,29 +74,16 @@ document.addEventListener("includesLoaded", () => {
       }
     };
 
-    // Update button behavior based on login status
+    // Update button href based on login status
     let navAccountsBtn = document.getElementById("navAccountsBtn");
     if (navAccountsBtn) {
-      // Remove previous click handlers by cloning the element
-      const newBtn = navAccountsBtn.cloneNode(true);
-      navAccountsBtn.parentNode.replaceChild(newBtn, navAccountsBtn);
-      navAccountsBtn = newBtn;
-      
-      navAccountsBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (isLoggedIn) {
-          // Show dropdown for logged-in users
-          if (navAccountsDropdown) {
-            navAccountsDropdown.classList.toggle('hidden');
-            clampAccountsDropdown();
-          }
-        } else {
-          // Navigate to login for non-logged-in users
-          window.location.href = '/login/';
-        }
-      });
+      if (isLoggedIn) {
+        // Link to character select for logged-in users
+        navAccountsBtn.href = '/character-select/';
+      } else {
+        // Link to login for non-logged-in users
+        navAccountsBtn.href = '/login/';
+      }
     }
 
     window.addEventListener('resize', clampAccountsDropdown);
