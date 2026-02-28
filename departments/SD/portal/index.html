@@ -7,8 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/main.css">
   <link rel="stylesheet" href="/assets/css/acs.css">
-  <!-- TinyMCE -->
-  <script src="https://cdn.tiny.cloud/1/wgqechbx2jopsbvntv872129bj4qw3wbxsvy35z27edgkqz4/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
   <style>
     .portal-header { 
       background: linear-gradient(135deg, rgba(78,250,170,0.1) 0%, rgba(78,250,170,0.02) 100%); 
@@ -50,105 +48,6 @@
       padding-bottom:0.5rem;
     }
 
-    .create-report-form {
-      background:rgba(78,250,170,0.02);
-      padding:1.25rem;
-      border-radius:6px;
-      border:1px solid rgba(78,250,170,0.1);
-      margin-bottom:1.5rem;
-    }
-
-    .form-group {
-      margin-bottom:1rem;
-    }
-    .form-group label {
-      display:block;
-      color:var(--accent-teal);
-      font-weight:500;
-      margin-bottom:0.4rem;
-      font-size:0.95rem;
-    }
-    .form-group input {
-      width:100%;
-      max-width:400px;
-      padding:0.6rem;
-      background:var(--bg-dark);
-      border:1px solid rgba(78,250,170,0.2);
-      border-radius:4px;
-      color:var(--text-light);
-      font-family:var(--font-mono);
-      font-size:0.95rem;
-    }
-    .form-group input:focus {
-      outline:none;
-      border-color:var(--accent-mint);
-      box-shadow:0 0 0 2px rgba(78,250,170,0.1);
-    }
-
-    .btn-create {
-      background:var(--accent-mint);
-      color:var(--bg-dark);
-      padding:0.7rem 1.5rem;
-      border:none;
-      border-radius:6px;
-      font-weight:600;
-      cursor:pointer;
-      transition:all 0.2s;
-      font-size:1rem;
-    }
-    .btn-create:hover {
-      background:var(--accent-teal);
-      transform:translateY(-2px);
-      box-shadow:0 4px 12px rgba(78,250,170,0.3);
-    }
-
-    .format-info {
-      background:rgba(78,250,170,0.05);
-      padding:1rem;
-      border-radius:6px;
-      border-left:3px solid var(--accent-teal);
-      margin-top:1rem;
-      font-size:0.9rem;
-    }
-    .format-info code {
-      background:rgba(78,250,170,0.1);
-      padding:0.2rem 0.5rem;
-      border-radius:3px;
-      font-family:var(--font-mono);
-      color:var(--accent-mint);
-    }
-
-    .reports-table {
-      width:100%;
-      border-collapse:collapse;
-      margin-top:1rem;
-    }
-    .reports-table thead {
-      background:rgba(78,250,170,0.05);
-    }
-    .reports-table th {
-      padding:0.75rem;
-      text-align:left;
-      color:var(--accent-teal);
-      font-weight:600;
-      border-bottom:2px solid rgba(78,250,170,0.2);
-    }
-    .reports-table td {
-      padding:0.75rem;
-      color:var(--text-light);
-      border-bottom:1px solid rgba(78,250,170,0.05);
-    }
-    .reports-table tbody tr:hover {
-      background:rgba(78,250,170,0.02);
-    }
-    .reports-table a {
-      color:var(--accent-mint);
-      text-decoration:none;
-      font-family:var(--font-mono);
-    }
-    .reports-table a:hover {
-      text-decoration:underline;
-    }
 
     .access-notice {
       background:rgba(255,200,0,0.05);
@@ -162,57 +61,9 @@
       color:#ffc800;
     }
 
-    /* Report Modal */
-    .report-modal {
-      display:none;
-      position:fixed;
-      inset:0;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,0.6);
-      z-index:1800;
-    }
-    .report-modal[aria-hidden="false"] {
-      display:flex;
-    }
-    .report-modal .modal-box {
-      background:var(--bg-card);
-      padding:1.5rem;
-      border-radius:10px;
-      max-width:900px;
-      width:96%;
-      max-height:90vh;
-      overflow-y:auto;
-      border:1px solid rgba(78,250,170,0.1);
-    }
-
-    /* View Modal */
-    .view-modal {
-      display:none;
-      position:fixed;
-      inset:0;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,0.6);
-      z-index:1800;
-    }
-    .view-modal[aria-hidden="false"] {
-      display:flex;
-    }
-    .view-modal .modal-box {
-      background:var(--bg-card);
-      padding:1.5rem;
-      border-radius:10px;
-      max-width:1100px;
-      width:96%;
-      max-height:90vh;
-      overflow-y:auto;
-      border:1px solid rgba(78,250,170,0.1);
-    }
-
     @media (max-width:768px) {
-      .reports-table { font-size:0.85rem; }
-      .reports-table th, .reports-table td { padding:0.5rem; }
+      .portal-header { padding:1.5rem 1rem; }
+      .portal-header h1 { font-size:1.5rem; }
     }
   </style>
 </head>
@@ -230,95 +81,24 @@
       Checking access credentials...
     </div>
 
-    <!-- Create New Incident Report -->
+    <!-- Incident Reports Link -->
     <div class="portal-section" id="portalContent" style="display:none;">
       <h2>Incident Reports</h2>
-      
-      <div style="margin-bottom:1.5rem;">
-        <button class="btn-create" id="newReportBtn">+ Create New Report</button>
-        
-        <div class="format-info" style="margin-top:1rem;">
-          <strong>Report ID Format:</strong> <code>IR-[MONTH].[DAY].[YEAR]-[LAST 3 OF YOUR PERSONNEL ID #]</code><br>
-          <strong>Example:</strong> <code>IR-07.18.25-322</code>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Reports -->
-    <div class="portal-section" style="display:none;" data-requires-access="true">
-      <h2>Recent Incident Reports</h2>
-      
-      <table class="reports-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Report ID</th>
-            <th>Date Created</th>
-          </tr>
-        </thead>
-        <tbody id="reportsTableBody">
-          <tr>
-            <td colspan="3" style="text-align:center; padding:1rem; color:var(--text-light); opacity:0.8;">Loading...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Create Report Modal -->
-    <div id="createReportModal" class="report-modal" aria-hidden="true">
-      <div class="modal-box">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-          <h2 style="margin:0;">Create New Incident Report</h2>
-          <button id="closeCreateModal" class="btn-link" style="font-size:1.5rem;">✕</button>
-        </div>
-        
-        <form id="createReportForm">
-          <div class="form-group">
-            <label for="reportIdInput">Report ID</label>
-            <input type="text" id="reportIdInput" placeholder="IR-MM.DD.YY-###" required />
-          </div>
-          
-          <div class="form-group">
-            <label for="reportTitle">Title/Summary</label>
-            <input type="text" id="reportTitle" placeholder="Brief description of incident" required />
-          </div>
-          
-          <div class="form-group">
-            <label for="reportContent">Report Content</label>
-            <textarea id="reportContent" style="width:100%; min-height:400px;"></textarea>
-          </div>
-          
-          <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-            <button type="submit" class="btn-create">Submit Report</button>
-            <button type="button" id="cancelCreateReport" class="btn-secondary">Cancel</button>
-          </div>
-          <p id="reportFeedback" style="margin-top:0.5rem; color:var(--accent-mint);"></p>
-        </form>
-      </div>
-    </div>
-
-    <!-- View Report Modal -->
-    <div id="viewReportModal" class="view-modal" aria-hidden="true">
-      <div class="modal-box">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-          <h2 id="viewReportTitle" style="margin:0;">Report Title</h2>
-          <button id="closeViewModal" class="btn-link" style="font-size:1.5rem;">✕</button>
-        </div>
-        <div id="viewReportMeta" style="color:var(--text-light);opacity:0.9;margin-bottom:1rem;"></div>
-        <div id="viewReportBody" style="line-height:1.6;"></div>
-      </div>
+      <p style="color:var(--text-light); margin-bottom:1rem;">Incident reports are managed through the site-wide system to ensure consistency and accountability across all departments.</p>
+      <a href="/incident-reports/" class="btn-primary">Access Incident Reports →</a>
     </div>
 
     <!-- Quick Links -->
     <div class="portal-section" style="display:none;" data-requires-access="true">
       <h2>Quick Access</h2>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;">
-        <a href="#" class="btn-primary" style="text-align:center;">Security Protocols</a>
-        <a href="#" class="btn-primary" style="text-align:center;">Breach Procedures</a>
-        <a href="#" class="btn-primary" style="text-align:center;">Duty Roster</a>
-        <a href="#" class="btn-primary" style="text-align:center;">Equipment Request</a>
-        <a href="#" class="btn-primary" style="text-align:center;">Training Materials</a>
-        <a href="#" class="btn-primary" style="text-align:center;">Contact Command</a>
+        <a href="/departments/SD/portal/security-protocols/" class="btn-primary" style="text-align:center;">Security Protocols</a>
+        <a href="https://docs.google.com/spreadsheets/d/1jWTDykjUJueYm2g2uUYekj6ohSWoFA4RowCxs9zMj5Q/edit?usp=sharing" class="btn-primary" style="text-align:center;">Duty Roster</a>
+        <a href="https://forms.gle/1LJ7R71kjuwB2RKM7" class="btn-primary" style="text-align:center;">Equipment Request</a>
+        <a href="https://forms.gle/oePQtEVbHcwWT3ek7" class="btn-primary" style="text-align:center;">Warrant Request</a>
+        <a href="https://forms.gle/XW9H1F9oJaERgXgb7" class="btn-primary" style="text-align:center;">Transfer Request</a>
+        <a href="#" class="btn-primary" style="text-align:center;">Criminal Records</a>
+        <a href="#" class="btn-primary" style="text-align:center;">Arrest Reports</a>
       </div>
     </div>
 
@@ -335,8 +115,8 @@
           <code style="color:var(--accent-teal); font-family:var(--font-mono);">sd.sis.mgmt@site89.org</code>
         </li>
         <li style="margin-bottom:0.75rem;">
-          <strong style="color:var(--accent-mint);">Specialized Divisions Unit:</strong> 
-          <code style="color:var(--accent-teal); font-family:var(--font-mono);">sd.sdu.mgmt@site89.org</code>
+          <strong style="color:var(--accent-mint);">Advanced Tactical Response Administration:</strong> 
+          <code style="color:var(--accent-teal); font-family:var(--font-mono);">sd.atra.mgmt@site89.org</code>
         </li>
         <li style="margin-bottom:0.75rem;">
           <strong style="color:var(--accent-mint);">Security & Containment:</strong> 
@@ -356,10 +136,9 @@
   <script type="module">
     import { auth, app } from "/assets/js/auth.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
     const db = getFirestore(app);
-    let editorInstance = null;
 
     function getSelectedCharacter(){
       try { return JSON.parse(localStorage.getItem('selectedCharacter')); } catch(e){ return null; }
@@ -394,179 +173,10 @@
         allSections.forEach(section => {
           section.style.display = '';
         });
-        
-        // Initialize incident reports functionality
-        initIncidentReports();
       }catch(err){
         window.location.replace('/403/');
         console.error('portal access error', err);
       }
-    }
-
-    // Initialize incident reports
-    function initIncidentReports(){
-      const newReportBtn = document.getElementById('newReportBtn');
-      const createModal = document.getElementById('createReportModal');
-      const closeCreateModal = document.getElementById('closeCreateModal');
-      const cancelCreateReport = document.getElementById('cancelCreateReport');
-      const createForm = document.getElementById('createReportForm');
-      const reportFeedback = document.getElementById('reportFeedback');
-      const viewModal = document.getElementById('viewReportModal');
-      const closeViewModal = document.getElementById('closeViewModal');
-      const viewReportTitle = document.getElementById('viewReportTitle');
-      const viewReportMeta = document.getElementById('viewReportMeta');
-      const viewReportBody = document.getElementById('viewReportBody');
-
-      // Open create modal
-      if(newReportBtn){
-        newReportBtn.addEventListener('click', () => {
-          createModal.setAttribute('aria-hidden', 'false');
-          document.getElementById('reportIdInput').focus();
-          
-          // Initialize TinyMCE
-          if(!editorInstance){
-            tinymce.init({
-              selector: '#reportContent',
-              height: 400,
-              menubar: false,
-              plugins: 'lists link table code',
-              toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link table | code',
-              skin: 'oxide-dark',
-              content_css: 'dark',
-              setup: (editor) => { editorInstance = editor; }
-            });
-          }
-        });
-      }
-
-      // Close create modal
-      const closeCreate = () => {
-        createModal.setAttribute('aria-hidden', 'true');
-        reportFeedback.textContent = '';
-        if(editorInstance) { editorInstance.remove(); editorInstance = null; }
-      };
-      if(closeCreateModal) closeCreateModal.addEventListener('click', closeCreate);
-      if(cancelCreateReport) cancelCreateReport.addEventListener('click', closeCreate);
-
-      // Submit report
-      if(createForm){
-        createForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          reportFeedback.textContent = '';
-          
-          if(!auth.currentUser){ 
-            reportFeedback.style.color = 'var(--accent-red)';
-            reportFeedback.textContent = 'You must be signed in.'; 
-            return; 
-          }
-
-          const reportId = document.getElementById('reportIdInput').value.trim();
-          const title = document.getElementById('reportTitle').value.trim();
-          const content = editorInstance ? editorInstance.getContent() : document.getElementById('reportContent').value;
-
-          // Validate format
-          const pattern = /^IR-\d{2}\.\d{2}\.\d{2}-\d{3}$/;
-          if (!pattern.test(reportId)) {
-            reportFeedback.style.color = 'var(--accent-red)';
-            reportFeedback.textContent = 'Invalid format. Use: IR-MM.DD.YY-###';
-            return;
-          }
-
-          if(!title || !content){
-            reportFeedback.style.color = 'var(--accent-red)';
-            reportFeedback.textContent = 'Title and content required.';
-            return;
-          }
-
-          try{
-            const ch = getSelectedCharacter();
-            const author = ch ? (ch.name || auth.currentUser.email) : auth.currentUser.email;
-            const authorPid = ch ? (ch.pid || '') : '';
-
-            await addDoc(collection(db, 'incidentReports'), {
-              reportId,
-              title,
-              content,
-              author,
-              authorPid,
-              department: ch ? ch.department || '' : '',
-              createdAt: serverTimestamp(),
-              createdByUid: auth.currentUser.uid
-            });
-
-            reportFeedback.style.color = 'var(--accent-mint)';
-            reportFeedback.textContent = 'Report submitted successfully.';
-            createForm.reset();
-            if(editorInstance) { editorInstance.setContent(''); }
-            
-            setTimeout(() => {
-              closeCreate();
-            }, 1500);
-          } catch(err){
-            reportFeedback.style.color = 'var(--accent-red)';
-            reportFeedback.textContent = 'Error: ' + err.message;
-          }
-        });
-      }
-
-      // View report functions
-      function openViewReport(report){
-        viewReportTitle.textContent = report.reportId + ': ' + (report.title || 'Untitled');
-        viewReportMeta.textContent = `${report.author || 'Unknown'} • ${report.department || ''} • ${formatDate(report.createdAt)}`;
-        viewReportBody.innerHTML = report.content || '<em>No content</em>';
-        viewModal.setAttribute('aria-hidden', 'false');
-      }
-
-      function closeView(){
-        viewModal.setAttribute('aria-hidden', 'true');
-      }
-
-      if(closeViewModal) closeViewModal.addEventListener('click', closeView);
-      if(viewModal) viewModal.addEventListener('click', (e) => {
-        if(e.target === viewModal) closeView();
-      });
-
-      // Load reports
-      const tableBody = document.getElementById('reportsTableBody');
-      const q = query(collection(db, 'incidentReports'), orderBy('createdAt', 'desc'));
-      
-      onSnapshot(q, (snap) => {
-        const reports = [];
-        snap.forEach(doc => reports.push({ id: doc.id, ...doc.data() }));
-        
-        if(reports.length === 0){
-          tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--text-light);opacity:0.8;">No reports yet.</td></tr>';
-          return;
-        }
-
-        tableBody.innerHTML = '';
-        reports.forEach((report, idx) => {
-          const row = document.createElement('tr');
-          
-          const numCell = document.createElement('td');
-          numCell.textContent = idx + 1;
-          
-          const idCell = document.createElement('td');
-          const link = document.createElement('a');
-          link.href = '#';
-          link.textContent = report.reportId || 'Unknown';
-          link.addEventListener('click', (e) => {
-            e.preventDefault();
-            openViewReport(report);
-          });
-          idCell.appendChild(link);
-          
-          const dateCell = document.createElement('td');
-          dateCell.textContent = formatDate(report.createdAt);
-          
-          row.appendChild(numCell);
-          row.appendChild(idCell);
-          row.appendChild(dateCell);
-          tableBody.appendChild(row);
-        });
-      }, (err) => {
-        tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--accent-red);">Error: ' + err.message + '</td></tr>';
-      });
     }
 
     // Check if user is logged in first

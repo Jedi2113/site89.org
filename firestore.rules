@@ -134,12 +134,16 @@ service cloud.firestore {
       // Allow update if:
       // - User is the sender (can update folder, status, etc.)
       // - OR user is updating ONLY the 'read' field (recipients marking as read)
+      // - OR user is updating ONLY the 'deletedBy' array (soft delete for recipient view)
+      //   Recipients can add themselves to this array to hide emails from their view
       allow update: if request.auth != null && (
         resource.data.senderEmail == request.auth.token.email ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']))
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedBy']) && 
+         request.auth.token.email in resource.data.recipients)
       );
 
-      // Allow delete if user is the sender
+      // Allow delete if user is the sender only
       allow delete: if request.auth != null && resource.data.senderEmail == request.auth.token.email;
     }
 
@@ -205,11 +209,11 @@ service cloud.firestore {
       );
     }
 
-    // Events - IO personnel and Directors can manage
+    // Events - Authenticated users can create/manage their own events, AD/IO can manage all
     match /events/{eventId} {
       allow read: if true;
+      // Allow any authenticated user to create events (frontend enforces clearance checks)
       allow create: if request.auth != null
-        && (isADIOPersonnel() || isAdmin())
         && request.resource.data.createdByUid == request.auth.uid
         && request.resource.data.title is string
         && request.resource.data.start is timestamp
@@ -219,7 +223,12 @@ service cloud.firestore {
         && request.resource.data.departments is list
         && request.resource.data.manager is string
         && request.resource.data.banner is string;
-      allow update, delete: if request.auth != null && (isADIOPersonnel() || isAdmin());
+      // Allow updates if: user created the event, OR user is AD/IO personnel, OR user is admin
+      allow update, delete: if request.auth != null && (
+        resource.data.createdByUid == request.auth.uid ||
+        isADIOPersonnel() || 
+        isAdmin()
+      );
 
       match /rsvps/{rsvpId} {
         allow read: if true;

@@ -25,7 +25,7 @@
 
   <section class="page-hero">
     <div class="hero-title">Skins Guide</div>
-    <div class="hero-sub">Setting skins, using HD skins, and the /setskin command.</div>
+    <div class="hero-sub">Upload skins, use HD skins, and the /setskin command.</div>
   </section>
 
   <section class="content guide-content">
@@ -34,31 +34,54 @@
     <p>When roleplaying on the server, you will find yourself changing skins frequently. To simplify this, we provide a mod that lets you change your skin with a URL.</p>
 
     <div class="note">
-      To use it in-game, type: <code>/setskin [sekwah url]</code>
+      To use it in-game, type: <code>/setskin [image url]</code>
+    </div>
+
+    <h2>» Uploading Your Skin «</h2>
+    <p>Site-89 provides a dedicated image hosting service for all your skin needs. Simply upload your skin file and you'll receive a permanent URL that you can use with the <code>/setskin</code> command.</p>
+
+    <h3>Steps to Upload Your Skin</h3>
+    <ol>
+      <li>Visit the <a href="/uploads/" style="color: var(--accent-mint); font-weight: 600;">Site-89 Image Uploads page</a></li>
+      <li>Log in with your account if you haven't already</li>
+      <li>Drag and drop your skin file or click to browse</li>
+      <li>Click "Upload to Server" and wait for the upload to complete</li>
+      <li>Copy the URL provided after upload</li>
+      <li>Use <code>/setskin [your url]</code> in-game</li>
+    </ol>
+
+    <div class="note">
+      <strong>Tip:</strong> The uploads page supports PNG, JPEG, WebP, GIF, BMP, and SVG files up to 10MB. Your skin images are stored permanently on Site-89 servers.
     </div>
 
     <h2>» HD skins and why we use them «</h2>
-    <p>The only image hosting/sharing site that is usable is Imgur through the Sekwah proxy. When uploading a skin to Imgur, make sure to copy the image URL (not the album URL) — right-click the image and choose "Copy image address".</p>
+    <p>The server supports both standard 64x64 skins and high-resolution skins (128x128, 256x256, 512x512, or even 1024x1024). Higher resolution lets us include small, high-detail insignias and logos that aren't possible on standard resolution skins, such as custom Security Department uniforms.</p>
 
-    <p>Then, go to the Sekwah Reskin Proxy, paste the Imgur image address, and press "Modify and Copy URL." Use the resulting Sekwah URL with the <code>/setskin</code> command in-game.</p>
-
-    <p><strong>Why HD?</strong> The server style uses the standard 64x64 layout, but some departments require higher-resolution skins (512x512 or 1024x1024). Higher resolution lets us include small, high-detail insignias and logos that aren't possible on a 64x64 skin, such as custom Security Department uniforms.</p>
+    <p><strong>Why HD?</strong> Some departments require higher-resolution skins to display detailed badges, rank insignias, and department logos clearly. Upload your HD skin to the Site-89 uploads page and use the URL with <code>/setskin</code>.</p>
 
     <p>Note: HD-style features (strongly detailed eyes, etc.) that deviate from the 64x64 aesthetic may look out of place and are generally discouraged unless specifically required by a department.</p>
 
-    <h2>» Upgrading your skin to a HD One «</h2>
+    <h2>» Upgrading your skin to HD «</h2>
     <p>To safely upscale a skin without losing detail, use an image editor that preserves clarity. We recommend Medibang Pro for this purpose (Photoshop can sometimes introduce blurring).</p>
 
     <h3>Steps (Using Medibang Pro)</h3>
     <ol>
-      <li>Download and install Medibang Pro: <a href="https://medibangpaint.com/en/app-download/" target="_blank" rel="noopener">https://medibangpaint.com/en/app-download/</a></li>
-      <li>Open your skin image in Medibang Pro.</li>
-      <li>Under the <strong>Edit</strong> menu, find <strong>Image Size</strong>.</li>
-      <li>Change the image size to the required resolution (128x128, 256x256, 512x512, etc.).</li>
-      <li>Export the skin via <strong>File → Export</strong> when finished.</li>
+      <li>Download and install Medibang Pro: <a href="https://medibangpaint.com/en/app-download/" target="_blank" rel="noopener" style="color: var(--accent-teal);">https://medibangpaint.com/en/app-download/</a></li>
+      <li>Open your skin image in Medibang Pro</li>
+      <li>Under the <strong>Edit</strong> menu, find <strong>Image Size</strong></li>
+      <li>Change the image size to the required resolution (128x128, 256x256, 512x512, etc.)</li>
+      <li>Make sure "Nearest Neighbor" or similar is selected to maintain pixel sharpness</li>
+      <li>Export the skin via <strong>File → Export</strong> as PNG format</li>
     </ol>
 
-    <p>After exporting, upload the image to Imgur, convert using the Sekwah Reskin Proxy, and use <code>/setskin [sekwah url]</code> in-game to apply it.</p>
+    <p>After exporting, upload the image to the <a href="/uploads/" style="color: var(--accent-mint); font-weight: 600;">Site-89 uploads page</a>, copy the URL, and use <code>/setskin [your url]</code> in-game to apply it.</p>
+
+    <h2>» Quick Reference «</h2>
+    <div class="note">
+      <p style="margin-bottom: 0.5rem;"><strong>Upload skins:</strong> <a href="/uploads/" style="color: var(--accent-mint);">/uploads/</a></p>
+      <p style="margin-bottom: 0.5rem;"><strong>In-game command:</strong> <code>/setskin [url]</code></p>
+      <p style="margin-bottom: 0;"><strong>Supported formats:</strong> PNG (recommended), JPEG, WebP, GIF, BMP, SVG</p>
+    </div>
   </section>
 
   <div data-include="/components/footer.html"></div>

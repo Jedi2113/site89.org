@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codes & Alarms — Site-89</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .page-hero { 
+      padding: 2.5rem 1rem; 
+      text-align:center; 
+      background: linear-gradient(90deg, rgba(78,250,170,0.04), transparent); 
+      border-bottom: 1px solid rgba(78,250,170,0.03); 
+    }
+    .page-hero .hero-title { 
+      font-family: var(--font-head); 
+      font-size: 2rem; 
+      color: var(--accent-mint); 
+      margin-bottom: 0.35rem; 
+    }
+    .page-hero .hero-sub { 
+      color: var(--text-light); 
+      opacity: 0.9; 
+    }
+
+    .code-section {
+      padding: 3rem 1rem;
+      background: var(--bg-dark);
+    }
+
+    .code-box {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem;
+      border-radius: 12px;
+      color: #fff;
+    }
+
+    .code-box.purple { background: linear-gradient(135deg, #6b3a8f 0%, #8b4db8 100%); }
+    .code-box.teal { background: linear-gradient(135deg, #0a7ea4 0%, #0dcaf0 100%); }
+    .code-box.amber { background: linear-gradient(135deg, #b8720d 0%, #d4820f 100%); }
+    .code-box.blue { background: linear-gradient(135deg, #1e4a8f 0%, #2d6db8 100%); }
+    .code-box.red { background: linear-gradient(135deg, #a12828 0%, #c42a2a 100%); }
+    .code-box.black { background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%); border: 2px solid #444; }
+
+    .code-section h2 {
+      font-family: var(--font-head);
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      margin-top: 0;
+      text-align: center;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .code-section .code-description {
+      margin: 0 auto 2rem;
+      padding: 1.5rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      line-height: 1.7;
+      backdrop-filter: blur(10px);
+    }
+
+    .code-section .scenario-box {
+      margin: 2rem auto 0;
+      padding: 1.5rem;
+      background: rgba(0,0,0,0.5);
+      border-left: 4px solid rgba(255,255,255,0.7);
+      border-radius: 4px;
+      backdrop-filter: blur(10px);
+    }
+
+    .code-section .scenario-box h3 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      color: rgba(255,255,255,0.95);
+    }
+
+    .code-section .scenario-box p {
+      margin: 0.5rem 0;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .code-section .action-list {
+      margin-top: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    .code-section .action-list li {
+      margin: 0.5rem 0;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .other-situations {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      padding: 3rem 1rem;
+    }
+
+    .other-situations h2 {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      color: var(--accent-mint);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .situation-card {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: rgba(78,250,170,0.05);
+      border: 1px solid rgba(78,250,170,0.1);
+      border-radius: 8px;
+    }
+
+    .situation-card h3 {
+      font-family: var(--font-head);
+      color: var(--accent-mint);
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+
+    .situation-card p {
+      line-height: 1.6;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="page-hero">
+    <div class="hero-title">Codes & Alarms</div>
+    <div class="hero-sub">Emergency codes and protocol guide for Site-89 personnel.</div>
+  </section>
+
+  <!-- CODE PURPLE -->
+  <section class="code-section" id="code-purple">
+    <div class="code-box purple">
+      <h2>CODE PURPLE</h2>
+      <div class="code-description">
+        <p><strong>"Code Purple has been declared. All personnel are advised to remain vigilant and report any unusual activity."</strong></p>
+        <p>This code indicates a Suspicious Person has been reported in or around the facility. All personnel should excercise elevated vigilance and report any unusual activity.</p>
+      </div>
+      <div class="scenario-box">
+        <h3>📋 Example Scenario</h3>
+        <p><strong>Situation:</strong> You're working in your lab when the intercom crackles to life and Code Purple is announced.</p>
+        <p><strong>What do you do?</strong></p>
+        <ul class="action-list">
+          <li>Immediately secure any sensitive materials or experiments</li>
+          <li>Excercise elevated levels of alertness and report any unusual activity</li>
+          <li>Proceed with your work as usual</li>
+          <li>Do NOT attempt to confront the suspicious person</li>
+          <li>Follow any directions given by security officers</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE BLUE -->
+  <section class="code-section" id="code-blue">
+    <div class="code-box blue">
+      <h2>CODE BLUE</h2>
+      <div class="code-description">
+      <p><strong>"Code Blue has been declared. A suspicious, potentially armed person has been confirmed in the facility. Personnel must follow Code Blue procedures and await security to confirm the threat is neutralized."</strong></p>
+      <p>This code indicates a Suspicious, potentially armed person has been confirmed in the facility. Personnel must shelter in place and await security to confirm the threat is neutralized.</p>
+    </div>
+    <div class="scenario-box">
+      <h3>📋 Example Scenario</h3>
+      <p><strong>Situation:</strong> You're waiting for the printer to finish a large print job in the middle of Code Purple when the intercom clicks on and Code Blue is announced.</p>
+      <p><strong>What do you do?</strong></p>
+      <ul class="action-list">
+        <li>Stop what you are doing immidiately, and take cover</li>
+        <li>If possible, lock the door to your current location</li>
+        <li>Do not respond to anyone calling for help, even if they appear to be a coworker</li>
+        <li>Attempt to conceal yourself and remain out of sight</li>
+        <li>Do NOT try to confront the suspicious person</li>
+        <li>Do NOT leave your current location unless it is absolutely necessary</li>
+        <li>If you are discovered by the suspicious person, comply with their demands and remain calm</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE TEAL -->
+  <section class="code-section" id="code-teal">
+    <div class="code-box teal">
+      <h2>CODE TEAL</h2>
+      <div class="code-description">
+      <p><strong>"Code Teal has been declared. Site-89 is under terrorist threat. Please follow Code Teal Procedures and wait for further instructions."</strong></p>
+      <p>This code indicates the facility is under terrorist threat. Personnel must react quickly and make their way to the nearest breach shelter.</p>
+    </div>
+    <div class="scenario-box">
+      <h3>📋 Example Scenario</h3>
+      <p><strong>Situation:</strong> You're eating at Tom's diner when you hear multiple gunshots ring out, alarms begin blaring, and Code Teal is announced.</p>
+      <p><strong>What do you do?</strong></p>
+      <ul class="action-list">
+        <li>Stop what you are doing, and assess the situation, ask yourself; "Where is the nearest breach shelter?", "Where are the bad actors?", "What is the safest route to the shelter?"</li>
+        <li>Using your better judgement, determine if it is safe to proceed to the breach shelter, or find an alternative safe location</li>
+        <li>If you can make it to a breach shelter, proceed there immediately and follow all instructions from security personnel</li>
+        <li>If you cannot make it to a breach shelter, and are trapped, or do not feel it is safe to proceed, find a secure location and barricade yourself</li>
+        <li>Remain calm, attempt to conceal yourself to the best of your ability, and remain quiet</li>
+        <li>Do NOT attempt to confront the threat, it is likely that they are heavily armed, and doing so could result in serious injury or death</li>
+        <li>Do NOT attempt to recover your personal belongings at this time, focus on your safety</li>
+        <li>Do NOT follow any directions from any individual, remain sheltered until Code Green is declared via intercom</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE AMBER -->
+  <section class="code-section" id="code-amber">
+    <div class="code-box amber">
+      <h2>CODE AMBER</h2>
+      <div class="code-description">
+      <p><strong>"Code Amber has been declared. Site-89 has experienced an emergency situation. Please evacuate immediately and follow direction by security personnel."</strong></p>
+      <p>This code indicates a fire or other emergency which compromises the safety of the facility. All personnel should evacuate immediately and follow established emergency procedures.</p>
+    </div>
+    <div class="scenario-box">
+      <h3>📋 Example Scenario</h3>
+      <p><strong>Situation:</strong> You're conducting routine maintenance in the Heavy Containment Zone when you notice smoke along the roof and flames at the end of a hallway. After you report it, Code Amber is announced.</p>
+      <p><strong>What do you do?</strong></p>
+      <ul class="action-list">
+        <li>Stop what you are doing and assess the situation, ask yourself; "Where is the nearest exit?", "Where is the fire?", "What is the safest route to evacuate?"</li>
+        <li>After assessing the situation, proceed to the nearest safe exit or follow the established evacuation route</li>
+        <li>If you are near the fire, and you are capable of procuring a fire extinguisher, attempt to extinguish the fire if it is safe to do so</li>
+        <li>Take only your immediate belongings, do not attempt to recover other items, focus on your safety</li>
+        <li>After evacuating, do not re-enter the building until it has been declared safe by emergency personnel</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE RED -->
+  <section class="code-section" id="code-red">
+    <div class="code-box red">
+      <h2>CODE RED</h2>
+      <div class="code-description">
+      <p><strong>"Code Red has been declared. Site-89 is experiencing a containment breach. Please remain calm and make your way to the nearest breach shelter or exit and follow instruction by security personnel."</strong></p>
+      <p>This code indicates a containment breach. All personnel must follow established containment breach protocols.</p>
+    </div>
+    <div class="scenario-box">
+      <h3>📋 Example Scenario</h3>
+      <p><strong>Situation:</strong> You're working in the Medium Containment Zone when you hear an explosion. Immediately after, Code Red blares through the facility and panic ensues.</p>
+      <p><strong>What do you do?</strong></p>
+      <ul class="action-list">
+        <li><strong>DO NOT PANIC</strong> - panic causes casualties</li>
+        <li>Make your way to the nearest breach shelter, or safe exit, and follow established evacuation routes</li>
+        <li>Follow directions issued by security personnel</li>
+        <li>If you evacuate, do not re-enter the building until it has been declared safe by the Mobile Task Force</li>
+        <li>If you are in a breach shelter, do not leave until instructed by security personnel</li>
+        <li>Assume all containment chambers are compromised</li>
+        <li>Close doors behind you to contain the breach</li>
+        <li>Do NOT attempt to recover personal belongings, they will be covered by your insurance</li>
+        <li>Do NOT trust anyone who isn't carrying proper identification</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE BLACK -->
+  <section class="code-section" id="code-black">
+    <div class="code-box black">
+      <h2>CODE BLACK</h2>
+      <div class="code-description">
+      <p><strong>"Code Black has been declared. Site-89 is currently experiencing multiple containment breaches. Make your way to the nearest breach shelter or exit and await further instructions."</strong></p>
+      <p>This code indicates multiple containment breaches. All personnel must follow the highest level of emergency protocols.</p>
+    </div>
+    <div class="scenario-box">
+      <h3>📋 Example Scenario</h3>
+      <p><strong>Situation:</strong> You jolt awake from your sleep, it's 4:12 AM, and you hear the ominous drone of the Code Black alarm, you wished this day would never come.</p>
+      <p><strong>What do you do?</strong></p>
+      <ul class="action-list">
+        <li><strong>THIS IS THE WORST CASE SCENARIO</strong></li>
+        <li>If you're near an exit - LEAVE IMMEDIATELY and get to minimum safe distance</li>
+        <li>If you're trapped inside - find the nearest reinforced safe room</li>
+        <li>DO NOT trust anyone who isn't wearing proper ID</li>
+        <li>Assume all containment chambers are compromised</li>
+        <li>If you have access to weapons, arm yourself for survival</li>
+        <li>Await extraction by Mobile Task Force</li>
+        <li>Prepare for facility-wide lockdown or heavily armed Mobile Task Force members to threaten you in order to gain compliance</li>
+        <li>DO NOT under any circumstances attempt to get deeper into the facility, assume that behind every door, something wants to kill you</li>
+        <li>You may be handcuffed, or ziptied by Mobile Task Force operators, do not resist them, they are attempting to gain control of the situation, and your non-compliance may result in suspension at best, and death at worst due to Code Black Protcols</li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- OTHER SITUATIONS -->
+  <section class="other-situations">
+    <h2>Other Emergency Situations</h2>
+
+    <div class="situation-card">
+      <h3>Fire Emergency</h3>
+      <p><strong>[PLACEHOLDER - User to fill in fire emergency protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> You smell smoke coming from the electrical room. Within seconds, the fire alarm begins sounding.</p>
+      <ul class="action-list">
+        <li>Activate the nearest fire alarm pull station if not already activated</li>
+        <li>Attempt to extinguish ONLY if fire is small and you're trained</li>
+        <li>If fire is large or spreading, evacuate immediately</li>
+        <li>Close doors behind you to contain the fire</li>
+        <li>Use stairs, never elevators during fire emergencies</li>
+        <li>Report to your emergency assembly point</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Containment Breach (Non-Code)</h3>
+      <p><strong>[PLACEHOLDER - User to fill in breach protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> While passing by SCP-[REDACTED]'s chamber, you notice the containment door is slightly ajar and no code has been called yet.</p>
+      <ul class="action-list">
+        <li>DO NOT APPROACH the containment chamber</li>
+        <li>Immediately notify security and your supervisor</li>
+        <li>Evacuate the immediate area calmly</li>
+        <li>Seal the sector if you have clearance to do so</li>
+        <li>Do not sound alarms unless instructed (may agitate the anomaly)</li>
+        <li>Provide location and anomaly designation to responders</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Medical Emergency</h3>
+      <p><strong>[PLACEHOLDER - User to fill in medical emergency protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> A colleague collapses during a routine experiment. They're unconscious and not responding.</p>
+      <ul class="action-list">
+        <li>Call for medical assistance immediately (radio or emergency phone)</li>
+        <li>Assess for breathing and pulse if trained to do so</li>
+        <li>Begin CPR only if certified and necessary</li>
+        <li>Do NOT move the patient unless they're in immediate danger</li>
+        <li>Clear the area for medical team arrival</li>
+        <li>Gather any relevant medical information or exposure details</li>
+        <li>Complete incident report after situation is resolved</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Hazardous Material Exposure</h3>
+      <p><strong>[PLACEHOLDER - User to fill in hazmat protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> A chemical container breaks in the lab, releasing toxic fumes. You begin to feel dizzy.</p>
+      <ul class="action-list">
+        <li>Immediately leave the contaminated area</li>
+        <li>Alert others in the area without putting yourself at risk</li>
+        <li>Activate emergency ventilation if safe to do so</li>
+        <li>Proceed to nearest decontamination station</li>
+        <li>Remove contaminated clothing in designated area</li>
+        <li>Report exposure to medical staff immediately</li>
+        <li>Provide SDS (Safety Data Sheet) information for the substance</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Power Failure</h3>
+      <p><strong>[PLACEHOLDER - User to fill in power failure protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> The lights suddenly go out facility-wide. Emergency lighting kicks in, but main power is down.</p>
+      <ul class="action-list">
+        <li>Remain calm and stay where you are initially</li>
+        <li>Allow your eyes to adjust to emergency lighting</li>
+        <li>Check if backup generators have activated</li>
+        <li>Do NOT attempt to restart systems without authorization</li>
+        <li>If in containment areas, verify all cells are sealed</li>
+        <li>Report to your supervisor for instructions</li>
+        <li>Be prepared for potential evacuation if power isn't restored</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Lockdown Procedure</h3>
+      <p><strong>[PLACEHOLDER - User to fill in lockdown protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> "Facility lockdown initiated" echoes through the intercom. All blast doors begin to close.</p>
+      <ul class="action-list">
+        <li>Move to the safest enclosed area immediately</li>
+        <li>If blast doors are closing, get to one side - don't try to pass through</li>
+        <li>Lock and barricade doors if instructed</li>
+        <li>Turn off lights and silence all devices</li>
+        <li>Stay away from windows and doors</li>
+        <li>Remain silent and await all-clear signal</li>
+        <li>Do NOT open doors for anyone except authorized personnel with proper codes</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Decontamination Protocol</h3>
+      <p><strong>[PLACEHOLDER - User to fill in decontamination protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> After working with a potentially infectious anomaly, you're directed to undergo full decontamination.</p>
+      <ul class="action-list">
+        <li>Proceed to designated decontamination chamber immediately</li>
+        <li>Remove all clothing and personal items in the ante-chamber</li>
+        <li>Place items in biohazard bags if provided</li>
+        <li>Follow shower procedure completely (minimum time requirements)</li>
+        <li>Use provided antimicrobial soap thoroughly</li>
+        <li>Don clean scrubs or protective gear from clean side</li>
+        <li>Report any symptoms immediately to medical staff</li>
+        <li>Remain in quarantine observation if required</li>
+      </ul>
+    </div>
+
+    <div class="situation-card">
+      <h3>Communications Failure</h3>
+      <p><strong>[PLACEHOLDER - User to fill in communications failure protocols]</strong></p>
+      <p><strong>Example Scenario:</strong> You try to radio for assistance but realize all communication systems are down. No radios, phones, or intercoms are working.</p>
+      <ul class="action-list">
+        <li>Do NOT panic - maintain situational awareness</li>
+        <li>Use runner system (physical messengers) if available</li>
+        <li>Proceed to your supervisor's last known location</li>
+        <li>Look for visual signals or emergency flags</li>
+        <li>Maintain watch on your assigned area/post</li>
+        <li>Document events with timestamps for later reporting</li>
+        <li>Be prepared for manual evacuation protocols</li>
+      </ul>
+    </div>
+  </section>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+</body>
+</html>

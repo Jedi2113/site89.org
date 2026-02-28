@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Site-89
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Images folder - authenticated users can upload, everyone can read
+    match /images/{imageCode} {
+      // Allow authenticated users to upload images
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024 // Max 10MB
+                   && request.resource.contentType.matches('image/.*');
+      
+      // Allow everyone to read images (public access for display)
+      allow read: if true;
+    }
+    
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

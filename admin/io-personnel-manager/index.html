@@ -229,11 +229,13 @@
       </div>
 
       <div class="edit-photo-section">
-        <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Photo URL</label>
-        <input id="editPhotoUrl" class="modal-detail-input" placeholder="https://example.com/photo.jpg">
+        <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Profile Photo</label>
         <div class="photo-preview">
           <img id="editPhotoPreview" src="" alt="Photo preview">
         </div>
+        <input id="editPhotoFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" class="modal-detail-input" style="padding: 0.75rem;">
+        <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; margin-bottom: 0.5rem;">Max 10MB. Supported: PNG, JPEG, WebP, GIF, BMP</div>
+        <button id="uploadPhotoBtn" type="button" style="width: 100%; padding: 0.6rem; background: var(--accent-teal); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Upload New Photo</button>
       </div>
 
       <div>
@@ -287,6 +289,7 @@
 
     const db = getFirestore(app);
     let currentEditingPID = null;
+    let currentPhotoUrl = '';
     let allPersonnel = [];
 
     function initializeManager() {
@@ -403,8 +406,9 @@
       window.openEditModal = async function(person) {
         currentEditingPID = person.pid;
         document.getElementById('editPersonnelName').textContent = person.name || 'Unknown';
-        document.getElementById('editPhotoUrl').value = person.profileImage || '';
+        currentPhotoUrl = person.profileImage || '';
         document.getElementById('editPhotoPreview').src = person.profileImage || '/assets/img/dataunavailable.png';
+        document.getElementById('editPhotoFile').value = '';
         document.getElementById('editName').value = person.name || '';
         document.getElementById('editRank').value = person.rank || '';
         document.getElementById('editDept').value = person.department || '';
@@ -463,7 +467,7 @@
       window.savePersonnelChanges = async function() {
         if (!currentEditingPID) return;
 
-        const photoUrl = (document.getElementById('editPhotoUrl').value || '').trim();
+        const photoUrl = currentPhotoUrl;
         const name = (document.getElementById('editName').value || '').trim();
         const rank = (document.getElementById('editRank').value || '').trim();
         const dept = (document.getElementById('editDept').value || '').trim();
@@ -574,13 +578,67 @@
         pidFeedback.style.display = 'block';
       };
 
-      // Event listeners
-      document.getElementById('editPhotoUrl').addEventListener('input', (e) => {
-        const url = e.target.value.trim();
-        if (url) {
-          document.getElementById('editPhotoPreview').src = url;
+      // Upload photo handler
+      document.getElementById('uploadPhotoBtn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('editPhotoFile');
+        const selectedFile = fileInput.files && fileInput.files[0];
+        
+        if (!selectedFile) {
+          window.showEditFeedback('Please select an image file', 'error');
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          window.showEditFeedback('You must be logged in to upload', 'error');
+          return;
+        }
+
+        const uploadBtn = document.getElementById('uploadPhotoBtn');
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading...';
+
+        try {
+          const idToken = await user.getIdToken();
+          const response = await fetch('/upload', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+              'Content-Type': selectedFile.type || 'application/octet-stream'
+            },
+            body: selectedFile
+          });
+
+          let payload = null;
+          const responseText = await response.text();
+          if (responseText) {
+            try {
+              payload = JSON.parse(responseText);
+            } catch (_error) {
+              payload = null;
+            }
+          }
+
+          if (!response.ok || !payload || !payload.url) {
+            const fallbackError = response.status === 401
+              ? 'You must be logged in to upload images.'
+              : 'Upload failed';
+            throw new Error((payload && payload.error) || fallbackError);
+          }
+
+          currentPhotoUrl = payload.url;
+          document.getElementById('editPhotoPreview').src = payload.url;
+          fileInput.value = '';
+          window.showEditFeedback('Photo uploaded successfully (save changes to apply)', 'success');
+        } catch (error) {
+          window.showEditFeedback('Upload error: ' + error.message, 'error');
+        } finally {
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = 'Upload New Photo';
         }
       });
+
+      // Event listeners
 
       pidModal.addEventListener('click', (e) => {
         if (e.target === pidModal) window.closePIDModal();

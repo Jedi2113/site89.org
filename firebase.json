@@ -2,6 +2,12 @@
   "functions": {
     "source": "functions"
   },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
@@ -10,6 +16,8 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      { "source": "/upload", "function": "imageApi" },
+      { "source": "/image/**", "function": "imageApi" },
       { "source": "/anomalies/view", "destination": "/anomalies/view/index.html" },
       { "source": "/anomalies/view/**", "destination": "/anomalies/view/index.html" },
       { "source": "/anomalies/new", "destination": "/anomalies/new/index.html" },

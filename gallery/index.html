@@ -506,7 +506,7 @@
   <section class="page-hero">
     <div class="content">
       <div class="hero-title">Foundation Gallery</div>
-      <div class="hero-sub">Community submissions for art, photos, and screenshots. Share your work, add context, and keep Site-89 lore-rich.</div>
+      <div class="hero-sub">Community submissions for art, photos, and screenshots. Upload directly to Site-89 servers, add context, and keep the archive lore-rich.</div>
       <div class="gallery-actions">
         <button class="btn btn-primary" onclick="document.getElementById('uploadModal').classList.add('active')">
           <i class="fas fa-cloud-upload-alt"></i>Submit
@@ -531,14 +531,15 @@
           <h2>Submit to the Archive</h2>
           <p>Share concept art, field photos, or in-game screenshots. Every post keeps the community archive current and searchable.</p>
           <div class="submission-steps">
-            <div class="step-card"><span>1</span>Upload your file to a host (Catbox, Imgur, etc.).</div>
-            <div class="step-card"><span>2</span>Add a caption and pick the type.</div>
-            <div class="step-card"><span>3</span>Submit and watch it appear in the archive.</div>
+            <div class="step-card"><span>1</span>Select your image file from your device.</div>
+            <div class="step-card"><span>2</span>Add a caption and pick the submission type.</div>
+            <div class="step-card"><span>3</span>Submit and watch it appear in the archive instantly.</div>
           </div>
         </div>
         <div class="submission-panel">
           <h3>Submission checklist</h3>
           <ul>
+            <li><i class="fas fa-check"></i>Images are hosted securely on Site-89 servers.</li>
             <li><i class="fas fa-check"></i>Tag art vs. photos vs. screenshots.</li>
             <li><i class="fas fa-check"></i>Keep captions short and lore-aware.</li>
             <li><i class="fas fa-check"></i>Credit collaborators when relevant.</li>
@@ -595,15 +596,13 @@
         <option value="screenshot">Screenshot</option>
         <option value="other">Other</option>
       </select>
-      <label for="imageUrl">Image URL</label>
-      <input id="imageUrl" type="text" placeholder="Paste a direct image URL" maxlength="500">
+      <label for="imageFile">Image File</label>
+      <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" style="padding: 0.75rem;">
+      <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Max 10MB. Supported: PNG, JPEG, WebP, GIF, BMP</div>
       <label for="imageCaption">Caption</label>
       <textarea id="imageCaption" placeholder="Add context, character, or location" rows="4" maxlength="300"></textarea>
       <label for="imageSource">Source link (optional)</label>
       <input id="imageSource" type="text" placeholder="Credit link or original post" maxlength="500">
-      <div class="modal-tip">
-        <strong>Tip:</strong> Upload your image to <a href="https://catbox.moe" target="_blank" style="color:#ffd27c;">Catbox.moe</a> and paste the direct image URL here.
-      </div>
       <div class="modal-buttons">
         <button class="btn-submit" onclick="submitGalleryImage()">Submit</button>
         <button class="btn-cancel" onclick="closeUploadModal()">Cancel</button>
@@ -847,7 +846,8 @@
     // Submit gallery image
     window.submitGalleryImage = async function() {
       const imageType = document.getElementById('imageType').value.trim();
-      const imageUrl = document.getElementById('imageUrl').value.trim();
+      const imageFile = document.getElementById('imageFile');
+      const selectedFile = imageFile.files && imageFile.files[0];
       const imageCaption = document.getElementById('imageCaption').value.trim();
       const imageSource = document.getElementById('imageSource').value.trim();
 
@@ -856,14 +856,8 @@
         return;
       }
 
-      if (!imageUrl) {
-        alert('Please enter an image URL');
-        return;
-      }
-
-      const normalizedImageUrl = normalizeUrl(imageUrl);
-      if (!normalizedImageUrl) {
-        alert('Please enter a valid image URL');
+      if (!selectedFile) {
+        alert('Please select an image file');
         return;
       }
 
@@ -882,6 +876,36 @@
       btn.textContent = 'Uploading...';
 
       try {
+        // Upload image to Firebase Storage
+        const idToken = await currentUser.getIdToken();
+        const uploadResponse = await fetch('/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            'Content-Type': selectedFile.type || 'application/octet-stream'
+          },
+          body: selectedFile
+        });
+
+        let uploadPayload = null;
+        const uploadResponseText = await uploadResponse.text();
+        if (uploadResponseText) {
+          try {
+            uploadPayload = JSON.parse(uploadResponseText);
+          } catch (_error) {
+            uploadPayload = null;
+          }
+        }
+
+        if (!uploadResponse.ok || !uploadPayload || !uploadPayload.url) {
+          const fallbackError = uploadResponse.status === 401
+            ? 'You must be logged in to upload images.'
+            : 'Upload failed';
+          throw new Error((uploadPayload && uploadPayload.error) || fallbackError);
+        }
+
+        const imageUrl = uploadPayload.url;
+
         // Get uploader name from character
         let uploaderName = currentUser.email;
         const charQuery = query(collection(db, 'characters'), where('linkedUID', '==', currentUser.uid));
@@ -891,7 +915,7 @@
         }
 
         await addDoc(collection(db, 'gallery'), {
-          imageUrl: normalizedImageUrl,
+          imageUrl: imageUrl,
           caption: imageCaption,
           uploaderId: currentUser.uid,
           uploaderName: uploaderName,
@@ -925,7 +949,7 @@
     window.closeUploadModal = function() {
       document.getElementById('uploadModal').classList.remove('active');
       document.getElementById('imageType').value = '';
-      document.getElementById('imageUrl').value = '';
+      document.getElementById('imageFile').value = '';
       document.getElementById('imageCaption').value = '';
       document.getElementById('imageSource').value = '';
       const submitBtn = document.querySelector('.btn-submit');

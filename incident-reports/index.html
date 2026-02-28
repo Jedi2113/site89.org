@@ -7,8 +7,6 @@
   <meta name="required-clearance" content="1">
   <title>Incident Reports — Site-89</title>
   <link rel="stylesheet" href="/assets/css/main.css">
-  <!-- TinyMCE -->
-  <script src="https://cdn.tiny.cloud/1/wgqechbx2jopsbvntv872129bj4qw3wbxsvy35z27edgkqz4/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
   <!-- Theme System -->
   <script type="module">
     import { ThemeManager } from '/assets/js/theme.js';
@@ -74,8 +72,8 @@
       <div id="viewIncidentModal" class="view-modal" aria-hidden="true">
         <div class="modal-box" role="dialog" aria-modal="true" style="max-width:1100px; max-height:90vh; overflow-y:auto;">
           <div style="display:flex;justify-content:space-between;align-items:center"><h2 id="viewIncidentTitle">Title</h2><button id="viewIncidentClose" class="btn-link">✕</button></div>
-          <div id="viewIncidentMeta" class="meta"></div>
-          <div id="viewIncidentBody" style="margin-top:1rem; line-height:1.6;"></div>
+          <div id="viewIncidentMeta" class="meta" style="color:var(--text-light);opacity:.9;margin-top:.4rem"></div>
+          <div id="viewIncidentBody" style="margin-top:1rem; line-height:1.6; color:var(--text-primary);"></div>
         </div>
       </div>
 
@@ -91,8 +89,18 @@
             <label>Report ID <input id="incReportId" placeholder="IR-MM.DD.YY-###" required></label>
             <label>Title <input id="incTitle" placeholder="Title" required></label>
             <label>Tags <input id="incTags" placeholder="Tags (comma separated)"></label>
-            <label style="display:block; margin-bottom:0.5rem;">Report Content
-              <textarea id="incContent" style="width:100%; min-height:400px;"></textarea>
+            <label style="display:block; margin-bottom:0.5rem;">Report Content (Markdown)
+              <div style="font-size:.9rem;color:var(--text-light);margin-top:.2rem">Use Markdown formatting: **bold**, *italic*, # headers, - lists, [links](url)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.5rem">
+                <div>
+                  <div style="font-weight:600;margin-bottom:.5rem">Editor</div>
+                  <textarea id="incContent" style="width:100%; min-height:300px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;"></textarea>
+                </div>
+                <div>
+                  <div style="font-weight:600;margin-bottom:.5rem">Preview</div>
+                  <div id="incPreview" style="background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:1rem; min-height:300px; overflow-y:auto; line-height:1.6;"><em>Preview will appear here...</em></div>
+                </div>
+              </div>
             </label>
             <div style="display:flex;gap:.5rem;margin-top:.6rem"><button id="createIncidentBtn" class="btn-primary" type="submit">Create</button><button id="cancelIncidentBtn" class="btn-secondary" type="button">Cancel</button></div>
             <p id="incFeedback" class="feedback"></p>
@@ -107,6 +115,10 @@
 
   <script src="/assets/js/include.js"></script>
   <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module">
+    import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js';
+    window.marked = marked;
+  </script>
   <script type="module" src="/assets/js/incidentReports.js"></script>
 </body>
 </html>

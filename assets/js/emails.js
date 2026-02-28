@@ -524,6 +524,7 @@ document.addEventListener('includesLoaded', () => {
       format: 'markdown',
       status: status, // 'sent' or 'draft'
       folder: status === 'draft' ? 'drafts' : '',
+      deletedBy: [],
       ts: serverTimestamp()
     };
 
@@ -556,14 +557,31 @@ document.addEventListener('includesLoaded', () => {
   btnDelete.addEventListener('click', async ()=>{
     if(!currentMessage) return;
     try{
-      if(currentMessage.folder === 'trash'){
-        await deleteDoc(doc(db,'emails',currentMessage.id));
+      const ownedAddresses = getOwnedAddresses(myAddress, sendAsAddresses);
+      const senderLower = (currentMessage.sender || '').toLowerCase();
+      const isSender = ownedAddresses.has(senderLower);
+      
+      if(isSender){
+        // Sender: move to trash or permanently delete
+        if(currentMessage.folder === 'trash'){
+          await deleteDoc(doc(db,'emails',currentMessage.id));
+        } else {
+          await updateDoc(doc(db,'emails',currentMessage.id), { folder: 'trash' });
+        }
       } else {
-        await updateDoc(doc(db,'emails',currentMessage.id), { folder: 'trash' });
+        // Recipient: add self to deletedBy array (all lowercase for consistency)
+        const deletedByLower = (currentMessage.deletedBy || []).map(e => (e || '').toLowerCase());
+        const myAddressLower = myAddress.toLowerCase();
+        if(!deletedByLower.includes(myAddressLower)){
+          deletedByLower.push(myAddressLower);
+          await updateDoc(doc(db,'emails',currentMessage.id), { deletedBy: deletedByLower });
+        }
       }
+      
       currentMessage = null; 
       selectedMessageId = null;
       showEmptyState();
+      renderList();
     } catch(e){ console.warn('delete failed', e); alert('Could not delete message'); }
   });
 
@@ -600,17 +618,20 @@ document.addEventListener('includesLoaded', () => {
       const senderLower = (m.sender || '').toLowerCase();
       const isRecipient = recipientsLower.some(r => ownedAddresses.has(r));
       const isSender = ownedAddresses.has(senderLower);
-      if (currentFolder === 'inbox') return isRecipient && m.folder !== 'trash' && m.status !== 'draft';
+      const userInDeletedBy = (m.deletedBy || []).some(e => e.toLowerCase() === myAddressLower);
+      
+      if (currentFolder === 'inbox') return isRecipient && m.folder !== 'trash' && m.status !== 'draft' && !userInDeletedBy;
       if (currentFolder === 'drafts') return m.status === 'draft' && isSender;
       if (currentFolder === 'sent') return isSender && m.folder !== 'trash' && m.status !== 'draft';
-      if (currentFolder === 'trash') return m.folder === 'trash' && (isSender || isRecipient);
+      if (currentFolder === 'trash') return (m.folder === 'trash' && isSender) || (isRecipient && userInDeletedBy);
       return false;
     }).filter(m => (m.subject||'').toLowerCase().includes(q) || (m.body||'').toLowerCase().includes(q) || (m.sender||'').toLowerCase().includes(q));
 
     // counts and unread badge on navbar
     const inboxMsgs = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
-      return recipientsLower.some(r => ownedAddresses.has(r)) && m.folder !== 'trash' && m.status !== 'draft';
+      const userInDeletedBy = (m.deletedBy || []).some(e => e.toLowerCase() === myAddressLower);
+      return recipientsLower.some(r => ownedAddresses.has(r)) && m.folder !== 'trash' && m.status !== 'draft' && !userInDeletedBy;
     });
     // Count unread: neither m.read nor in locallyMarkedRead
     const unreadCount = inboxMsgs.filter(m => !m.read && !locallyMarkedRead.has(m.id)).length;
@@ -630,7 +651,10 @@ document.addEventListener('includesLoaded', () => {
     document.getElementById('countTrash').textContent = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
       const senderLower = (m.sender || '').toLowerCase();
-      return m.folder === 'trash' && (ownedAddresses.has(senderLower) || recipientsLower.some(r => ownedAddresses.has(r)));
+      const userInDeletedBy = (m.deletedBy || []).some(e => e.toLowerCase() === myAddressLower);
+      const isSender = ownedAddresses.has(senderLower);
+      const isRecipient = recipientsLower.some(r => ownedAddresses.has(r));
+      return (m.folder === 'trash' && isSender) || (isRecipient && userInDeletedBy);
     }).length;
 
     messagesContainer.innerHTML = '';
@@ -861,8 +885,8 @@ document.addEventListener('includesLoaded', () => {
     if (snaps.empty){
       const demoSenderEmail = currentUser ? currentUser.email : 'demo@site89.org';
       const directorDemo = 'director.mgmt@site89.org';
-      await addDoc(collection(db,'emails'), { sender: directorDemo, senderEmail: 'demo@site89.org', recipients: [myAddress], subject: 'Welcome to Site‑89 Mail', body: 'This is a demo message. Use Compose to send test emails between characters.', status: 'sent', ts: serverTimestamp() });
-      await addDoc(collection(db,'emails'), { sender: myAddress, senderEmail: demoSenderEmail, recipients: [directorDemo], subject: 'Re: Welcome', body: 'Thanks — message received.', status: 'sent', ts: serverTimestamp() });
+      await addDoc(collection(db,'emails'), { sender: directorDemo, senderEmail: 'demo@site89.org', recipients: [myAddress], subject: 'Welcome to Site‑89 Mail', body: 'This is a demo message. Use Compose to send test emails between characters.', status: 'sent', deletedBy: [], ts: serverTimestamp() });
+      await addDoc(collection(db,'emails'), { sender: myAddress, senderEmail: demoSenderEmail, recipients: [directorDemo], subject: 'Re: Welcome', body: 'Thanks — message received.', status: 'sent', deletedBy: [], ts: serverTimestamp() });
     }
   }
 

@@ -502,7 +502,16 @@
     .editor-status {
       color: var(--muted);
       font-size: 0.85rem;
-      margin: 0.2rem 0 0;
+      margin: 0.5rem 0 0;
+      padding: 0.5rem;
+      border-radius: 6px;
+      min-height: 1.2rem;
+      transition: all 0.2s ease;
+    }
+
+    .editor-status:not(:empty) {
+      background: rgba(78, 250, 170, 0.1);
+      border: 1px solid rgba(78, 250, 170, 0.3);
     }
 
     html[data-theme="light"] .editor-status {
@@ -608,8 +617,9 @@
           <label for="eventManager">RP Manager *</label>
           <input id="eventManager" type="text" placeholder="Event lead">
 
-          <label for="eventBanner">Banner URL * <span style="font-weight:400;font-size:0.85rem;color:var(--muted);">(use catbox.moe)</span></label>
-          <input id="eventBanner" type="text" placeholder="https://files.catbox.moe/...">
+          <label for="eventBannerFile">Banner Image *</label>
+          <input id="eventBannerFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="padding: 0.75rem;">
+          <input id="eventBanner" type="hidden">
         </div>
 
         <div class="editor-actions">

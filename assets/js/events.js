@@ -54,6 +54,7 @@ const eventZoneInput = document.getElementById('eventZone');
 const eventDepartmentsInput = document.getElementById('eventDepartments');
 const eventManagerInput = document.getElementById('eventManager');
 const eventBannerInput = document.getElementById('eventBanner');
+const eventBannerFileInput = document.getElementById('eventBannerFile');
 
 let activeFilter = 'upcoming';
 let selectedEventId = null;
@@ -312,6 +313,7 @@ function resetEditor() {
   eventDepartmentsInput.value = '';
   eventManagerInput.value = '';
   eventBannerInput.value = '';
+  if (eventBannerFileInput) eventBannerFileInput.value = '';
 }
 
 function openEditor(eventData = null) {
@@ -349,7 +351,12 @@ function closeEditor() {
 
 function setEditorStatus(message, isError = false) {
   editorStatus.textContent = message;
-  editorStatus.style.color = isError ? 'var(--alert-warn)' : 'var(--muted)';
+  editorStatus.style.color = isError ? '#ff4444' : 'var(--muted)';
+  editorStatus.style.fontWeight = isError ? '700' : '400';
+  editorStatus.style.fontSize = isError ? '0.95rem' : '0.85rem';
+  if (isError) {
+    console.error('Editor Error:', message);
+  }
 }
 
 function collectEditorData() {
@@ -360,10 +367,17 @@ function collectEditorData() {
   const zone = eventZoneInput.value.trim();
   const departmentsRaw = eventDepartmentsInput.value.trim();
   const manager = eventManagerInput.value.trim();
-  const banner = eventBannerInput.value.trim();
+  const bannerFile = eventBannerFileInput && eventBannerFileInput.files && eventBannerFileInput.files[0];
+  const existingBanner = eventBannerInput.value.trim();
 
-  if (!title || !startRaw || !shortDesc || !longDesc || !zone || !departmentsRaw || !manager || !banner) {
+  if (!title || !startRaw || !shortDesc || !longDesc || !zone || !departmentsRaw || !manager) {
     setEditorStatus('Fill in every required field.', true);
+    return null;
+  }
+
+  // Banner is required for new events, optional for edits if already exists
+  if (!editingEventId && !bannerFile) {
+    setEditorStatus('Banner image is required.', true);
     return null;
   }
 
@@ -386,8 +400,7 @@ function collectEditorData() {
     longDesc,
     zone,
     departments,
-    manager,
-    banner
+    manager
   };
 }
 
@@ -445,41 +458,135 @@ function formatInputDate(date, timeZone) {
 }
 
 async function saveEvent() {
-  if (!canManageEvents || !currentUser) return;
+  if (!canManageEvents || !currentUser) {
+    setEditorStatus('You do not have permission to manage events.', true);
+    alert('You do not have permission to manage events. You need clearance level 4+ or director rank.');
+    return;
+  }
+  
   const data = collectEditorData();
   if (!data) return;
 
-  const payload = {
-    title: data.title,
-    start: Timestamp.fromDate(data.startDate),
-    shortDesc: data.shortDesc,
-    longDesc: data.longDesc,
-    zone: data.zone,
-    departments: data.departments,
-    manager: data.manager,
-    banner: data.banner,
-    updatedAt: serverTimestamp()
-  };
+  // Disable save button to prevent double-clicks
+  saveEventBtn.disabled = true;
+  const originalBtnText = saveEventBtn.textContent;
+  saveEventBtn.textContent = 'Saving...';
 
   try {
+    let bannerUrl = eventBannerInput.value.trim(); // Use existing banner for edits
+
+    // If a new banner file was selected, upload it first
+    const bannerFile = eventBannerFileInput && eventBannerFileInput.files && eventBannerFileInput.files[0];
+    if (bannerFile) {
+      setEditorStatus('Uploading banner...');
+      const idToken = await currentUser.getIdToken();
+      
+      console.log('Uploading banner file:', bannerFile.name, bannerFile.type);
+      
+      const uploadResponse = await fetch('/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': bannerFile.type || 'application/octet-stream'
+        },
+        body: bannerFile
+      });
+
+      let uploadPayload = null;
+      const uploadResponseText = await uploadResponse.text();
+      if (uploadResponseText) {
+        try {
+          uploadPayload = JSON.parse(uploadResponseText);
+        } catch (_error) {
+          console.error('Failed to parse upload response:', uploadResponseText);
+          uploadPayload = null;
+        }
+      }
+
+      if (!uploadResponse.ok || !uploadPayload || !uploadPayload.url) {
+        const fallbackError = uploadResponse.status === 401
+          ? 'You must be logged in to upload images.'
+          : `Banner upload failed (Status: ${uploadResponse.status})`;
+        const errorMsg = (uploadPayload && uploadPayload.error) || fallbackError;
+        console.error('Upload error:', errorMsg, uploadPayload);
+        throw new Error(errorMsg);
+      }
+
+      bannerUrl = uploadPayload.url;
+      console.log('Banner uploaded successfully:', bannerUrl);
+    }
+
+    // Banner must exist at this point
+    if (!bannerUrl) {
+      setEditorStatus('Banner is required.', true);
+      saveEventBtn.disabled = false;
+      saveEventBtn.textContent = originalBtnText;
+      return;
+    }
+
+    const payload = {
+      title: data.title,
+      start: Timestamp.fromDate(data.startDate),
+      shortDesc: data.shortDesc,
+      longDesc: data.longDesc,
+      zone: data.zone,
+      departments: data.departments,
+      manager: data.manager,
+      banner: bannerUrl,
+      updatedAt: serverTimestamp()
+    };
+
+    console.log('Saving event payload:', payload);
+    console.log('Edit mode:', editingEventId ? `Editing ${editingEventId}` : 'Creating new');
+    console.log('User:', currentUser.uid, currentUser.email);
+
     if (!editingEventId) {
-      await addDoc(collection(db, 'events'), {
+      const newEventData = {
         ...payload,
         createdAt: serverTimestamp(),
         createdByUid: currentUser.uid,
         createdByEmail: currentUser.email || ''
-      });
-      setEditorStatus('Event created.');
-      closeEditor();
+      };
+      console.log('Creating new event with data:', newEventData);
+      await addDoc(collection(db, 'events'), newEventData);
+      setEditorStatus('Event created successfully!');
+      console.log('Event created successfully');
+      setTimeout(() => closeEditor(), 1000);
       return;
     }
 
+    console.log('Updating event:', editingEventId);
     await updateDoc(doc(db, 'events', editingEventId), payload);
-    setEditorStatus('Event updated.');
-    closeEditor();
+    setEditorStatus('Event updated successfully!');
+    console.log('Event updated successfully');
+    setTimeout(() => closeEditor(), 1000);
   } catch (err) {
-    console.error('Error saving event', err);
-    setEditorStatus(`Error saving event: ${err.message}`, true);
+    console.error('Error saving event:', err);
+    console.error('Error code:', err.code);
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
+    
+    let errorMessage = 'Error saving event: ';
+    
+    // Handle specific Firestore errors
+    if (err.code === 'permission-denied') {
+      errorMessage += 'Permission denied. You may not have rights to edit this event. Check console for details.';
+      console.error('Permission denied. User:', currentUser?.email, 'Editing event:', editingEventId);
+      alert('PERMISSION DENIED: You do not have permission to save this event.\n\nYour email: ' + (currentUser?.email || 'unknown') + '\n\nCheck browser console (F12) for more details.');
+    } else if (err.code === 'not-found') {
+      errorMessage += 'Event not found. It may have been deleted.';
+    } else if (err.code === 'unauthenticated') {
+      errorMessage += 'You are not logged in. Please refresh and log in again.';
+    } else if (err.message) {
+      errorMessage += err.message;
+    } else {
+      errorMessage += 'Unknown error. Check browser console for details.';
+    }
+    
+    setEditorStatus(errorMessage, true);
+  } finally {
+    saveEventBtn.disabled = false;
+    saveEventBtn.textContent = originalBtnText;
   }
 }
 

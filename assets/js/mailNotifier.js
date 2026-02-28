@@ -108,33 +108,75 @@ function requestNotificationPermission() {
   }
 }
 
-// Play notification sound
-async function playNotificationSound() {
-  try {
-    const audio = new Audio('/assets/sound/mail.mp3');
-    audio.volume = 0.5;
-    await audio.play();
-  } catch(e) {
-    console.log('Audio notification failed:', e);
-    throw e;
+// Pre-load the mail notification sound
+let mailAudio = null;
+let audioEnabled = false;
+
+function preloadMailSound() {
+  console.log('[MailNotifier] Preloading mail sound...');
+  if (!mailAudio) {
+    try {
+      mailAudio = new Audio('/assets/sound/mail.mp3');
+      mailAudio.volume = 0.3; // Comfortable notification volume
+      mailAudio.preload = 'auto';
+      
+      mailAudio.addEventListener('canplaythrough', () => {
+        console.log('[MailNotifier] ✓ Mail sound loaded and ready to play');
+      }, { once: true });
+      
+      mailAudio.addEventListener('error', (e) => {
+        console.error('[MailNotifier] ✗ Error loading mail sound:', e, mailAudio.error);
+      });
+      
+      // Load the audio
+      mailAudio.load();
+      console.log('[MailNotifier] Audio object created, loading started');
+    } catch(e) {
+      console.error('[MailNotifier] ✗ Failed to create Audio object:', e);
+    }
+  } else {
+    console.log('[MailNotifier] Mail sound already preloaded');
   }
 }
 
-// Enable audio on first user interaction (required by browsers)
-let audioEnabled = false;
-function enableAudioOnInteraction() {
+// Play notification sound
+async function playNotificationSound() {
+  console.log('[MailNotifier] 🔔 Attempting to play notification sound...');
+  console.log('[MailNotifier] - audioEnabled:', audioEnabled);
+  console.log('[MailNotifier] - mailAudio exists:', !!mailAudio);
+  
   if (!audioEnabled) {
-    document.addEventListener('click', async () => {
-      if (!audioEnabled) {
-        try {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          await audioContext.resume();
-          audioEnabled = true;
-        } catch(e) {
-          console.log('Could not enable audio:', e);
-        }
-      }
-    }, { once: true });
+    console.warn('[MailNotifier] ⚠️ Audio not enabled yet. User needs to interact with page first.');
+    return;
+  }
+  
+  if (!mailAudio) {
+    console.warn('[MailNotifier] ⚠️ Mail audio object not created. Creating now...');
+    preloadMailSound();
+    // Wait a moment for it to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  try {
+    console.log('[MailNotifier] - mailAudio.readyState:', mailAudio?.readyState);
+    console.log('[MailNotifier] - mailAudio.volume:', mailAudio?.volume);
+    console.log('[MailNotifier] - mailAudio.paused:', mailAudio?.paused);
+    
+    // Reset to beginning in case it was already played
+    mailAudio.currentTime = 0;
+    console.log('[MailNotifier] Playing audio...');
+    const playPromise = mailAudio.play();
+    
+    if (playPromise !== undefined) {
+      await playPromise;
+      console.log('[MailNotifier] ✓ Audio played successfully!');
+    }
+  } catch(e) {
+    console.error('[MailNotifier] ✗ Audio play failed:', e);
+    console.error('[MailNotifier] Error name:', e.name);
+    console.error('[MailNotifier] Error message:', e.message);
+    console.error('[MailNotifier] 💡 Tip: Make sure you\'ve clicked or interacted with the page before receiving mail');
+    // Don't throw - notifications should be non-blocking
   }
 }
 
@@ -162,7 +204,7 @@ async function showDesktopNotification(sender, subject, senderEmail, db) {
       badge: icon,
       tag: 'site89-email',
       requireInteraction: false,
-      silent: true // Disable Windows notification sound
+      silent: true // Keep silent - we handle our own audio
     });
     
     notification.onclick = function() {
@@ -176,26 +218,190 @@ async function showDesktopNotification(sender, subject, senderEmail, db) {
   }
 }
 
+// Enable audio on first user interaction (required by browsers)
+function enableAudioOnInteraction() {
+  console.log('[MailNotifier] Setting up audio interaction listeners...');
+  if (!audioEnabled) {
+    const enableAudio = async () => {
+      // Don't auto-enable if user explicitly disabled it
+      if (localStorage.getItem('mailAudioEnabled') === 'false') {
+        console.log('[MailNotifier] Audio was explicitly disabled by user, not auto-enabling');
+        return;
+      }
+      
+      console.log('[MailNotifier] User interaction detected, enabling audio...');
+      if (!audioEnabled) {
+        try {
+          // Create and resume AudioContext
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          console.log('[MailNotifier] AudioContext created, state:', audioContext.state);
+          await audioContext.resume();
+          console.log('[MailNotifier] AudioContext resumed, state:', audioContext.state);
+          
+          // Preload and "unlock" the audio by playing it silently
+          if (!mailAudio) {
+            mailAudio = new Audio('/assets/sound/mail.mp3');
+            mailAudio.volume = 0.3;
+            mailAudio.preload = 'auto';
+            console.log('[MailNotifier] Audio object created');
+          }
+          
+          // Attempt to play and immediately pause to unlock audio playback
+          console.log('[MailNotifier] Attempting to unlock audio playback...');
+          mailAudio.volume = 0.01; // Very quiet for the unlock
+          try {
+            await mailAudio.play();
+            mailAudio.pause();
+            mailAudio.currentTime = 0;
+            mailAudio.volume = 0.3; // Restore normal notification volume
+            audioEnabled = true;
+            console.log('[MailNotifier] ✓ Audio unlocked and enabled successfully!');
+            
+            // Store that audio is enabled
+            localStorage.setItem('mailAudioEnabled', 'true');
+            
+            // Update toggle switch if it exists
+            updateSoundToggleUI();
+          } catch(playErr) {
+            console.error('[MailNotifier] ✗ Failed to unlock audio:', playErr);
+            // Still mark as enabled to prevent repeated attempts
+            audioEnabled = true;
+          }
+        } catch(e) {
+          console.error('[MailNotifier] ✗ Could not enable audio context:', e);
+        }
+      }
+    };
+    
+    // Expose function globally so the toggle can call it
+    window.enableMailAudio = enableAudio;
+    
+    document.addEventListener('click', enableAudio, { once: true });
+    document.addEventListener('keydown', enableAudio, { once: true });
+    // Also try on touchstart for mobile
+    document.addEventListener('touchstart', enableAudio, { once: true });
+    console.log('[MailNotifier] Audio interaction listeners registered');
+  } else {
+    console.log('[MailNotifier] Audio already enabled');
+  }
+}
+
+// Update the toggle switch UI
+function updateSoundToggleUI() {
+  const toggleSwitch = document.getElementById('soundToggleSwitch');
+  if (toggleSwitch) {
+    if (audioEnabled || localStorage.getItem('mailAudioEnabled') === 'true') {
+      toggleSwitch.classList.add('active');
+    } else {
+      toggleSwitch.classList.remove('active');
+    }
+  }
+}
+
+// Initialize the sound toggle switch
+function initSoundToggle() {
+  const toggleContainer = document.getElementById('soundNotificationToggle');
+  const toggleSwitch = document.getElementById('soundToggleSwitch');
+  
+  if (!toggleContainer || !toggleSwitch) {
+    console.log('[MailNotifier] Sound toggle not found on this page');
+    return;
+  }
+  
+  console.log('[MailNotifier] Initializing sound toggle switch');
+  
+  // Check if audio was previously enabled/disabled
+  const storedPref = localStorage.getItem('mailAudioEnabled');
+  if (storedPref === 'true') {
+    audioEnabled = true;
+    preloadMailSound();
+    console.log('[MailNotifier] Audio preference loaded: enabled');
+  } else if (storedPref === 'false') {
+    audioEnabled = false;
+    console.log('[MailNotifier] Audio preference loaded: disabled');
+  }
+  
+  // Set initial state
+  updateSoundToggleUI();
+  
+  // Handle toggle click
+  toggleContainer.addEventListener('click', async () => {
+    if (!audioEnabled) {
+      console.log('[MailNotifier] User toggled sound ON - enabling audio...');
+      // Enable audio directly (user interaction gives us permission)
+      try {
+        // Create and resume AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('[MailNotifier] AudioContext created, state:', audioContext.state);
+        await audioContext.resume();
+        console.log('[MailNotifier] AudioContext resumed, state:', audioContext.state);
+        
+        // Create audio if it doesn't exist
+        if (!mailAudio) {
+          mailAudio = new Audio('/assets/sound/mail.mp3');
+          mailAudio.volume = 0.3;
+          mailAudio.preload = 'auto';
+          console.log('[MailNotifier] Audio object created');
+        }
+        
+        // Unlock audio by playing briefly at low volume
+        mailAudio.volume = 0.01;
+        await mailAudio.play();
+        mailAudio.pause();
+        mailAudio.currentTime = 0;
+        mailAudio.volume = 0.3;
+        
+        audioEnabled = true;
+        localStorage.setItem('mailAudioEnabled', 'true');
+        updateSoundToggleUI();
+        console.log('[MailNotifier] ✓ Audio enabled via toggle!');
+      } catch(e) {
+        console.error('[MailNotifier] ✗ Failed to enable audio:', e);
+      }
+    } else {
+      console.log('[MailNotifier] User toggled sound OFF - disabling audio');
+      // Disable audio
+      audioEnabled = false;
+      localStorage.setItem('mailAudioEnabled', 'false');
+      updateSoundToggleUI();
+    }
+  });
+}
+
 function initMailNotifier() {
+  console.log('[MailNotifier] ======== Initializing Mail Notifier ========');
   const auth = getAuth();
   const db = getFirestore();
   const navMailBadge = document.getElementById('navMailBadge');
+  console.log('[MailNotifier] Nav badge element found:', !!navMailBadge);
   
   let unsubscribe = null;
   let previousUnreadCount = 0;
   let isFirstLoad = true;
 
   // Request notification permission
+  console.log('[MailNotifier] Requesting notification permission...');
   requestNotificationPermission();
   
   // Enable audio on user interaction
+  console.log('[MailNotifier] Setting up audio enablement...');
   enableAudioOnInteraction();
+  
+  // Initialize sound toggle if on emails page (wait for DOM to be ready)
+  setTimeout(() => {
+    initSoundToggle();
+  }, 100);
 
   onAuthStateChanged(auth, async (user) => {
     // Clean up previous listener
     if(unsubscribe){ 
       unsubscribe(); 
       unsubscribe = null; 
+  
+  // Show sound enable prompt after a short delay (give page time to load)
+  setTimeout(() => {
+    showEnableSoundPrompt();
+  }, 2000);
     }
     
     if(!user || !navMailBadge) return;
@@ -258,17 +464,29 @@ function initMailNotifier() {
       
       // Check if we got a NEW email (count increased)
       if(!isFirstLoad && unreadCount > previousUnreadCount && newestEmail) {
-        // Try to play sound (may be blocked by browser autoplay policy on first interaction)
-        playNotificationSound().catch(err => {
-          console.log('Audio notification blocked:', err);
-        });
+        console.log('[MailNotifier] 📧 NEW EMAIL DETECTED!');
+        console.log('[MailNotifier] Previous count:', previousUnreadCount, '→ New count:', unreadCount);
+        console.log('[MailNotifier] Sender:', newestEmail.sender);
+        console.log('[MailNotifier] Subject:', newestEmail.subject);
         
+        // Try to play custom sound
+        if (audioEnabled) {
+          playNotificationSound().catch(err => {
+            console.warn('[MailNotifier] ⚠️ Custom sound failed:', err);
+          });
+        } else {
+          console.log('[MailNotifier] ⚠️ Audio not enabled - user needs to enable sound notifications');
+        }
+        
+        // Show desktop notification
         showDesktopNotification(
           newestEmail.sender || 'Unknown Sender',
           newestEmail.subject || '(No Subject)',
           newestEmail.sender || '',
           db
         );
+      } else {
+        console.log('[MailNotifier] Unread count updated:', unreadCount, '(isFirstLoad:', isFirstLoad, ', previous:', previousUnreadCount, ')');
       }
       
       previousUnreadCount = unreadCount;
@@ -293,6 +511,7 @@ let initialized = false;
 
 document.addEventListener('includesLoaded', () => {
   if(!initialized){
+    console.log('[MailNotifier] Initializing via includesLoaded event');
     initialized = true;
     initMailNotifier();
   }
@@ -300,6 +519,7 @@ document.addEventListener('includesLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   if(!initialized){
+    console.log('[MailNotifier] Initializing via DOMContentLoaded event');
     initialized = true;
     initMailNotifier();
   }
@@ -308,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fallback: try after a short delay
 setTimeout(() => {
   if(!initialized){
+    console.log('[MailNotifier] Initializing via timeout fallback');
     initialized = true;
     initMailNotifier();
   }

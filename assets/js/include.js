@@ -1,4 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
+  try {
+    const rawSelectedCharacter = localStorage.getItem('selectedCharacter');
+    if (rawSelectedCharacter !== null) {
+      const parsedSelectedCharacter = JSON.parse(rawSelectedCharacter);
+      if (!parsedSelectedCharacter || typeof parsedSelectedCharacter !== 'object') {
+        localStorage.removeItem('selectedCharacter');
+      }
+    }
+  } catch (_error) {
+    localStorage.removeItem('selectedCharacter');
+  }
+
   const includes = Array.from(document.querySelectorAll("[data-include]"));
   const INCLUDE_VERSION = '2026-02-25-4';
   if (!includes.length) {

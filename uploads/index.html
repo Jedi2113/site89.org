@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Hosting | Site-89</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .upload-page {
+      min-height: 100vh;
+    }
+
+    .upload-hero {
+      background: linear-gradient(135deg, rgba(78, 250, 170, 0.08) 0%, rgba(78, 250, 170, 0.02) 100%);
+      border-bottom: 1px solid rgba(78, 250, 170, 0.1);
+      padding: 3rem 1rem;
+      text-align: center;
+    }
+
+    .upload-hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--accent-mint);
+      margin: 0 0 1rem 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .upload-hero-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .upload-hero-icon {
+      font-size: 3rem;
+      color: var(--accent-teal);
+      margin-bottom: 1rem;
+      opacity: 0.7;
+    }
+
+    .upload-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (min-width: 900px) {
+      .upload-grid {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
+    .upload-main-card {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-teal);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    html[data-theme="light"] .upload-main-card {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .upload-card-title {
+      font-family: var(--font-head);
+      font-size: 1.5rem;
+      color: var(--accent-mint);
+      margin: 0 0 1.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .upload-dropzone {
+      border: 3px dashed var(--accent-teal);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      background: rgba(78, 250, 170, 0.03);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .upload-dropzone:hover,
+    .upload-dropzone.drag-over {
+      border-color: var(--accent-mint);
+      background: rgba(78, 250, 170, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .upload-dropzone-icon {
+      font-size: 4rem;
+      color: var(--accent-teal);
+      opacity: 0.6;
+      margin-bottom: 1rem;
+    }
+
+    .upload-dropzone-text {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .upload-dropzone-hint {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      opacity: 0.7;
+    }
+
+    .upload-input-hidden {
+      display: none;
+    }
+
+    .upload-preview-section {
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    .upload-preview-section.active {
+      display: block;
+    }
+
+    .upload-preview-box {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+      background: var(--bg-soft);
+      text-align: center;
+    }
+
+    .upload-preview-img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .upload-preview-info {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      opacity: 0.8;
+    }
+
+    .upload-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+      background: var(--accent-mint);
+      color: var(--bg-dark);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .upload-btn:hover:not(:disabled) {
+      background: var(--accent-teal);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(78, 250, 170, 0.3);
+    }
+
+    .upload-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .upload-result {
+      display: none;
+      border: 2px solid var(--accent-mint);
+      border-radius: 10px;
+      padding: 1.5rem;
+      background: rgba(78, 250, 170, 0.08);
+      margin-top: 1.5rem;
+    }
+
+    .upload-result.active {
+      display: block;
+    }
+
+    .upload-result-title {
+      color: var(--accent-mint);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .upload-result-url {
+      background: var(--bg-dark);
+      border: 1px solid var(--accent-teal);
+      border-radius: 6px;
+      padding: 0.75rem;
+      word-break: break-all;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent-mint);
+      margin-bottom: 1rem;
+    }
+
+    .upload-result-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .upload-copy-btn {
+      flex: 1;
+      min-width: 120px;
+      border: 1px solid var(--accent-teal);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-light);
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .upload-copy-btn:hover {
+      background: rgba(78, 250, 170, 0.1);
+      border-color: var(--accent-mint);
+    }
+
+    .upload-error {
+      display: none;
+      border: 2px solid #ff6b6b;
+      border-radius: 10px;
+      padding: 1.5rem;
+      background: rgba(255, 107, 107, 0.08);
+      margin-top: 1.5rem;
+      color: #ff6b6b;
+    }
+
+    .upload-error.active {
+      display: block;
+    }
+
+    .upload-error-title {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .upload-info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      height: fit-content;
+    }
+
+    .upload-info-title {
+      font-family: var(--font-head);
+      font-size: 1.2rem;
+      color: var(--accent-mint);
+      margin: 0 0 1rem 0;
+    }
+
+    .upload-info-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .upload-info-list li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(78, 250, 170, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .upload-info-list li:last-child {
+      border-bottom: none;
+    }
+
+    .upload-info-list i {
+      color: var(--accent-teal);
+      font-size: 1.1rem;
+      width: 20px;
+    }
+
+    .upload-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .upload-feature {
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .upload-feature:hover {
+      border-color: var(--accent-teal);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(78, 250, 170, 0.15);
+    }
+
+    .upload-feature-icon {
+      font-size: 2.5rem;
+      color: var(--accent-teal);
+      margin-bottom: 1rem;
+    }
+
+    .upload-feature-title {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      color: var(--accent-mint);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-feature-desc {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      opacity: 0.8;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body class="upload-page">
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="upload-hero">
+    <i class="fas fa-cloud-upload-alt upload-hero-icon"></i>
+    <h1>Site-89 Image Hosting</h1>
+    <p class="upload-hero-subtitle">Secure, reliable image hosting for all Site-89 personnel. Upload and share images instantly with permanent URLs.</p>
+  </section>
+
+  <section class="content upload-content">
+    <div class="upload-grid">
+      <div class="upload-main-card">
+        <h2 class="upload-card-title">
+          <i class="fas fa-upload"></i>
+          Upload Image
+        </h2>
+
+        <div class="upload-dropzone" id="dropzone">
+          <i class="fas fa-cloud-upload-alt upload-dropzone-icon"></i>
+          <div class="upload-dropzone-text">Drop your image here or click to browse</div>
+          <div class="upload-dropzone-hint">Supports PNG, JPEG, WebP, GIF, BMP, SVG • Max 10MB</div>
+          <input id="imageFile" class="upload-input-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/svg+xml" />
+        </div>
+
+        <div id="previewSection" class="upload-preview-section">
+          <div class="upload-preview-box">
+            <img id="previewImg" class="upload-preview-img" src="" alt="Preview">
+            <div id="previewInfo" class="upload-preview-info"></div>
+          </div>
+        </div>
+
+        <button id="uploadBtn" class="upload-btn" type="button">
+          <i class="fas fa-upload"></i>
+          Upload to Server
+        </button>
+
+        <div id="uploadResult" class="upload-result">
+          <div class="upload-result-title">
+            <i class="fas fa-check-circle"></i>
+            Upload Successful!
+          </div>
+          <div class="upload-result-url" id="imageUrl"></div>
+          <div class="upload-result-actions">
+            <button id="copyBtn" class="upload-copy-btn" type="button">
+              <i class="fas fa-copy"></i>
+              Copy URL
+            </button>
+            <button id="copyMarkdownBtn" class="upload-copy-btn" type="button">
+              <i class="fab fa-markdown"></i>
+              Copy Markdown
+            </button>
+          </div>
+        </div>
+
+        <div id="uploadError" class="upload-error">
+          <div class="upload-error-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            Upload Failed
+          </div>
+          <div id="uploadErrorText"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="upload-info-card">
+          <h3 class="upload-info-title">Upload Guidelines</h3>
+          <ul class="upload-info-list">
+            <li>
+              <i class="fas fa-lock"></i>
+              <span>Authentication required</span>
+            </li>
+            <li>
+              <i class="fas fa-file-image"></i>
+              <span>Max file size: 10MB</span>
+            </li>
+            <li>
+              <i class="fas fa-shield-alt"></i>
+              <span>Secure server storage</span>
+            </li>
+            <li>
+              <i class="fas fa-link"></i>
+              <span>Permanent URLs</span>
+            </li>
+            <li>
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Fast CDN delivery</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-features">
+      <div class="upload-feature">
+        <i class="fas fa-rocket upload-feature-icon"></i>
+        <div class="upload-feature-title">Lightning Fast</div>
+        <div class="upload-feature-desc">Images are stored on high-performance servers with instant global delivery.</div>
+      </div>
+
+      <div class="upload-feature">
+        <i class="fas fa-database upload-feature-icon"></i>
+        <div class="upload-feature-title">Permanent Storage</div>
+        <div class="upload-feature-desc">Your images are safely stored with permanent URLs that never expire.</div>
+      </div>
+
+      <div class="upload-feature">
+        <i class="fas fa-lock upload-feature-icon"></i>
+        <div class="upload-feature-title">Secure & Private</div>
+        <div class="upload-feature-desc">All uploads are secured and only accessible to authenticated Site-89 personnel.</div>
+      </div>
+    </div>
+  </section>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/uploads.js?v=2026-02-27-3"></script>
+  
+  <script>
+    // Drag and drop functionality
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('imageFile');
+    const previewSection = document.getElementById('previewSection');
+    const previewImg = document.getElementById('previewImg');
+    const previewInfo = document.getElementById('previewInfo');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('drag-over');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        handleFileSelect(files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          previewInfo.textContent = `${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+          previewSection.classList.add('active');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+</body>
+</html>

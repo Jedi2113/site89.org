@@ -10,8 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/assets/css/main.css">
-  <!-- TinyMCE Rich Text Editor -->
-  <script src="https://cdn.tiny.cloud/1/wgqechbx2jopsbvntv872129bj4qw3wbxsvy35z27edgkqz4/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 
   <!-- Theme System -->
   <script type="module">
@@ -433,16 +431,19 @@
       <div class="char-editor-header">
         <img id="charEditorImage" class="char-editor-image" src="https://via.placeholder.com/150" alt="Character photo">
         <div style="flex: 1;">
-          <input type="text" id="charImgurLink" placeholder="Catbox image URL (e.g., https://files.catbox.moe/...)">
-          <button type="button" id="updatePhotoBtn" style="width: 100%; margin-top: 0.5rem; padding: 0.6rem; background: var(--accent-teal); color: #fff; border: none; border-radius: 6px; cursor: pointer;">Update Photo</button>
+          <input type="file" id="charImageFile" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-bottom: 0.5rem;">
+          <button type="button" id="updatePhotoBtn" style="width: 100%; margin-top: 0.5rem; padding: 0.6rem; background: var(--accent-teal); color: #fff; border: none; border-radius: 6px; cursor: pointer;">Upload Photo</button>
         </div>
       </div>
 
       <label style="display: block; margin: 1rem 0 0.5rem 0; color: var(--text-light);">Rank:</label>
       <input type="text" id="charEditorRank" placeholder="e.g., Junior Researcher">
 
-      <label style="display: block; margin: 1rem 0 0.5rem 0; color: var(--text-light);">Bio:</label>
-      <textarea id="charEditorBio" placeholder="Enter character bio..."></textarea>
+      <label style="display: block; margin: 1rem 0 0.5rem 0; color: var(--text-light);">Bio (Markdown):</label>
+      <div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.5rem; opacity: 0.8;">
+        Use Markdown formatting: **bold**, *italic*, # headers, - lists, [links](url)
+      </div>
+      <textarea id="charEditorBio" placeholder="Enter character bio using Markdown..." style="min-height: 200px;"></textarea>
 
       <div class="form-buttons">
         <button id="saveCharProfileBtn" class="btn-submit">Save Profile</button>
@@ -676,7 +677,6 @@
 
     const charEditor = document.getElementById("charEditor");
     const charEditorImage = document.getElementById("charEditorImage");
-    const charImgurLink = document.getElementById("charImgurLink");
     const updatePhotoBtn = document.getElementById("updatePhotoBtn");
     const charEditorRank = document.getElementById("charEditorRank");
     const charEditorBio = document.getElementById("charEditorBio");
@@ -860,26 +860,64 @@
     closeCharEditor.addEventListener("click", () => {
       charEditor.classList.remove("active");
       charEditorFeedback.style.display = "none";
-      // Remove TinyMCE when closing modal
-      if (tinymce.get('charEditorBio')) {
-        tinymce.remove('#charEditorBio');
-      }
     });
 
-    updatePhotoBtn.addEventListener("click", () => {
-      const url = charImgurLink.value.trim();
-      if (!url) {
-        showFeedback(charEditorFeedback, "Please enter an Imgur URL", "error");
+    updatePhotoBtn.addEventListener("click", async () => {
+      const fileInput = document.getElementById('charImageFile');
+      const selectedFile = fileInput.files && fileInput.files[0];
+      
+      if (!selectedFile) {
+        showFeedback(charEditorFeedback, "Please select an image file", "error");
         return;
       }
 
-      if (!url.includes("imgur")) {
-        showFeedback(charEditorFeedback, "Please enter a valid Imgur URL", "error");
+      const user = auth.currentUser;
+      if (!user) {
+        showFeedback(charEditorFeedback, "You must be logged in to upload", "error");
         return;
       }
 
-      charEditorImage.src = url;
-      showFeedback(charEditorFeedback, "Photo updated (will save when you click Save Profile)", "success");
+      updatePhotoBtn.disabled = true;
+      updatePhotoBtn.textContent = "Uploading...";
+      charEditorFeedback.style.display = "none";
+
+      try {
+        const idToken = await user.getIdToken();
+        const response = await fetch('/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            'Content-Type': selectedFile.type || 'application/octet-stream'
+          },
+          body: selectedFile
+        });
+
+        let payload = null;
+        const responseText = await response.text();
+        if (responseText) {
+          try {
+            payload = JSON.parse(responseText);
+          } catch (_error) {
+            payload = null;
+          }
+        }
+
+        if (!response.ok || !payload || !payload.url) {
+          const fallbackError = response.status === 401
+            ? 'You must be logged in to upload images.'
+            : 'Upload failed';
+          throw new Error((payload && payload.error) || fallbackError);
+        }
+
+        charEditorImage.src = payload.url;
+        fileInput.value = ''; // Clear the file input
+        showFeedback(charEditorFeedback, "Photo uploaded (will save when you click Save Profile)", "success");
+      } catch (error) {
+        showFeedback(charEditorFeedback, "Upload error: " + error.message, "error");
+      } finally {
+        updatePhotoBtn.disabled = false;
+        updatePhotoBtn.textContent = "Upload Photo";
+      }
     });
 
     saveCharProfileBtn.addEventListener("click", async () => {
@@ -889,9 +927,8 @@
       saveCharProfileBtn.textContent = "Saving...";
 
       try {
-        // Get bio from TinyMCE editor
-        const editor = tinymce.get('charEditorBio');
-        const bioContent = editor ? editor.getContent() : charEditorBio.value;
+        // Get bio from textarea
+        const bioContent = charEditorBio.value;
 
         const charRef = doc(db, "characters", currentEditingCharId);
         await updateDoc(charRef, {
@@ -948,43 +985,10 @@
             currentEditingCharId = charId;
             editCharName.textContent = char.name || "Unknown";
             charEditorRank.value = char.rank || "";
-            charImgurLink.value = char.profileImage || "";
             charEditorImage.src = char.profileImage || "https://via.placeholder.com/150";
             
-            // Initialize TinyMCE if not already done
-            if (!tinymce.get('charEditorBio')) {
-              tinymce.init({
-                selector: '#charEditorBio',
-                plugins: 'lists link image code textcolor',
-                toolbar: 'undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | removeformat code',
-                menubar: 'file edit view insert format tools',
-                height: 300,
-                skin: 'oxide-dark',
-                content_css: 'dark',
-                setup: function(editor) {
-                  editor.on('change', function() {
-                    tinymce.get('charEditorBio').save();
-                  });
-                }
-              });
-              // Wait a moment for TinyMCE to initialize, then load content
-              setTimeout(() => {
-                const editor = tinymce.get('charEditorBio');
-                if (editor) {
-                  editor.setContent(char.bio || "");
-                } else {
-                  charEditorBio.value = char.bio || "";
-                }
-              }, 100);
-            } else {
-              // TinyMCE already initialized, just load content
-              const editor = tinymce.get('charEditorBio');
-              if (editor) {
-                editor.setContent(char.bio || "");
-              } else {
-                charEditorBio.value = char.bio || "";
-              }
-            }
+            // Load bio content
+            charEditorBio.value = char.bio || "";
             
             charEditor.classList.add("active");
             charEditorFeedback.style.display = "none";

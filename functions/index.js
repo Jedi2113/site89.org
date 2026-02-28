@@ -1,6 +1,9 @@
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
+const express = require('express');
+const crypto = require('crypto');
 
 admin.initializeApp();
 
@@ -201,6 +204,7 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
       format: 'markdown',
       status: 'sent',
       folder: '',
+      deletedBy: [],
       ts: admin.firestore.FieldValue.serverTimestamp()
     });
     console.log('✅ Email created successfully!');
@@ -209,3 +213,199 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
     throw error;
   }
 });
+
+const IMAGE_CODE_LENGTH = 8;
+const IMAGE_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const IMAGE_ALLOWED_MIME_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'image/bmp',
+  'image/svg+xml'
+]);
+
+const IMAGE_MIME_EXTENSIONS = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'image/bmp': '.bmp',
+  'image/svg+xml': '.svg'
+};
+
+function normalizeMimeType(contentType = '') {
+  return contentType.toString().split(';')[0].trim().toLowerCase();
+}
+
+function normalizeImageCode(input = '') {
+  const cleaned = input.toString().trim();
+  const match = cleaned.match(/^([A-Za-z0-9]{6,32})(?:\.[A-Za-z0-9]+)?$/);
+  return match ? match[1] : '';
+}
+
+function randomImageCode() {
+  const bytes = crypto.randomBytes(IMAGE_CODE_LENGTH);
+  return bytes
+    .toString('base64')
+    .replace(/\+/g, 'A')
+    .replace(/\//g, 'B')
+    .replace(/=/g, '')
+    .slice(0, IMAGE_CODE_LENGTH);
+}
+
+async function createUniqueImageCode() {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const code = randomImageCode();
+    const doc = await db.collection('image_files').doc(code).get();
+    if (!doc.exists) return code;
+  }
+  throw new Error('Unable to generate unique image code');
+}
+
+async function verifyUserFromRequest(req) {
+  const authHeader = (req.headers.authorization || '').trim();
+  if (!authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7).trim();
+  if (!token) return null;
+
+  try {
+    return await admin.auth().verifyIdToken(token);
+  } catch (_error) {
+    return null;
+  }
+}
+
+const imageApiApp = express();
+
+imageApiApp.get('/image/:code', async (req, res) => {
+  const code = normalizeImageCode(req.params.code);
+  if (!code) {
+    res.status(404).send('Not found');
+    return;
+  }
+
+  const imageDoc = await db.collection('image_files').doc(code).get();
+  if (!imageDoc.exists) {
+    res.status(404).send('Not found');
+    return;
+  }
+
+  const imageData = imageDoc.data() || {};
+  const storagePath = imageData.storagePath;
+  if (!storagePath) {
+    res.status(404).send('Not found');
+    return;
+  }
+
+  try {
+    const bucket = admin.storage().bucket('site-89-2d768.firebasestorage.app');
+    const storageFile = bucket.file(storagePath);
+    const [exists] = await storageFile.exists();
+    if (!exists) {
+      res.status(404).send('Not found');
+      return;
+    }
+
+    const contentType = imageData.mimeType || 'application/octet-stream';
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    storageFile.createReadStream().pipe(res);
+  } catch (error) {
+    console.error('Image read error:', error);
+    res.status(500).send('Failed to load image');
+  }
+});
+
+imageApiApp.post('/upload', express.raw({ type: '*/*', limit: IMAGE_MAX_UPLOAD_BYTES }), async (req, res) => {
+  const verifiedUser = await verifyUserFromRequest(req);
+  if (!verifiedUser) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const mimeType = normalizeMimeType(req.get('content-type'));
+  if (!IMAGE_ALLOWED_MIME_TYPES.has(mimeType)) {
+    res.status(400).json({ error: 'Unsupported file type' });
+    return;
+  }
+
+  const uploadedBuffer = Buffer.isBuffer(req.body) ? req.body : null;
+  if (!uploadedBuffer || !uploadedBuffer.length) {
+    res.status(400).json({ error: 'No file uploaded' });
+    return;
+  }
+
+  try {
+    const code = await createUniqueImageCode();
+    const extension = IMAGE_MIME_EXTENSIONS[mimeType] || '.bin';
+    const storagePath = `images/${code}${extension}`;
+
+    const bucket = admin.storage().bucket('site-89-2d768.firebasestorage.app');
+    const storageFile = bucket.file(storagePath);
+
+    await storageFile.save(uploadedBuffer, {
+      resumable: false,
+      contentType: mimeType,
+      metadata: {
+        cacheControl: 'public, max-age=31536000, immutable'
+      }
+    });
+
+    await db.collection('image_files').doc(code).set({
+      code,
+      extension,
+      mimeType,
+      size: uploadedBuffer.length,
+      storagePath,
+      uploaderUid: verifiedUser.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Always use site89.org domain for image URLs
+    const url = `https://site89.org/image/${code}${extension}`;
+
+    res.status(201).json({
+      code,
+      extension,
+      url
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Upload failed';
+    if (error.code === 'storage/unauthorized') {
+      errorMessage = 'Storage access denied. Please check Firebase Storage configuration.';
+    } else if (error.code === 'storage/bucket-not-found') {
+      errorMessage = 'Storage bucket not found. Please configure Firebase Storage.';
+    } else if (error.code === 'storage/quota-exceeded') {
+      errorMessage = 'Storage quota exceeded. Please contact administrator.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
+imageApiApp.use((error, _req, res, next) => {
+  if (!error) {
+    next();
+    return;
+  }
+
+  if (error.type === 'entity.too.large' || error.code === 'LIMIT_FILE_SIZE') {
+    res.status(400).json({ error: 'File exceeds 10MB upload limit' });
+    return;
+  }
+
+  console.error('Image API middleware error:', error);
+  res.status(400).json({ error: error.message || 'Invalid upload request' });
+});
+
+imageApiApp.use((_req, res) => {
+  res.status(404).send('Not found');
+});
+
+exports.imageApi = onRequest({ invoker: 'public' }, imageApiApp);

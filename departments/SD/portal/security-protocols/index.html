@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Protocols — SD Portal — Site-89</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .page-header {
+      background: linear-gradient(135deg, rgba(78,250,170,0.1) 0%, rgba(78,250,170,0.02) 100%);
+      padding: 2rem 1rem;
+      text-align: center;
+      border-bottom: 2px solid rgba(78,250,170,0.2);
+      margin-bottom: 2rem;
+    }
+    .page-header h1 {
+      margin: 0 0 0.5rem 0;
+      font-family: var(--font-head);
+      color: var(--accent-mint);
+      font-size: 2rem;
+    }
+    .page-header .sub {
+      color: var(--text-light);
+      opacity: 0.9;
+      font-size: 1.05rem;
+    }
+
+    .page-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem 2rem 1rem;
+    }
+
+    .access-notice {
+      background: rgba(255,200,0,0.05);
+      border: 1px solid rgba(255,200,0,0.2);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-light);
+    }
+
+    .protocol-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .protocol-card {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid rgba(78,250,170,0.12);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .protocol-card h2 {
+      margin: 0 0 0.6rem 0;
+      color: var(--accent-mint);
+      font-size: 1.25rem;
+      border-bottom: 1px solid rgba(78,250,170,0.1);
+      padding-bottom: 0.45rem;
+    }
+
+    .protocol-card p {
+      margin: 0;
+      color: var(--text-light);
+      line-height: 1.65;
+      opacity: 0.95;
+    }
+
+    .page-actions {
+      display: none;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(78,250,170,0.12);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <div class="page-header">
+    <h1>Security Protocols</h1>
+    <div class="sub">Security Department operational assignments and rotation descriptions</div>
+  </div>
+
+  <main class="page-wrap">
+    <div class="access-notice" id="accessNotice">Checking access credentials...</div>
+
+    <section class="protocol-list">
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Basic Security Rotation (1K1)</h2>
+        <p>Basic Security Rotation (1K1) consists of the majority of SD personnel assignments and encompasses a number of positions within Site-89. Assigned personnel are responsible for the surveillance, security, and protection of Site-89 resources and personnel. Locations consist of checkpoints, entrances, processing centers, and office blocks. Personnel are to be routinely transferred between guard positions on a fixed schedule unless warranted otherwise by security administration or commanding officer.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Class-D Zone Control (1K3)</h2>
+        <p>Class-D Zone Control (1K3) is the basic CDCZ Operations. Assigned personnel are tasked with the responsibility of patrolling individual detention blocks, escorts to detention cells, inspection of cells for contraband, and suppression of hostile behavior. Additionally, personnel are to move Class-D in and out of the CDCZ, including for tests and medical checks.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Hazardous Materials (1K5)</h2>
+        <p>Hazardous Materials (1K5) consists of operations in hazardous environments containing biological, chemical, radiological, or explosive substances. S&amp;C Personnel are to secure the area, while CBRNE Units secure the hazard. S&amp;C and CBRNE Personnel are tasked with patrolling sectors that function in the containment or processing of hazardous substances and secure/evacuate affected locations in the event of leakage or rupture.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Containment Zone Sweep (1K7)</h2>
+        <p>Containment Zone Sweep (1K7) consists of various critical roles in containment sectors housing anomalous items or entities. Personnel are to additionally perform strict identification and credential inspections of incoming and outgoing staff. Assigned personnel typically consist of experienced/veteran personnel, although additional manpower may be required if deemed necessary. Personnel adhere to a strict schedule in rotations between posts leading to and from individual containment cells.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Intake (1K9)</h2>
+        <p>Intake (1K9) consists of the processing of incoming anomalous items and entities. Personnel are tasked with assisting containment assets in ensuring the safety of staff as well as providing a contingent defense in the event of an attempted breach or containment failure. All personnel are additionally provided a tentative schedule detailing the dates of all incoming transfers. Required manpower is determined by the anomaly's threat level and classification; reserve teams are to remain on stand-by during processing.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Quick Reaction Force (2L)</h2>
+        <p>Quick Reaction Force (2L) are full force ATRA Deployments, with spare S&amp;C units there to assist. QRF’s are headed by the highest ranking ATRA Member there, regardless of S&amp;C members there.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Incident Control (4L)</h2>
+        <p>Incident Control (4L) usually consists of one or several shifts or periods of time where personnel are tasked with securing the area of a past incident, normally recent, and begin investigating the cause of the event. Furthermore, Detectives or a/multiple SIS agent(s) will take charge of the situation, depending on severity. Personnel are tasked with figuring out how something happened, and reporting how they could prevent further incidents.</p>
+      </article>
+
+      <article class="protocol-card" data-requires-access="true">
+        <h2>Exterior Operations (6L)</h2>
+        <p>Exterior Operations (6L) consists of all avalible Security Members, along with volunteering research personnel investigate some sort of incident on foundation property. MTF members may also be present, depending on the severity of the situation.</p>
+      </article>
+    </section>
+
+    <div class="page-actions" data-requires-access="true">
+      <a href="/departments/SD/portal/" class="btn-primary">← Back to SD Portal</a>
+    </div>
+  </main>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module">
+    import { auth } from "/assets/js/auth.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+    function checkAccess() {
+      const notice = document.getElementById('accessNotice');
+      const gated = document.querySelectorAll('[data-requires-access="true"]');
+      try {
+        const raw = localStorage.getItem('selectedCharacter');
+        if (!raw) {
+          window.location.replace('/403/');
+          return;
+        }
+        const ch = JSON.parse(raw);
+        const dept = ch && ch.department ? String(ch.department) : '';
+        if (dept.indexOf('SD/') === -1) {
+          window.location.replace('/403/');
+          return;
+        }
+
+        notice.style.display = 'none';
+        gated.forEach((el) => {
+          if (el.classList.contains('protocol-card')) {
+            el.style.display = 'block';
+            return;
+          }
+          if (el.classList.contains('page-actions')) {
+            el.style.display = 'block';
+            return;
+          }
+          el.style.display = '';
+        });
+      } catch (err) {
+        window.location.replace('/403/');
+        console.error('security protocols access error', err);
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.replace('/403/');
+        return;
+      }
+      checkAccess();
+    });
+
+    document.addEventListener('scroll', () => {
+      const nav = document.getElementById('main-nav');
+      if (nav) nav.classList.toggle('is-sticky', window.scrollY > 120);
+    });
+  </script>
+</body>
+</html>
