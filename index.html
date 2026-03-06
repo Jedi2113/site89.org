@@ -161,9 +161,20 @@
       position: fixed;
       right: 2.5rem;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translate3d(0, -50%, 0);
+      transition: transform 0.35s ease, box-shadow 0.25s ease;
       width: min(360px, 90vw);
       z-index: 30;
+    }
+
+    .hero-event-card.is-initializing {
+      visibility: hidden;
+      transition: none;
+    }
+
+    .hero-event-card.is-collapsed {
+      transform: translate3d(calc(100% + 3rem), -50%, 0);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
     }
 
     .hero-event-header {
@@ -174,6 +185,12 @@
       padding: 0.85rem 1rem 0.6rem;
       border-bottom: 1px solid rgba(78, 250, 170, 0.1);
       background: linear-gradient(90deg, rgba(0, 124, 107, 0.25), rgba(78, 250, 170, 0.08));
+    }
+
+    .hero-event-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .hero-event-label {
@@ -194,6 +211,55 @@
 
     .hero-event-link:hover {
       color: var(--accent-mint);
+    }
+
+    .hero-event-collapse-btn,
+    .hero-event-expand-btn {
+      border: 1px solid rgba(78, 250, 170, 0.28);
+      background: rgba(13, 13, 14, 0.82);
+      color: var(--accent-mint);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.35s ease, opacity 0.2s ease;
+    }
+
+    .hero-event-collapse-btn {
+      width: 34px;
+      height: 68px;
+      border-radius: 10px;
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .hero-event-expand-btn {
+      position: fixed;
+      right: 0.85rem;
+      top: 50%;
+      width: 34px;
+      height: 68px;
+      border-radius: 10px;
+      z-index: 31;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(115%, -50%, 0);
+    }
+
+    .hero-event-expand-btn.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate3d(0, -50%, 0);
+    }
+
+    .hero-event-collapse-btn:hover,
+    .hero-event-expand-btn:hover {
+      background: rgba(78, 250, 170, 0.12);
+      border-color: rgba(78, 250, 170, 0.6);
+      color: var(--accent-teal);
     }
 
     .hero-event-banner {
@@ -243,58 +309,6 @@
       color: var(--text-light);
       opacity: 0.75;
       font-size: 0.9rem;
-    }
-
-    .status-bar {
-      display: inline-flex;
-      gap: 2rem;
-      margin-bottom: 3rem;
-      padding: 1rem 2rem;
-      background: rgba(26, 26, 28, 0.6);
-      border: 1px solid rgba(78, 250, 170, 0.2);
-      border-radius: 8px;
-      backdrop-filter: blur(10px);
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-    }
-
-    .status-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent-mint);
-      animation: pulse 2s infinite;
-    }
-
-    .status-indicator.online {
-      background: var(--accent-mint);
-      animation: pulse 2s infinite;
-    }
-
-    .status-indicator.offline {
-      background: var(--accent-red);
-      animation: pulse-danger 2s infinite;
-    }
-
-    .status-indicator.checking {
-      background: #ffc857;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    @keyframes pulse-danger {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
     }
 
     .cta-buttons {
@@ -752,9 +766,8 @@
         display: none;
       }
 
-      .status-bar {
-        flex-direction: column;
-        gap: 1rem;
+      .hero-event-expand-btn {
+        display: none;
       }
 
       .cta-buttons {
@@ -1847,10 +1860,15 @@
           <h1 class="main-title">SITE-89</h1>
           <p class="subtitle">Secure Foundation Portal</p>
         </div>
-        <div class="hero-event-card" id="heroEventCard">
+        <div class="hero-event-card is-initializing" id="heroEventCard" aria-expanded="true">
           <div class="hero-event-header">
             <span class="hero-event-label">Closest Event</span>
-            <a class="hero-event-link" href="/events/">View all</a>
+            <div class="hero-event-actions">
+              <a class="hero-event-link" href="/events/">View all</a>
+              <button class="hero-event-collapse-btn" id="heroEventCollapseBtn" type="button" aria-controls="heroEventCard" aria-label="Collapse closest event widget">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
           <img class="hero-event-banner" id="heroEventBanner" src="/assets/img/dataunavailable.png" alt="Event banner">
           <div class="hero-event-body" id="heroEventBody">
@@ -1863,25 +1881,13 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="status-bar" onclick="window.location.href='/status/'" style="cursor: pointer;" title="View detailed status">
-        <div class="status-item" id="status-mc">
-          <span class="status-indicator checking"></span>
-          <span class="status-text">SERVER: <span class="status-value">CHECKING</span></span>
-        </div>
-        <div class="status-item" id="status-catbox">
-          <span class="status-indicator checking"></span>
-          <span class="status-text">CDN: <span class="status-value">CHECKING</span></span>
-        </div>
-        <div class="status-item" id="status-msa">
-          <span class="status-indicator checking"></span>
-          <span class="status-text">AUTH: <span class="status-value">CHECKING</span></span>
-        </div>
+        <button class="hero-event-expand-btn" id="heroEventExpandBtn" type="button" aria-controls="heroEventCard" aria-label="Expand closest event widget">
+          <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
       </div>
 
       <div class="cta-buttons">
-        <button class="btn-primary" onclick="document.querySelector('.info-section').scrollIntoView({ behavior: 'smooth' })">
+        <button class="btn-primary" onclick="scrollToFacilityContent()">
           <i class="fas fa-arrow-down"></i> Enter Facility
         </button>
         <button id="authBtn" class="btn-secondary">
@@ -2245,6 +2251,7 @@
     import { app, auth } from "/assets/js/auth.js";
     import { getFirestore, collection, getDocs, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { autoSelectFirstCharacter } from "/assets/js/character-auto-select.js";
 
     const db = getFirestore(app);
 
@@ -2254,6 +2261,11 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        // Auto-select first active character if not already selected
+        autoSelectFirstCharacter(user.uid).catch(err => {
+          console.error("Failed to auto-select character:", err);
+        });
+
         // Close modal if user logs in
         closeFirstTimeModal();
         
@@ -2328,6 +2340,26 @@
       });
     }
 
+    function scrollToFacilityContent() {
+      const targets = [
+        document.getElementById('welcomeSection'),
+        document.querySelector('.why-section'),
+        document.querySelector('.activity-section'),
+        document.querySelector('.departments-section'),
+        document.querySelector('.archive-section'),
+        document.getElementById('condensedStatsSection')
+      ].filter(Boolean);
+
+      const firstVisibleTarget = targets.find((section) => {
+        const style = window.getComputedStyle(section);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      });
+
+      if (firstVisibleTarget) {
+        firstVisibleTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
     // Load statistics
     async function loadStats() {
       try {
@@ -2355,6 +2387,7 @@
       updateDevTime();
     }
 
+    initHeroEventCardToggle();
     loadStats();
 
     function resolveEventStart(value) {
@@ -2367,6 +2400,54 @@
     function formatEventDate(date) {
       if (!date) return 'Start time TBD';
       return `Starts ${date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`;
+    }
+
+    function initHeroEventCardToggle() {
+      const card = document.getElementById('heroEventCard');
+      const collapseBtn = document.getElementById('heroEventCollapseBtn');
+      const expandBtn = document.getElementById('heroEventExpandBtn');
+      const socialButtons = document.querySelector('.hero-social');
+
+      if (!card || !collapseBtn || !expandBtn) return;
+
+      const setCollapsed = (collapsed) => {
+        card.classList.toggle('is-collapsed', collapsed);
+        card.setAttribute('aria-expanded', String(!collapsed));
+        expandBtn.classList.toggle('is-visible', collapsed);
+      };
+
+      collapseBtn.addEventListener('click', () => setCollapsed(true));
+      expandBtn.addEventListener('click', () => setCollapsed(false));
+
+      const updateByScroll = () => {
+        if (window.innerWidth <= 768 || !socialButtons) {
+          setCollapsed(false);
+          return;
+        }
+
+        const socialRect = socialButtons.getBoundingClientRect();
+        const socialMidpoint = socialRect.top + (socialRect.height / 2);
+        const hasScrolledPastHero = socialMidpoint <= (window.innerHeight * 0.5);
+        setCollapsed(hasScrolledPastHero);
+      };
+
+      const finalizeInitialPosition = () => {
+        updateByScroll();
+        requestAnimationFrame(() => {
+          updateByScroll();
+          card.classList.remove('is-initializing');
+        });
+      };
+
+      if (document.readyState === 'complete') {
+        finalizeInitialPosition();
+      } else {
+        window.addEventListener('load', finalizeInitialPosition, { once: true });
+      }
+
+      window.addEventListener('scroll', updateByScroll, { passive: true });
+      window.addEventListener('resize', updateByScroll);
+      window.addEventListener('pageshow', updateByScroll);
     }
 
     async function loadClosestEvent() {
@@ -2822,94 +2903,6 @@
       }
     }
 
-    // Live status checking
-    const WORKER_ENDPOINT = 'https://status.jedi21132.workers.dev/status';
-    const MC_STATUS_API = 'https://api.mcsrvstat.us/2/play.site89.org';
-
-    function setIndicator(item, state) {
-      if (!item) return;
-      const indicator = item.querySelector('.status-indicator');
-      const value = item.querySelector('.status-value');
-      indicator.className = `status-indicator ${state}`;
-      value.textContent = state === 'online' ? 'ONLINE' : 'OFFLINE';
-      
-      // Update enhanced status display
-      updateEnhancedStatusDisplay();
-    }
-    
-    function updateEnhancedStatusDisplay() {
-      const mcItem = document.getElementById('status-mc');
-      const catboxItem = document.getElementById('status-catbox');
-      const msaItem = document.getElementById('status-msa');
-      
-      const mcVal = document.getElementById('status-mc-val');
-      const cdnVal = document.getElementById('status-cdn-val');
-      const authVal = document.getElementById('status-auth-val');
-      const overallVal = document.getElementById('status-overall-val');
-      
-      if (!mcVal || !cdnVal || !authVal || !overallVal) return;
-      
-      const mcStatus = mcItem?.querySelector('.status-value')?.textContent === 'ONLINE' ? '🟢 ONLINE' : '🔴 OFFLINE';
-      const cdnStatus = catboxItem?.querySelector('.status-value')?.textContent === 'ONLINE' ? '🟢 ONLINE' : '🔴 OFFLINE';
-      const authStatus = msaItem?.querySelector('.status-value')?.textContent === 'ONLINE' ? '🟢 ONLINE' : '🔴 OFFLINE';
-      
-      mcVal.textContent = mcStatus;
-      cdnVal.textContent = cdnStatus;
-      authVal.textContent = authStatus;
-      
-      // Calculate overall status
-      const allOnline = mcStatus.includes('🟢') && cdnStatus.includes('🟢') && authStatus.includes('🟢');
-      overallVal.textContent = allOnline ? '✓ OPERATIONAL' : '⚠ DEGRADED';
-      overallVal.style.color = allOnline ? 'var(--accent-mint)' : '#ffc857';
-    }
-    
-    async function updateHomeStatus() {
-      const mcItem = document.getElementById('status-mc');
-      const catboxItem = document.getElementById('status-catbox');
-      const msaItem = document.getElementById('status-msa');
-      
-      if (!mcItem || !catboxItem || !msaItem) return;
-      
-      // Always check Minecraft directly via mcsrvstat.us for reliability
-      try {
-        const mcRes = await fetch(MC_STATUS_API, { cache: 'no-store' });
-        let mcOnline = false;
-        if (mcRes.ok) {
-          try {
-            const mcJson = await mcRes.json();
-            mcOnline = mcJson?.online === true;
-          } catch (parseErr) {
-            mcOnline = false;
-          }
-        }
-        setIndicator(mcItem, mcOnline ? 'online' : 'offline');
-      } catch (err) {
-        setIndicator(mcItem, 'offline');
-      }
-      
-      // Use worker for other services
-      try {
-        const res = await fetch(WORKER_ENDPOINT, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Worker unavailable');
-        const json = await res.json();
-        const services = json.services || [];
-        
-        const catbox = services.find(s => s.id === 'catbox');
-        const msa = services.find(s => s.id === 'msa');
-        
-        if (catbox) setIndicator(catboxItem, catbox.state === 'online' ? 'online' : 'offline');
-        if (msa) setIndicator(msaItem, msa.state === 'online' ? 'online' : 'offline');
-      } catch (err) {
-        // Keep current indicators on error
-        console.error('Status check failed:', err);
-      }
-    }
-    
-    // Check immediately and every 60 seconds
-    if (document.getElementById('status-mc')) {
-      updateHomeStatus();
-      setInterval(updateHomeStatus, 60000);
-    }
   </script>
 
 </body>

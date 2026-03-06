@@ -24,16 +24,6 @@ class StatusMonitor {
         isOnline: false,
         uptime: 100,
         isExternal: true
-      },
-      {
-        id: 'catbox',
-        name: 'Catbox Services',
-        icon: 'fas fa-server',
-        endpoint: '162.251.11.78:25561',
-        lastResponseTime: null,
-        isOnline: false,
-        uptime: 100,
-        isExternal: true
       }
     ];
 
@@ -107,10 +97,6 @@ class StatusMonitor {
         const data = await response.json();
         service.lastResponseTime = Date.now() - startTime;
         service.isOnline = data.online === true;
-      } else if (service.id === 'catbox') {
-        // Check TCP connection to Catbox server
-        service.isOnline = await this.checkTCPConnection(service.endpoint);
-        service.lastResponseTime = Date.now() - startTime;
       }
     } catch (error) {
       service.isOnline = false;
@@ -131,38 +117,6 @@ class StatusMonitor {
         setTimeout(() => reject(new Error('Timeout')), timeout)
       )
     ]);
-  }
-
-  async checkTCPConnection(hostPort) {
-    try {
-      // Use a WebSocket to attempt connection (works in browsers)
-      const [host, port] = hostPort.split(':');
-      return await new Promise((resolve) => {
-        const socket = new WebSocket(`ws://${host}:${port}`, { timeout: 5000 });
-        
-        const timeout = setTimeout(() => {
-          socket.close();
-          resolve(false);
-        }, 5000);
-
-        socket.onopen = () => {
-          clearTimeout(timeout);
-          socket.close();
-          resolve(true);
-        };
-
-        socket.onerror = () => {
-          clearTimeout(timeout);
-          resolve(false);
-        };
-
-        socket.onclose = () => {
-          clearTimeout(timeout);
-        };
-      });
-    } catch (error) {
-      return false;
-    }
   }
 
   updateServiceUI(service) {

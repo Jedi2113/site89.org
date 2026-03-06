@@ -535,18 +535,79 @@ footer p { margin:0; }
 .nav-search { position: relative; display:inline-flex; align-items:center; }
 .nav-search input { width: 220px; padding: .4rem .6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04); background: #0f0f10; color: var(--text-light); transition: box-shadow .12s ease; }
 .nav-search input:focus { outline: none; box-shadow: 0 6px 18px rgba(78,250,170,0.06); }
-.search-results { position: absolute; top: calc(100% + 8px); left: 0; width: 360px; max-width: 90vw; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); z-index: 1200; overflow: hidden; max-height: 400px; overflow-y: auto; }
+.search-results { position: absolute; top: calc(100% + 8px); left: 0; width: 420px; max-width: 90vw; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); z-index: 1200; overflow: hidden; max-height: 500px; overflow-y: auto; }
 .search-results[aria-hidden="true"] { display: none; }
 .search-results[aria-hidden="false"] { display: block; }
+
+/* Individual search result item */
+.search-result { 
+  padding: .9rem 1rem; 
+  cursor: pointer; 
+  display:flex; 
+  align-items:flex-start; 
+  gap:.8rem; 
+  text-decoration: none; 
+  color: var(--text-light); 
+  border-bottom: 1px solid rgba(255,255,255,0.04); 
+  transition: all 0.2s ease;
+}
+.search-result:last-child { border-bottom: none; }
+.search-result:hover, .search-result.active { 
+  background: rgba(78,250,170,0.08); 
+  padding-left: 1.2rem;
+}
+
+/* Search result title */
+.search-title { 
+  font-weight: 600; 
+  font-size: .95rem; 
+  margin-bottom: 4px; 
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Search result description */
+.search-desc { 
+  font-size: .85rem; 
+  color: var(--text-dim); 
+  line-height: 1.4;
+}
+
+/* Category badge */
+.search-category {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(78,250,170,0.1);
+  border: 1px solid rgba(78,250,170,0.2);
+  border-radius: 4px;
+  font-size: .7rem;
+  font-weight: 500;
+  color: var(--accent-mint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Empty results message */
+.search-empty { 
+  padding: 1rem 1rem; 
+  color: var(--text-dim); 
+  text-align: center;
+  font-size: .9rem;
+}
+
+/* Legacy compatibility classes (for other search implementations) */
 .search-result-item { padding: .8rem 1rem; cursor: pointer; display:flex; align-items:flex-start; gap:.8rem; text-decoration: none; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.02); transition: background var(--transition); }
 .search-result-item:last-child { border-bottom: none; }
 .search-result-item:hover { background: rgba(78,250,170,0.06); }
 .search-result-item i { color: var(--accent-mint); margin-top: 2px; }
 .search-result-title { font-weight: 600; font-size: .95rem; margin-bottom: 2px; }
 .search-result-subtitle { font-size: .8rem; color: var(--muted); }
-.search-empty { padding: .6rem .8rem; color:var(--text-light); opacity:.8 }
 
-@media (max-width: 800px){ .nav-search input { width: 140px; } .search-results { width: 260px } }
+@media (max-width: 800px){ .nav-search input { width: 140px; } .search-results { width: 280px } }
+
 
 /* helper spacing */
 .kv { display:flex; gap:.6rem; align-items:center }
@@ -716,11 +777,33 @@ html[data-theme="light"] .search-results {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-html[data-theme="light"] .search-result-item:hover {
+html[data-theme="light"] .search-result:hover,
+html[data-theme="light"] .search-result.active {
   background: rgba(30, 155, 138, 0.08);
 }
+
+html[data-theme="light"] .search-title {
+  color: #1A1A1A;
+}
+
+html[data-theme="light"] .search-desc {
+  color: #666666;
+}
+
+html[data-theme="light"] .search-category {
+  background: rgba(30, 155, 138, 0.1);
+  border-color: rgba(30, 155, 138, 0.3);
+  color: #1E9B8A;
+}
+
+html[data-theme="light"] .search-empty {
+  color: #666666;
+}
+
+html[data-theme="light"] .search-result-item:hover {
   background: rgba(0, 163, 137, 0.08);
 }
+
 
 html[data-theme="light"] .nav-accounts-btn {
   border-color: #D0D0D0;

@@ -190,7 +190,7 @@ document.addEventListener('includesLoaded', ()=>{
       
       try{
         const ch = getSelectedCharacter();
-        const author = ch ? (ch.name || auth.currentUser.email) : auth.currentUser.email;
+        const author = ch ? ch.name : null;
         const authorPid = ch ? (ch.pid || '') : '';
         
         await addDoc(collection(db,'incidentReports'), { 

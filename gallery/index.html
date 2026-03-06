@@ -4,6 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Foundation Gallery — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Foundation Gallery: community-contributed art, photos, and screenshots from Site-89 operations.">
+  <meta name="keywords" content="Site-89 gallery, SCP artwork, Foundation art, community gallery, Minecraft screenshots">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Foundation Gallery — Site-89">
+  <meta property="og:description" content="Foundation Gallery: community-contributed art, photos, and screenshots from Site-89 operations.">
+  <meta property="og:url" content="https://site89.github.io/gallery/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Foundation Gallery — Site-89">
+  <meta name="twitter:description" content="View community art and screenshots from Site-89.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/gallery/">
+
   <link rel="stylesheet" href="/assets/css/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <!-- Theme System -->
@@ -652,8 +675,27 @@
       currentUser = user;
       currentUserClearance = 0;
       
+      const uploadModal = document.getElementById('uploadModal');
+      const uploadBtn = document.querySelector('button[onclick="document.getElementById(\'uploadModal\').classList.add(\'active\')"]');
+      const startSubmissionBtn = document.querySelector('.upload-btn');
+      
       if (user) {
-        // Fetch user's clearance
+        // User is logged in - hide submission UI and show auth required message
+        // Only unauthenticated users can submit to gallery
+        galleryContent.style.display = 'block';
+        authRequired.style.display = 'none';
+        
+        // Hide submission buttons
+        if (uploadBtn) uploadBtn.style.display = 'none';
+        if (startSubmissionBtn) startSubmissionBtn.style.display = 'none';
+        
+        // Disable modal access
+        if (uploadModal) {
+          uploadModal.style.display = 'none';
+          uploadModal.classList.remove('active');
+        }
+        
+        // Try to fetch clearance anyway for read-only access
         try {
           const charQuery = query(collection(db, 'characters'), where('linkedUID', '==', user.uid));
           const charSnap = await getDocs(charQuery);
@@ -664,12 +706,17 @@
           console.error('Error fetching clearance:', err);
         }
         
-        galleryContent.style.display = 'block';
-        authRequired.style.display = 'none';
         loadGallery();
       } else {
-        authRequired.style.display = 'block';
-        galleryContent.style.display = 'none';
+        // User is logged out - show submission UI
+        authRequired.style.display = 'none';
+        galleryContent.style.display = 'block';
+        
+        // Show submission buttons
+        if (uploadBtn) uploadBtn.style.display = 'inline-block';
+        if (startSubmissionBtn) startSubmissionBtn.style.display = 'inline-block';
+        
+        loadGallery();
       }
     });
 

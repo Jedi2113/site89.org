@@ -18,14 +18,6 @@ const services = [
     target: 'https://site89.org'
   },
   {
-    id: 'catbox',
-    name: 'catbox.moe',
-    description: 'CDN/upload host',
-    icon: 'fa-solid fa-cloud',
-    type: 'http',
-    target: 'https://catbox.moe'
-  },
-  {
     id: 'msa',
     name: 'Microsoft Auth',
     description: 'login.microsoftonline.com',

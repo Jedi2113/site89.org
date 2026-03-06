@@ -304,7 +304,7 @@ async function submitReply() {
     await addDoc(collection(db, 'forum-threads', threadId, 'replies'), {
       content,
       authorUid: currentUser.uid,
-      authorName: currentCharacter.name || currentUser.email,
+      authorName: currentCharacter ? currentCharacter.name : null,
       authorClearance: userClearance,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -372,7 +372,7 @@ window.submitNestedReply = async function(parentReplyId) {
       content,
       parentReplyId: parentReplyId,
       authorUid: currentUser.uid,
-      authorName: currentCharacter.name || currentUser.email,
+      authorName: currentCharacter ? currentCharacter.name : null,
       authorClearance: userClearance,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()

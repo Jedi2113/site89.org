@@ -4,7 +4,6 @@
 const SERVICES = [
   { id: 'mc', name: 'Minecraft Server', type: 'minecraft', target: 'play.site89.org' },
   { id: 'site', name: 'Site-89 Website', type: 'http', target: 'https://site89.org' },
-  { id: 'catbox', name: 'catbox.moe', type: 'http', target: 'https://catbox.moe' },
   { id: 'msa', name: 'Microsoft Auth', type: 'http', target: 'https://login.microsoftonline.com' }
 ];
 

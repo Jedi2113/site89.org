@@ -4,7 +4,29 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site-89 Manage Characters</title>
+  <title>Manage Characters — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Manage your Site-89 characters. Create, edit, and switch between your Foundation personnel in our Minecraft SCP roleplay server.">
+  <meta name="keywords" content="Site-89 characters, Minecraft SCP characters, manage roleplay characters, Foundation personnel">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Manage Characters — Site-89">
+  <meta property="og:description" content="Manage your Site-89 characters. Create, edit, and switch between your Foundation personnel.">
+  <meta property="og:url" content="https://site89.github.io/character-select/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Manage Characters — Site-89">
+  <meta name="twitter:description" content="Manage your Site-89 characters.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/character-select/">
 
   <!-- Fonts & CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
@@ -462,10 +484,92 @@
   <script type="module">
     import { app, auth } from "/assets/js/auth.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, query, where, addDoc, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc, updateDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
     const db = getFirestore(app);
     let currentUser = null;  // Store current user for use in event listeners
+
+    // Email generation functions
+    function baseLocalFromName(name) {
+      if (!name) return '';
+      const parts = name.trim().split(/\s+/);
+      const first = parts[0] ? parts[0].toLowerCase().replace(/[^a-z]/g, '') : '';
+      const last = parts.length > 1 ? parts[parts.length - 1].toLowerCase().replace(/[^a-z]/g, '') : first;
+      return last && first ? `${last}.${first}` : '';
+    }
+
+    function makeUniqueEmail(baseLocal, counts) {
+      if (!baseLocal) return '';
+      const current = counts.get(baseLocal) || 0;
+      const next = current + 1;
+      counts.set(baseLocal, next);
+      const localPart = next === 1 ? baseLocal : `${baseLocal}${next}`;
+      return `${localPart}@site89.org`.toLowerCase();
+    }
+
+    // Generate an email for a new character
+    async function generateEmailForNewCharacter(name) {
+      try {
+        const snap = await getDocs(collection(db, 'characters'));
+        const counts = new Map();
+        const withEmail = [];
+        const withoutEmail = [];
+
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          if (!data || !data.name) return;
+          const entry = { docId: docSnap.id, ...data };
+          if (entry.email) withEmail.push(entry);
+          else withoutEmail.push(entry);
+        });
+
+        withEmail.forEach(data => {
+          const email = data.email.toLowerCase();
+          const baseLocal = baseLocalFromName(data.name);
+          if (!baseLocal) return;
+          const match = email.match(/@/);
+          if (!match) return;
+          const localPart = email.substring(0, match.index);
+          const numMatch = localPart.match(/(\d+)$/);
+          if (numMatch) {
+            const num = parseInt(numMatch[1], 10);
+            const currentMax = counts.get(baseLocal) || 0;
+            counts.set(baseLocal, Math.max(currentMax, num));
+          } else if (localPart === baseLocal) {
+            const currentMax = counts.get(baseLocal) || 0;
+            counts.set(baseLocal, Math.max(currentMax, 1));
+          }
+        });
+
+        withoutEmail.sort((a, b) => {
+          const aSec = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+          const bSec = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+          const aNanos = a.createdAt && a.createdAt.nanoseconds ? a.createdAt.nanoseconds : 0;
+          const bNanos = b.createdAt && b.createdAt.nanoseconds ? b.createdAt.nanoseconds : 0;
+          if (aSec !== bSec) return aSec - bSec;
+          if (aNanos !== bNanos) return aNanos - bNanos;
+
+          const aPid = String(a.pid || '');
+          const bPid = String(b.pid || '');
+          if (aPid !== bPid) return aPid.localeCompare(bPid);
+
+          return String(a.docId || '').localeCompare(String(b.docId || ''));
+        });
+
+        withoutEmail.forEach(data => {
+          const baseLocal = baseLocalFromName(data.name);
+          if (!baseLocal) return;
+          makeUniqueEmail(baseLocal, counts);
+        });
+
+        // Generate email for new character
+        const baseLocal = baseLocalFromName(name);
+        return makeUniqueEmail(baseLocal, counts);
+      } catch (err) {
+        console.error('Error generating email:', err);
+        return '';
+      }
+    }
 
     // Load only logged-in user's characters (linked to their account)
     async function loadCharacters(userId) {
@@ -496,9 +600,41 @@
           characters.push({ id: docSnap.id, ...docSnap.data() });
         });
 
+        // Filter out inactive and archived characters
+        const activeCharacters = characters.filter(char => {
+          const status = (char.status || 'active').toLowerCase();
+          return status === 'active';
+        });
+
+        if (activeCharacters.length === 0) {
+          // Check for reason from sessionStorage (set by requireCharacterSelection)
+          const reason = sessionStorage.getItem("characterRequirementReason");
+          sessionStorage.removeItem("characterRequirementReason");
+          
+          const reasonText = reason ? `<p style="color: var(--accent-teal); margin: 1rem 0; font-size: 0.95rem;">${reason}</p>` : '';
+          
+          characterGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1; max-width: 500px; margin: 2rem auto;">
+              <i class="fas fa-masks-theater" style="font-size: 3.5rem;"></i>
+              <p style="margin-top: 1.5rem;"><strong style="font-size: 1.2rem;">No Active Characters Available</strong></p>
+              <p style="margin: 0.8rem 0; opacity: 0.8;">You don't currently have any active characters available to select.</p>
+              ${reasonText}
+              <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="opacity: 0.8;">Options:</p>
+                <ul style="text-align: left; display: inline-block; opacity: 0.8; line-height: 1.8;">
+                  <li><strong>Create a New Character</strong> — If you're authorized, you can create one below.</li>
+                  <li><strong>Request a Character</strong> — Contact Site Administration if you don't have permission to create characters.</li>
+                  <li><strong>Check Your Characters</strong> — You may have characters that are inactive or archived. Only <strong>active</strong> characters appear here.</li>
+                </ul>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
         // Check if user has reached character limit (4 max)
         const createCharBtn = document.getElementById("createCharBtn");
-        if (characters.length >= 4) {
+        if (activeCharacters.length >= 4) {
           createCharBtn.disabled = true;
           createCharBtn.style.opacity = "0.5";
           createCharBtn.style.cursor = "not-allowed";
@@ -511,9 +647,9 @@
         }
 
         // Sort by name
-        characters.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        activeCharacters.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-        characters.forEach(char => {
+        activeCharacters.forEach(char => {
           const card = document.createElement("div");
           card.className = "character-card";
 
@@ -621,6 +757,48 @@
             }
           });
         });
+
+        // AUTO-SELECT: If no character is currently selected, auto-select the first one (already sorted alphabetically)
+        const storedChar = localStorage.getItem("selectedCharacter");
+        const hasValidSelection = storedChar ? (() => {
+          try {
+            const parsed = JSON.parse(storedChar);
+            return parsed && parsed.id && activeCharacters.some(c => c.id === parsed.id);
+          } catch {
+            return false;
+          }
+        })() : false;
+
+        if (!hasValidSelection && activeCharacters.length > 0) {
+          // No valid selection - auto-select first character
+          const firstChar = activeCharacters[0];
+          try {
+            const charRef = doc(db, "characters", firstChar.id);
+            const charSnap = await getDoc(charRef);
+            
+            if (charSnap.exists()) {
+              const charData = charSnap.data();
+              
+              // Verify character belongs to current user
+              if (currentUser && charData.linkedUID === currentUser.uid) {
+                localStorage.setItem('selectedCharacter', JSON.stringify({
+                  id: charSnap.id,
+                  name: charData.name,
+                  department: charData.department,
+                  rank: charData.rank,
+                  clearance: charData.clearance,
+                  profileImage: charData.profileImage,
+                  linkedUID: charData.linkedUID
+                }));
+                
+                // Reload to update UI with selected character
+                location.reload();
+              }
+            }
+          } catch (err) {
+            console.error("Error auto-selecting character:", err);
+          }
+        }
 
       } catch (err) {
         console.error("Error loading characters:", err);
@@ -834,6 +1012,9 @@
       }
 
       try {
+        // Generate email for the new character
+        const email = await generateEmailForNewCharacter(name || pidMatchedData.name || "");
+        
         const payload = {
           uid: user.uid,
           linkedUID: user.uid,
@@ -843,7 +1024,9 @@
           rank: pidMatchedData.rank || "",
           clearance: Number(pidMatchedData.clearance) || 1,
           bio: "",
-          profileImage: ""
+          profileImage: "",
+          email: email,  // Store the generated email
+          createdAt: serverTimestamp()  // Add creation timestamp
         };
 
         await addDoc(collection(db, "characters"), payload);

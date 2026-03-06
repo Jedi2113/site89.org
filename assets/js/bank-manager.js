@@ -55,48 +55,99 @@ function makeUniqueEmail(baseLocal, counts) {
 
 async function resolveCharacterEmail(targetChar) {
   if (!targetChar || !targetChar.name) return '';
+  
+  // If character has a stored email, use it
+  if (targetChar.email) return targetChar.email.toLowerCase();
 
   const snap = await getDocs(collection(db, 'characters'));
-  const raw = [];
+  
+  // Separate characters with existing emails from those without
+  const withEmail = [];
+  const withoutEmail = [];
+  const targetCharId = targetChar.docId || targetChar.id || '';
+  
   snap.forEach(docSnap => {
     const data = docSnap.data();
-    if (data && data.name) raw.push(data);
+    if (data && data.name) {
+      const char = { docId: docSnap.id, ...data };
+      if (char.email) {
+        withEmail.push(char);
+      } else {
+        withoutEmail.push(char);
+      }
+    }
   });
 
-  raw.sort((a, b) => {
-    const aName = (a.name || '').toLowerCase();
-    const bName = (b.name || '').toLowerCase();
-    if (aName !== bName) return aName.localeCompare(bName);
-    const aPid = (a.pid || '').toString();
-    const bPid = (b.pid || '').toString();
-    return aPid.localeCompare(bPid);
+  // Sort characters without emails by creation time (older first)
+  withoutEmail.sort((a, b) => {
+    const aSec = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+    const bSec = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+    const aNanos = a.createdAt && a.createdAt.nanoseconds ? a.createdAt.nanoseconds : 0;
+    const bNanos = b.createdAt && b.createdAt.nanoseconds ? b.createdAt.nanoseconds : 0;
+    if (aSec !== bSec) return aSec - bSec;
+    if (aNanos !== bNanos) return aNanos - bNanos;
+
+    const aPid = String(a.pid || '');
+    const bPid = String(b.pid || '');
+    if (aPid !== bPid) return aPid.localeCompare(bPid);
+
+    return String(a.docId || '').localeCompare(String(b.docId || ''));
   });
 
+  // Build counts from existing emails
   const counts = new Map();
-  const entries = raw.map(char => {
-    const baseLocal = baseLocalFromName(char.name);
-    const email = makeUniqueEmail(baseLocal, counts);
-    return {
-      email,
-      baseLocal,
-      pid: char.pid ? String(char.pid) : '',
-      department: char.department || '',
-      name: char.name || ''
-    };
-  }).filter(entry => !!entry.email);
-
   const byPid = new Map();
+  const byDocId = new Map();
   const byBase = new Map();
-  entries.forEach(entry => {
-    if (entry.pid) byPid.set(entry.pid, entry.email);
-    const list = byBase.get(entry.baseLocal) || [];
-    list.push(entry);
-    byBase.set(entry.baseLocal, list);
+
+  withEmail.forEach(char => {
+    const email = char.email.toLowerCase();
+    const baseLocal = baseLocalFromName(char.name);
+    
+    if (char.pid) byPid.set(String(char.pid), email);
+    if (char.docId) byDocId.set(char.docId, email);
+    
+    if (baseLocal) {
+      const match = email.match(/@/);
+      if (match) {
+        const localPart = email.substring(0, match.index);
+        const numMatch = localPart.match(/(\d+)$/);
+        if (numMatch) {
+          const num = parseInt(numMatch[1], 10);
+          const currentMax = counts.get(baseLocal) || 0;
+          counts.set(baseLocal, Math.max(currentMax, num));
+        } else if (localPart === baseLocal) {
+          const currentMax = counts.get(baseLocal) || 0;
+          counts.set(baseLocal, Math.max(currentMax, 1));
+        }
+      }
+      
+      const list = byBase.get(baseLocal) || [];
+      list.push({ email, department: char.department || '' });
+      byBase.set(baseLocal, list);
+    }
   });
 
+  // Generate emails for characters without them
+  withoutEmail.forEach(char => {
+    const baseLocal = baseLocalFromName(char.name);
+    if (baseLocal) {
+      const email = makeUniqueEmail(baseLocal, counts);
+      if (char.pid) byPid.set(String(char.pid), email);
+      if (char.docId) byDocId.set(char.docId, email);
+      
+      const list = byBase.get(baseLocal) || [];
+      list.push({ email, department: char.department || '' });
+      byBase.set(baseLocal, list);
+    }
+  });
+
+  // Resolve for target character
   const baseLocal = baseLocalFromName(targetChar.name);
   const pidKey = targetChar.pid ? String(targetChar.pid) : '';
+  
   if (pidKey && byPid.has(pidKey)) return byPid.get(pidKey);
+  if (targetCharId && byDocId.has(targetCharId)) return byDocId.get(targetCharId);
 
   const bucket = byBase.get(baseLocal);
   if (bucket && bucket.length) {

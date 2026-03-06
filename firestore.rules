@@ -71,6 +71,12 @@ service cloud.firestore {
       );
     }
 
+    // Archived characters collection - IA/RAISA personnel only
+    match /arch-char/{characterId} {
+      allow read: if request.auth != null && isIARAISAPersonnel();
+      allow create, update, delete: if request.auth != null && isIARAISAPersonnel();
+    }
+
     // Users collection - allow reads for authenticated users
     match /users/{userId} {
       allow read: if request.auth != null;

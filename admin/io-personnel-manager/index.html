@@ -3,12 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site-89 IA Personnel Manager</title>
+  <title>IA Personnel Manager — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Internal Affairs personnel management system. Manage Foundation staff records and personnel operations.">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="IA Personnel Manager — Site-89">
+  <meta property="og:description" content="Internal Affairs personnel management system.">
+  <meta property="og:url" content="https://site89.github.io/admin/io-personnel-manager/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="IA Personnel Manager — Site-89">
+  <meta name="twitter:description" content="Internal Affairs personnel management system.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/admin/io-personnel-manager/">
 
   <!-- Fonts & CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Theme System -->
   <script type="module">
@@ -80,6 +103,46 @@
       letter-spacing: 1px;
     }
 
+    .personnel-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .personnel-card-actions button {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+    }
+
+    .btn-edit-card {
+      background: var(--accent-teal);
+      color: white;
+    }
+
+    .btn-edit-card:hover {
+      background: var(--accent-mint);
+      color: var(--bg-dark);
+    }
+
+    .btn-delete-card {
+      background: transparent;
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .btn-delete-card:hover {
+      background: var(--accent-red);
+      color: white;
+    }
+
     .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); animation: fadeIn 0.3s ease; }
     .modal.show { display: flex; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); border: 2px solid var(--accent-mint); border-radius: 10px; padding: 2rem; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(78, 250, 170, 0.15); animation: slideIn 0.3s ease; }
@@ -112,6 +175,55 @@
     #editAwardsContainer { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; }
     #editAwardsContainer label { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s ease; }
     #editAwardsContainer label:hover { background: rgba(78, 250, 170, 0.1); }
+
+    /* Status & Bulk Actions */
+    .personnel-card-checkbox { position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; cursor: pointer; z-index: 10; accent-color: var(--accent-mint); }
+    .personnel-card.selected { border-color: var(--accent-mint); background: rgba(78, 250, 170, 0.05); }
+    .personnel-card-status { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 0.5rem; text-transform: uppercase; }
+    .personnel-card-status.active { background: rgba(78, 250, 170, 0.2); color: var(--accent-mint); }
+    .personnel-card-status.inactive { background: rgba(176, 0, 0, 0.2); color: #ff6b6b; }
+    .personnel-card-status.archived { background: rgba(100, 100, 100, 0.2); color: #999; }
+    .personnel-card-email { font-size: 0.8rem; color: var(--accent-teal); margin-top: 0.3rem; word-break: break-all; }
+
+    .bulk-action-bar { display: none; position: sticky; bottom: 0; background: rgba(0, 0, 0, 0.95); border-top: 3px solid var(--accent-mint); padding: 1.2rem; margin-top: 2rem; gap: 1rem; align-items: center; z-index: 100; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6); }
+    .bulk-action-bar.show { display: flex; }
+    .bulk-action-bar .bulk-count { color: var(--accent-mint); font-weight: 700; margin-right: auto; font-size: 1.1rem; }
+    .bulk-action-bar button { padding: 0.9rem 1.6rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.2s ease; font-size: 0.95rem; }
+    .bulk-action-bar .bulk-status-btn { background: linear-gradient(135deg, var(--accent-teal), #0dcaf0); color: white; }
+    .bulk-action-bar .bulk-user-btn { background: linear-gradient(135deg, var(--accent-mint), #4efaaa); color: var(--bg-dark); }
+    .bulk-action-bar .bulk-delete-btn { background: linear-gradient(135deg, var(--accent-red), #ff6b6b); color: white; }
+    .bulk-action-bar .bulk-clear-btn { background: transparent; border: 1.5px solid var(--text-light); color: var(--text-light); }
+    .bulk-action-bar button:hover { opacity: 0.9; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+
+    .bulk-status-menu { display: none; position: absolute; background: var(--bg-card); border: 2px solid var(--accent-mint); border-radius: 6px; z-index: 1000; min-width: 150px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
+    .bulk-status-menu.show { display: block; }
+    .bulk-status-menu button { display: block; width: 100%; padding: 0.6rem 1rem; border: none; background: transparent; color: var(--text-light); text-align: left; cursor: pointer; transition: background 0.2s ease; }
+    .bulk-status-menu button:hover { background: rgba(78, 250, 170, 0.1); }
+
+    /* Dashboard */
+    .dashboard-section { background: linear-gradient(135deg, rgba(78, 250, 170, 0.08) 0%, rgba(13, 202, 240, 0.08) 100%); border: 2px solid var(--accent-teal); border-radius: 14px; padding: 2.5rem; margin-bottom: 2.5rem; }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .dashboard-card { background: rgba(78, 250, 170, 0.08); border: 1.5px solid rgba(78, 250, 170, 0.25); border-radius: 12px; padding: 1.8rem; transition: all 0.3s ease; cursor: default; }
+    .dashboard-card:hover { border-color: var(--accent-mint); box-shadow: 0 4px 16px rgba(78, 250, 170, 0.15); transform: translateY(-4px); }
+    .dashboard-card h3 { margin: 0 0 1rem 0; color: var(--accent-mint); font-size: 1.1rem; font-weight: 700; }
+    .dashboard-card .stat-value { font-size: 2.5rem; font-weight: 900; color: var(--accent-teal); line-height: 1; margin-bottom: 0.5rem; }
+    .dashboard-card .stat-label { font-size: 0.85rem; color: var(--text-light); opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dashboard-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem; }
+    .chart-container { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(78, 250, 170, 0.15); border-radius: 12px; padding: 2rem; }
+    .chart-title { color: var(--accent-mint); font-weight: 700; margin-bottom: 1.5rem; font-size: 1.1rem; }
+
+    /* Responsive Design */
+    @media (max-width: 1400px) {
+      .personnel-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .personnel-grid { grid-template-columns: 1fr; }
+      .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+      .dashboard-charts { grid-template-columns: 1fr; }
+      .bulk-action-bar { flex-wrap: wrap; }
+      .bulk-action-bar .bulk-count { width: 100%; margin-right: 0; margin-bottom: 0.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -124,32 +236,109 @@
 
   <!-- Main Content -->
   <section class="content">
-    <div class="about-box" style="margin-bottom: 2rem;">
-      <h2>IA Personnel Manager</h2>
-      <p>Edit personnel records, ranks, class, and photographs.</p>
-    </div>
-
-    <div id="accessDenied" class="access-denied" style="display:none;">
-      <i class="fas fa-lock" style="font-size:3rem;margin-bottom:1rem;opacity:0.5;display:block;"></i>
-      <h2>Access Denied</h2>
-      <p>Only characters from the Internal Affairs or RAISA departments can access this page.</p>
-    </div>
-
-    <div id="managementContainer" style="display:none;">
-      <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-        <input id="searchInput" type="text" placeholder="Search by name, rank, or department..." style="flex: 1; min-width: 200px; padding: 0.6rem; background: var(--bg-card); border: 1px solid rgba(78, 250, 170, 0.3); border-radius: 6px; color: var(--text-light);">
-        <select id="sortSelect" style="padding: 0.6rem; background: var(--bg-card); border: 1px solid rgba(78, 250, 170, 0.3); border-radius: 6px; color: var(--text-light);">
-          <option value="name">Sort by: Name</option>
-          <option value="rank">Sort by: Rank</option>
-          <option value="department">Sort by: Department</option>
-          <option value="clearance">Sort by: Clearance</option>
-        </select>
-        <button id="addPIDBtn" style="padding: 0.6rem 1.2rem; background: var(--accent-mint); color: var(--bg-dark); border: none; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 0 1 auto;">+ Add Personnel ID</button>
+    <!-- Loading State -->
+    <div id="loadingState" style="display: block; padding: 4rem 2rem; text-align: center;">
+      <div style="background: linear-gradient(135deg, rgba(78, 250, 170, 0.1) 0%, rgba(13, 202, 240, 0.1) 100%); border-radius: 12px; padding: 3rem; border: 2px solid var(--accent-teal);">
+        <h2 style="color: var(--accent-mint); margin-top: 0;"><i class="fas fa-spinner fa-spin"></i> Loading IA Personnel Control Center</h2>
+        <p style="color: var(--text-light); opacity: 0.8;">Authenticating and loading personnel database...</p>
       </div>
+    </div>
+
+    <!-- Access Denied -->
+    <div id="accessDenied" class="access-denied" style="display:none;">
+      <i class="fas fa-lock" style="font-size:3rem;margin-bottom:1rem;opacity:0.6;display:block;"></i>
+      <h2>Access Denied</h2>
+      <p>Only characters from the Internal Affairs (IA) or Research Analysis Intelligence Agency (RAISA) departments can access this control center.</p>
+    </div>
+
+    <!-- Management Interface -->
+    <div id="managementContainer" style="display:none;">
+      <div style="background: linear-gradient(135deg, rgba(78, 250, 170, 0.15) 0%, rgba(13, 202, 240, 0.15) 100%); border-bottom: 2px solid var(--accent-teal); padding: 2.5rem 2rem; margin-bottom: 2rem; border-radius: 12px;">
+        <h1 style="margin: 0 0 0.5rem 0; color: var(--accent-mint); font-size: 2.2rem;"><i class="fas fa-users-cog"></i> IA Personnel Control Center</h1>
+        <p style="margin: 0; color: var(--text-light); opacity: 0.85; font-size: 1rem;">Manage character accounts, assignments, and personnel records</p>
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboardSection" style="background: linear-gradient(135deg, rgba(78, 250, 170, 0.08) 0%, rgba(13, 202, 240, 0.08) 100%); border: 2px solid var(--accent-teal); border-radius: 12px; padding: 2.5rem; margin-bottom: 2.5rem;">
+        <h3 style="margin-top: 0; color: var(--accent-mint); border-bottom: 2px solid var(--accent-teal); padding-bottom: 1rem; margin-bottom: 1.5rem;"><i class="fas fa-chart-line"></i> Personnel Overview</h3>
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h3><i class="fas fa-users"></i> Total Characters</h3>
+            <div class="stat-value" id="statTotalChars">0</div>
+          </div>
+          <div class="dashboard-card">
+            <h3><i class="fas fa-check-circle"></i> Active</h3>
+            <div class="stat-value" id="statActiveChars">0</div>
+          </div>
+          <div class="dashboard-card">
+            <h3><i class="fas fa-pause-circle"></i> Inactive</h3>
+            <div class="stat-value" id="statInactiveChars">0</div>
+          </div>
+          <div class="dashboard-card">
+            <h3><i class="fas fa-archive"></i> Archived</h3>
+            <div class="stat-value" id="statArchivedChars">0</div>
+          </div>
+          <div class="dashboard-card">
+            <h3><i class="fas fa-user-check"></i> Assigned</h3>
+            <div class="stat-value" id="statAssignedChars">0</div>
+          </div>
+          <div class="dashboard-card">
+            <h3><i class="fas fa-inbox"></i> Unassigned</h3>
+            <div class="stat-value" id="statUnassignedChars">0</div>
+          </div>
+        </div>
+        <div class="dashboard-charts">
+          <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-pie-chart"></i> Distribution by Department</div>
+            <canvas id="deptChart" width="300" height="200"></canvas>
+          </div>
+          <div class="chart-container">
+            <div class="chart-title"><i class="fas fa-bar-chart"></i> Status Breakdown</div>
+            <canvas id="statusChart" width="300" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Toolbar -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.2); border-radius: 10px; flex-wrap: wrap; align-items: center;">
+        <input id="searchInput" type="text" placeholder="🔍 Search by name, rank, or department..." style="flex: 1; min-width: 220px; padding: 0.8rem; background: var(--bg-card); border: 1.5px solid rgba(78, 250, 170, 0.3); border-radius: 8px; color: var(--text-light); font-size: 0.95rem;">
+        <select id="sortSelect" style="padding: 0.8rem; background: var(--bg-card); border: 1.5px solid rgba(78, 250, 170, 0.3); border-radius: 8px; color: var(--text-light); min-width: 180px;">
+          <option value="name">Sort: Name A-Z</option>
+          <option value="rank">Sort: Rank</option>
+          <option value="department">Sort: Department</option>
+          <option value="clearance">Sort: Clearance (High-Low)</option>
+        </select>
+        <select id="statusFilter" style="padding: 0.8rem; background: var(--bg-card); border: 1.5px solid rgba(78, 250, 170, 0.3); border-radius: 8px; color: var(--text-light); min-width: 180px;">
+          <option value="">Filter: All Status</option>
+          <option value="active">Filter: Active Only</option>
+          <option value="inactive">Filter: Inactive Only</option>
+          <option value="archived">Filter: Archived Only</option>
+        </select>
+        <button id="addPIDBtn" style="padding: 0.8rem 1.5rem; background: var(--accent-mint); color: var(--bg-dark); border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.2s ease;"><i class="fas fa-plus-circle"></i> Add Personnel ID</button>
+      </div>
+
     </div>
 
     <div id="personnelGrid" class="personnel-grid" style="display:none;">
       <div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading personnel...</div>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-count"><span id="bulkSelectedCount">0</span> selected</div>
+      <div style="position: relative;">
+        <button class="bulk-status-btn" id="bulkStatusBtn" onclick="document.getElementById('bulkStatusMenu').classList.toggle('show')">
+          <i class="fas fa-info-circle"></i> Change Status
+        </button>
+        <div class="bulk-status-menu" id="bulkStatusMenu">
+          <button onclick="window.bulkStatusAction('active')"><i class="fas fa-check-circle"></i> Active</button>
+          <button onclick="window.bulkStatusAction('inactive')"><i class="fas fa-pause-circle"></i> Inactive</button>
+          <button onclick="window.bulkStatusAction('archived')"><i class="fas fa-archive"></i> Archived</button>
+        </div>
+      </div>
+      <button class="bulk-user-btn" id="bulkUserBtn"><i class="fas fa-user-tie"></i> Assign to User</button>
+      <button class="bulk-delete-btn" id="bulkDeleteBtn"><i class="fas fa-trash"></i> Permanently Delete</button>
+      <button class="bulk-clear-btn" id="bulkClearBtn"><i class="fas fa-times"></i> Clear Selection</button>
     </div>
 
     <div id="paginationContainer" style="display:none; text-align:center; margin:2rem 0; gap:0.5rem;">
@@ -263,6 +452,30 @@
         <input id="editClass" class="modal-detail-input" placeholder="e.g., A" maxlength="1">
       </div>
 
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:2px solid rgba(78,250,170,0.2);">
+        <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Status Management</label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <button id="editStatusActiveBtn" type="button" onclick="window.updateCharacterStatus('active')" style="flex: 1; padding: 0.6rem; background: rgba(78,250,170,0.2); color: var(--accent-mint); border: 1px solid var(--accent-mint); border-radius: 6px; cursor: pointer; font-weight: 600;">Active</button>
+          <button id="editStatusInactiveBtn" type="button" onclick="window.updateCharacterStatus('inactive')" style="flex: 1; padding: 0.6rem; background: rgba(255,193,7,0.2); color: #ffc107; border: 1px solid #ffc107; border-radius: 6px; cursor: pointer; font-weight: 600;">Inactive</button>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:2px solid rgba(78,250,170,0.2);">
+        <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Assign to User Account</label>
+        <p style="font-size:0.85rem;color:var(--text-light);opacity:0.8;margin-bottom:0.75rem;">Enter a user's email or Firebase UID to link this character to their account</p>
+        <input id="editUserEmail" class="modal-detail-input" placeholder="user@example.com or Firebase UID">
+        <button id="assignUserBtn" type="button" style="width: 100%; padding: 0.6rem; background: var(--accent-mint); color: var(--bg-dark); border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 0.5rem;">Assign to User</button>
+        <div id="assignFeedback" style="display:none;margin-top:0.5rem;"></div>
+      </div>
+
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:2px solid rgba(78,250,170,0.2);">
+        <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Danger Zone</label>
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button id="editArchiveBtn" type="button" onclick="window.modalArchiveCharacter()" style="flex: 1; padding: 0.6rem; background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid #ff9800; border-radius: 6px; cursor: pointer; font-weight: 600;"><i class="fas fa-archive"></i> Archive</button>
+          <button id="editDeleteBtn" type="button" onclick="window.modalDeleteCharacter()" style="flex: 1; padding: 0.6rem; background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid #f44336; border-radius: 6px; cursor: pointer; font-weight: 600;"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+      </div>
+
       <div style="margin-top:1.5rem;">
         <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Awards & Commendations</label>
         <div id="editAwardsContainer"></div>
@@ -277,6 +490,154 @@
     </div>
   </div>
 
+  <!-- Status Change Confirmation Modal -->
+  <div id="statusConfirmModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.5rem;"><i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-right: 0.5rem;"></i>Confirm Status Change</h2>
+        <button class="modal-close" onclick="window.closeStatusConfirmModal()">&times;</button>
+      </div>
+      
+      <div id="statusConfirmContent" style="padding: 1rem 0;">
+        <p style="color: var(--text-light); line-height: 1.6; margin: 0 0 1rem 0;" id="statusConfirmMessage"></p>
+        <div style="background: rgba(78,250,170,0.05); border-left: 3px solid var(--accent-mint); padding: 1rem; border-radius: 4px;">
+          <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">New Status: <strong id="statusConfirmNewStatus" style="color: var(--accent-mint); text-transform: uppercase;"></strong></p>
+          <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.9rem;">Affected: <strong id="statusConfirmCount" style="color: var(--accent-teal);"></strong></p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" onclick="window.proceedToReason()">Continue</button>
+        <button class="btn-cancel" onclick="window.closeStatusConfirmModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Change Reason Modal -->
+  <div id="statusReasonModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.5rem;"><i class="fas fa-comment-alt" style="color: var(--accent-teal); margin-right: 0.5rem;"></i>Disable Reason Required</h2>
+        <button class="modal-close" onclick="window.closeStatusReasonModal()">&times;</button>
+      </div>
+      
+      <div style="padding: 1rem 0;">
+        <p style="color: var(--text-light); line-height: 1.6; margin: 0 0 1rem 0;">
+          Please provide a reason for disabling <span id="statusReasonTarget" style="color: var(--accent-mint); font-weight: 600;"></span>.
+        </p>
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin: 0 0 1rem 0;">
+          <i class="fas fa-info-circle"></i> This reason will be shown to the affected user(s).
+        </p>
+        
+        <label style="display: block; color: var(--accent-teal); font-weight: 600; margin-bottom: 0.5rem;">Reason:</label>
+        <textarea 
+          id="statusReasonInput" 
+          class="modal-detail-input" 
+          rows="4" 
+          placeholder="e.g., Violating roleplay guidelines, Inactive for extended period, Administrative decision..."
+          style="resize: vertical; min-height: 100px; font-family: var(--font-body);"
+        ></textarea>
+        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 0.5rem 0 0 0;">
+          <span id="reasonCharCount">0</span>/500 characters
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" onclick="window.submitStatusChange()"><i class="fas fa-check"></i> Confirm &amp; Apply</button>
+        <button class="btn-cancel" onclick="window.closeStatusReasonModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deletion Confirmation Modal - Step 1 -->
+  <div id="deleteConfirmModal1" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.5rem;"><i class="fas fa-exclamation-circle" style="color: #f44336; margin-right: 0.5rem;"></i>Are You Sure?</h2>
+        <button class="modal-close" onclick="window.closeDeleteModals()">&times;</button>
+      </div>
+      
+      <div style="padding: 1rem 0;">
+        <p style="color: var(--text-light); line-height: 1.6; margin: 0;">
+          Are you sure you want to permanently delete <strong id="deleteCharName1" style="color: #f44336;"></strong>?
+        </p>
+        <p style="color: rgba(255,255,255,0.6); margin: 1rem 0 0 0; font-size: 0.9rem;">
+          This character will be removed from the database permanently.
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" onclick="window.proceedToDeleteStep2()" style="background: #f44336; color: white; border-color: #f44336;">Yes, Continue</button>
+        <button class="btn-cancel" onclick="window.closeDeleteModals()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deletion Confirmation Modal - Step 2 -->
+  <div id="deleteConfirmModal2" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.5rem;"><i class="fas fa-exclamation-circle" style="color: #f44336; margin-right: 0.5rem;"></i>Are You Certain?</h2>
+        <button class="modal-close" onclick="window.closeDeleteModals()">&times;</button>
+      </div>
+      
+      <div style="padding: 1rem 0;">
+        <p style="color: var(--text-light); line-height: 1.6; margin: 0;">
+          This is your last chance to back out. Permanently deleting <strong id="deleteCharName2" style="color: #f44336;"></strong> cannot be undone.
+        </p>
+        <div style="background: rgba(244,67,54,0.1); border: 1px solid #f44336; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+          <p style="margin: 0; color: #f44336; font-weight: 600; font-size: 0.9rem;">⚠️ This action is irreversible</p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" onclick="window.proceedToDeleteStep3()" style="background: #f44336; color: white; border-color: #f44336;">Yes, I'm Certain</button>
+        <button class="btn-cancel" onclick="window.closeDeleteModals()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deletion CAPTCHA Modal - Step 3 -->
+  <div id="deleteConfirmModal3" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.5rem;"><i class="fas fa-lock" style="color: #f44336; margin-right: 0.5rem;"></i>Verify Deletion</h2>
+        <button class="modal-close" onclick="window.closeDeleteModals()">&times;</button>
+      </div>
+      
+      <div style="padding: 1rem 0;">
+        <p style="color: var(--text-light); line-height: 1.6; margin: 0;">
+          To confirm permanent deletion of <strong id="deleteCharName3" style="color: #f44336;"></strong>, please solve this challenge:
+        </p>
+        <div style="background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.5); padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+          <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Challenge:</p>
+          <p style="margin: 0; color: #ffc107; font-size: 1.1rem; font-weight: 600;" id="deleteChallenge"></p>
+        </div>
+        <input 
+          id="deleteVerificationInput" 
+          type="text" 
+          placeholder="Enter your answer..."
+          style="
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,193,7,0.3);
+            border-radius: 4px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+          "
+          onkeypress="if(event.key==='Enter') window.submitDelete();"
+        >
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" onclick="window.submitDelete()" style="background: #f44336; color: white; border-color: #f44336;"><i class="fas fa-trash"></i> Permanently Delete</button>
+        <button class="btn-cancel" onclick="window.closeDeleteModals()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <div data-include="/components/footer.html"></div>
 
@@ -285,14 +646,53 @@
 
   <script type="module">
     import { app, auth, onAuthStateChanged } from "/assets/js/auth.js";
-    import { getFirestore, collection, getDocs, query, where, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, doc, getDoc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+    console.log('[IA Manager] Module script loading...');
+    
     const db = getFirestore(app);
     let currentEditingPID = null;
+    let currentEditingDocId = null;
     let currentPhotoUrl = '';
     let allPersonnel = [];
+    let archivedCount = 0;
+    let selectedCharacters = new Set(); // Track selected characters
+    let selectedCharNames = new Map(); // Track names for bulk actions
+    let deptChart = null;
+    let statusChart = null;
+
+    // Status change modal state
+    let pendingStatusChange = {
+      type: null, // 'single' or 'bulk'
+      newStatus: null,
+      characterId: null,
+      characterIds: null,
+      characterName: null
+    };
+
+    // Helper function to reload all personnel data and archived count
+    async function reloadAllData() {
+      const allChars = await getDocs(collection(db, 'characters'));
+      allPersonnel = [];
+      allChars.forEach(doc => {
+        const char = doc.data();
+        if (char.pid) {
+          allPersonnel.push({ docId: doc.id, ...char });
+        }
+      });
+
+      // Reload archived character count from arch-char collection
+      try {
+        const archivedChars = await getDocs(collection(db, 'arch-char'));
+        archivedCount = archivedChars.size;
+      } catch (err) {
+        console.error('[IA Manager] Error loading archived count:', err);
+        archivedCount = 0;
+      }
+    }
 
     function initializeManager() {
+      console.log('[IA Manager] initializeManager() called');
       const accessDeniedDiv = document.getElementById('accessDenied');
       const managementContainer = document.getElementById('managementContainer');
       const personnelGrid = document.getElementById('personnelGrid');
@@ -319,12 +719,18 @@
       function filterAndSortPersonnel() {
         const searchQuery = (searchInput.value || "").toLowerCase();
         const sortBy = (document.getElementById('sortSelect').value || "name");
+        const statusFilter = (document.getElementById('statusFilter').value || "");
 
         filteredPersonnel = allPersonnel.filter(p => {
           const name = (p.name || "").toLowerCase();
           const rank = (p.rank || "").toLowerCase();
           const dept = (p.department || "").toLowerCase();
-          return name.includes(searchQuery) || rank.includes(searchQuery) || dept.includes(searchQuery);
+          const status = (p.status || "active").toLowerCase();
+          
+          const matchesSearch = name.includes(searchQuery) || rank.includes(searchQuery) || dept.includes(searchQuery);
+          const matchesStatus = !statusFilter || status === statusFilter;
+          
+          return matchesSearch && matchesStatus;
         });
 
         // Sort
@@ -363,19 +769,52 @@
           const card = document.createElement('div');
           card.className = 'personnel-card';
           const photoUrl = p.profileImage || '/assets/img/dataunavailable.png';
+          const status = p.status || 'active';
+          const statusClass = status.toLowerCase();
+          const isInactive = status !== 'active';
           
           card.innerHTML = `
+            <input type="checkbox" class="personnel-card-checkbox" data-char-id="${p.docId}" data-char-name="${(p.name || 'Unknown').replace(/"/g, '&quot;')}">
             <img src="${photoUrl}" alt="${p.name || 'Unknown'}" class="personnel-card-image" onerror="this.src='/assets/img/dataunavailable.png'">
             <div class="personnel-card-info">
               <h3 class="personnel-card-name">${p.name || "Unknown"}</h3>
               <p class="personnel-card-rank">${p.rank || "Unassigned"}</p>
               <p class="personnel-card-dept">${p.department || "Unassigned"}</p>
+              ${p.email ? `<p class="personnel-card-email">📧 ${p.email}</p>` : ''}
               <p class="personnel-card-pid">PID: ${p.pid || ''}</p>
+              <div class="personnel-card-status ${statusClass}">${status.toUpperCase()}</div>
+              <div class="personnel-card-actions">
+                <button class="btn-edit-card" onclick="event.stopPropagation(); window.openEditModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-delete-card" onclick="event.stopPropagation(); window.${isInactive ? 'reactivateCharacter' : 'deactivateCharacter'}('${p.docId}', '${(p.name || 'Unknown').replace(/'/g, "\\'")}')">
+                  <i class="fas fa-${isInactive ? 'play' : 'pause'}-circle"></i> ${isInactive ? 'Activate' : 'Deactivate'}
+                </button>
+              </div>
             </div>
           `;
 
-          card.addEventListener('click', () => window.openEditModal(p));
           personnelGrid.appendChild(card);
+        });
+
+        // Wire up checkboxes
+        document.querySelectorAll('.personnel-card-checkbox').forEach(cb => {
+          cb.addEventListener('change', function() {
+            const charId = this.dataset.charId;
+            const charName = this.dataset.charName;
+            
+            if (this.checked) {
+              selectedCharacters.add(charId);
+              selectedCharNames.set(charId, charName);
+              this.closest('.personnel-card').classList.add('selected');
+            } else {
+              selectedCharacters.delete(charId);
+              selectedCharNames.delete(charId);
+              this.closest('.personnel-card').classList.remove('selected');
+            }
+            
+            window.updateBulkActionBar();
+          });
         });
 
         // Update pagination
@@ -405,6 +844,7 @@
 
       window.openEditModal = async function(person) {
         currentEditingPID = person.pid;
+        currentEditingDocId = person.docId;
         document.getElementById('editPersonnelName').textContent = person.name || 'Unknown';
         currentPhotoUrl = person.profileImage || '';
         document.getElementById('editPhotoPreview').src = person.profileImage || '/assets/img/dataunavailable.png';
@@ -413,6 +853,8 @@
         document.getElementById('editRank').value = person.rank || '';
         document.getElementById('editDept').value = person.department || '';
         document.getElementById('editClearance').value = person.clearance || '';
+        document.getElementById('editUserEmail').value = '';
+        document.getElementById('assignFeedback').style.display = 'none';
 
         // Load class and other data from personnel collection
         try {
@@ -454,6 +896,11 @@
           console.warn('Error loading awards:', err);
         }
 
+        // Highlight the appropriate status button
+        const status = (person.status || 'active').toLowerCase();
+        document.getElementById('editStatusActiveBtn').style.background = status === 'active' ? 'rgba(78,250,170,0.4)' : 'rgba(78,250,170,0.2)';
+        document.getElementById('editStatusInactiveBtn').style.background = status === 'inactive' ? 'rgba(255,193,7,0.4)' : 'rgba(255,193,7,0.2)';
+
         editFeedback.style.display = 'none';
         editModal.classList.add('show');
       };
@@ -461,8 +908,111 @@
       window.closeEditModal = function() {
         editModal.classList.remove('show');
         currentEditingPID = null;
+        currentEditingDocId = null;
         editFeedback.style.display = 'none';
+        document.getElementById('assignFeedback').style.display = 'none';
       };
+
+      // Status Change Modal Functions
+      window.openStatusConfirmModal = function(type, newStatus, characterId, characterName, characterIds = null) {
+        const modal = document.getElementById('statusConfirmModal');
+        const messageEl = document.getElementById('statusConfirmMessage');
+        const statusEl = document.getElementById('statusConfirmNewStatus');
+        const countEl = document.getElementById('statusConfirmCount');
+
+        pendingStatusChange = { type, newStatus, characterId, characterIds: characterIds, characterName };
+
+        if (type === 'single') {
+          messageEl.textContent = `You are about to change the status of ${characterName || 'this character'}.`;
+          countEl.textContent = '1 character';
+        } else if (type === 'bulk') {
+          const count = characterIds ? characterIds.length : selectedCharacters.size;
+          messageEl.textContent = `You are about to change the status of multiple characters.`;
+          countEl.textContent = `${count} character${count !== 1 ? 's' : ''}`;
+          if (!characterIds) {
+            pendingStatusChange.characterIds = Array.from(selectedCharacters);
+          }
+        }
+
+        statusEl.textContent = newStatus;
+        modal.classList.add('show');
+      };
+
+      window.closeStatusConfirmModal = function() {
+        document.getElementById('statusConfirmModal').classList.remove('show');
+        pendingStatusChange = { type: null, newStatus: null, characterId: null, characterIds: null, characterName: null };
+      };
+
+      window.proceedToReason = function() {
+        const newStatus = pendingStatusChange.newStatus;
+        
+        // If setting to active, skip reason modal and apply immediately
+        if (newStatus === 'active') {
+          document.getElementById('statusConfirmModal').classList.remove('show');
+          window.submitStatusChange();
+          return;
+        }
+
+        // Otherwise show reason modal
+        document.getElementById('statusConfirmModal').classList.remove('show');
+        const reasonModal = document.getElementById('statusReasonModal');
+        const targetEl = document.getElementById('statusReasonTarget');
+        const reasonInput = document.getElementById('statusReasonInput');
+
+        if (pendingStatusChange.type === 'single') {
+          targetEl.textContent = pendingStatusChange.characterName || 'this character';
+        } else {
+          targetEl.textContent = `${pendingStatusChange.characterIds.length} character(s)`;
+        }
+
+        reasonInput.value = '';
+        document.getElementById('reasonCharCount').textContent = '0';
+        reasonModal.classList.add('show');
+        reasonInput.focus();
+      };
+
+      window.closeStatusReasonModal = function() {
+        document.getElementById('statusReasonModal').classList.remove('show');
+        pendingStatusChange = { type: null, newStatus: null, characterId: null, characterIds: null, characterName: null };
+      };
+
+      window.submitStatusChange = async function() {
+        const { type, newStatus, characterId, characterIds } = pendingStatusChange;
+        let reason = null;
+
+        if (newStatus === 'inactive' || newStatus === 'archived') {
+          reason = document.getElementById('statusReasonInput').value.trim();
+          if (!reason) {
+            alert('Please provide a reason for disabling this character.');
+            return;
+          }
+        }
+
+        document.getElementById('statusReasonModal').classList.remove('show');
+
+        try {
+          if (type === 'single') {
+            await performStatusChange(characterId, newStatus, reason);
+          } else if (type === 'bulk') {
+            await performBulkStatusChange(characterIds, newStatus, reason);
+          }
+        } catch (err) {
+          console.error('Status change failed:', err);
+          alert(`Failed to change status: ${err.message}`);
+        }
+
+        pendingStatusChange = { type: null, newStatus: null, characterId: null, characterIds: null, characterName: null };
+      };
+
+      // Character count tracker for reason textarea
+      document.getElementById('statusReasonInput').addEventListener('input', function(e) {
+        const count = e.target.value.length;
+        document.getElementById('reasonCharCount').textContent = count;
+        if (count > 500) {
+          e.target.value = e.target.value.substring(0, 500);
+          document.getElementById('reasonCharCount').textContent = '500';
+        }
+      });
 
       window.savePersonnelChanges = async function() {
         if (!currentEditingPID) return;
@@ -534,6 +1084,589 @@
         editFeedback.className = 'feedback ' + type;
         editFeedback.textContent = message;
         editFeedback.style.display = 'block';
+      };
+
+      window.deleteCharacter = async function(docId, charName) {
+        if (!confirm(`Are you sure you want to delete "${charName}"?\n\nThis action cannot be undone and will permanently remove this character from the system.`)) {
+          return;
+        }
+
+        try {
+          await deleteDoc(doc(db, 'characters', docId));
+          alert(`Character "${charName}" has been successfully deleted.`);
+          
+          // Reload the personnel list
+          await reloadAllData();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error deleting character:', err);
+          alert(`Error deleting character: ${err.message}`);
+        }
+      };
+
+      window.deactivateCharacter = async function(docId, charName) {
+        window.openStatusConfirmModal('single', 'inactive', docId, charName);
+      };
+
+      window.reactivateCharacter = async function(docId, charName) {
+        window.openStatusConfirmModal('single', 'active', docId, charName);
+      };
+
+      window.archiveCharacter = async function(docId, charName) {
+        window.openStatusConfirmModal('single', 'archived', docId, charName);
+      };
+
+      window.permanentlyDeleteCharacter = async function(docId, charName) {
+        if (!confirm(`PERMANENTLY DELETE character "${charName}"?\n\nThis action cannot be undone.`)) {
+          return;
+        }
+
+        try {
+          await deleteDoc(doc(db, 'characters', docId));
+          alert(`Character "${charName}" has been permanently deleted.`);
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error deleting character:', err);
+          alert(`Error deleting character: ${err.message}`);
+        }
+      };
+
+      window.updateCharacterStatus = async function(newStatus) {
+        if (!currentEditingDocId) {
+          window.showEditFeedback('No character selected', 'error');
+          return;
+        }
+
+        const characterName = document.getElementById('editPersonnelName').textContent;
+        window.openStatusConfirmModal('single', newStatus, currentEditingDocId, characterName);
+      };
+
+      // Helper function to perform single status change
+      async function performStatusChange(characterId, newStatus, reason) {
+        try {
+          const updateData = { status: newStatus };
+          if (reason) {
+            updateData.disableReason = reason.trim();
+            updateData.disabledAt = new Date();
+          } else if (newStatus === 'active') {
+            // Clear disable reason when re-activating
+            updateData.disableReason = null;
+            updateData.disabledAt = null;
+          }
+          
+          await updateDoc(doc(db, 'characters', characterId), updateData);
+          
+          // Update edit modal UI if it's open (currentEditingDocId is set)
+          if (currentEditingDocId === characterId) {
+            window.showEditFeedback(`Status changed to ${newStatus.toUpperCase()}!`, 'success');
+            
+            document.getElementById('editStatusActiveBtn').style.background = newStatus === 'active' ? 'rgba(78,250,170,0.4)' : 'rgba(78,250,170,0.2)';
+            document.getElementById('editStatusInactiveBtn').style.background = newStatus === 'inactive' ? 'rgba(255,193,7,0.4)' : 'rgba(255,193,7,0.2)';
+          } else {
+            // Show success message for card-based actions
+            alert(`Status changed to ${newStatus.toUpperCase()}!`);
+          }
+          
+          await reloadAllData();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error updating status:', err);
+          if (currentEditingDocId === characterId) {
+            window.showEditFeedback('Error: ' + err.message, 'error');
+          } else {
+            alert('Error: ' + err.message);
+          }
+          throw err;
+        }
+      }
+
+      window.modalArchiveCharacter = async function() {
+        if (!currentEditingDocId) return;
+        
+        const charName = document.getElementById('editPersonnelName').textContent;
+        if (!confirm(`Archive character "${charName}"?\n\nThis will move the character to the archive collection. It cannot be recovered.`)) {
+          return;
+        }
+
+        try {
+          const charRef = doc(db, 'characters', currentEditingDocId);
+          const charSnap = await getDoc(charRef);
+          
+          if (!charSnap.exists()) {
+            window.showEditFeedback('Character not found', 'error');
+            return;
+          }
+
+          const charData = charSnap.data();
+          await setDoc(doc(db, 'arch-char', currentEditingDocId), charData);
+          await deleteDoc(charRef);
+          
+          // Increment archived count since we just moved a character to arch-char
+          archivedCount++;
+          
+          alert(`Character "${charName}" has been archived.`);
+          window.closeEditModal();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error archiving character:', err);
+          window.showEditFeedback('Error: ' + err.message, 'error');
+        }
+      };
+
+      window.modalDeleteCharacter = async function() {
+        if (!currentEditingDocId) return;
+        
+        const charName = document.getElementById('editPersonnelName').textContent;
+        
+        // Show first deletion modal
+        document.getElementById('deleteCharName1').textContent = charName;
+        document.getElementById('deleteConfirmModal1').classList.add('show');
+        
+        // Store deletion context
+        window.deletionContext = {
+          docId: currentEditingDocId,
+          charName: charName
+        };
+      };
+
+      window.proceedToDeleteStep2 = function() {
+        const charName = window.deletionContext.charName;
+        document.getElementById('deleteCharName2').textContent = charName;
+        document.getElementById('deleteConfirmModal1').classList.remove('show');
+        document.getElementById('deleteConfirmModal2').classList.add('show');
+      };
+
+      window.proceedToDeleteStep3 = function() {
+        const charName = window.deletionContext.charName;
+        document.getElementById('deleteCharName3').textContent = charName;
+        document.getElementById('deleteConfirmModal2').classList.remove('show');
+        
+        // Generate challenge
+        const challenge = window.generateDeleteChallenge();
+        window.deletionContext.correctAnswer = challenge.answer;
+        document.getElementById('deleteChallenge').textContent = challenge.question;
+        document.getElementById('deleteVerificationInput').value = '';
+        document.getElementById('deleteVerificationInput').focus();
+        
+        document.getElementById('deleteConfirmModal3').classList.add('show');
+      };
+
+      window.generateDeleteChallenge = function() {
+        const challenges = [
+          { question: "What is 7 + 5?", answer: "12" },
+          { question: "What is 9 + 3?", answer: "12" },
+          { question: "What is 10 + 4?", answer: "14" },
+          { question: "What is 6 + 8?", answer: "14" },
+          { question: "What is 15 - 3?", answer: "12" },
+          { question: "What is 20 - 5?", answer: "15" },
+          { question: "What is 8 × 2?", answer: "16" },
+          { question: "What is 12 ÷ 3?", answer: "4" },
+          { question: "What is 5 + 6?", answer: "11" },
+          { question: "What is 18 - 2?", answer: "16" }
+        ];
+        
+        return challenges[Math.floor(Math.random() * challenges.length)];
+      };
+
+      window.submitDelete = async function() {
+        const userAnswer = document.getElementById('deleteVerificationInput').value.trim();
+        const correctAnswer = window.deletionContext.correctAnswer.toString();
+        
+        if (userAnswer !== correctAnswer) {
+          alert('Incorrect answer. Please try again.');
+          document.getElementById('deleteVerificationInput').value = '';
+          document.getElementById('deleteVerificationInput').focus();
+          return;
+        }
+
+        // Verification passed, proceed with deletion
+        try {
+          await deleteDoc(doc(db, 'characters', window.deletionContext.docId));
+          
+          // Close all modals
+          document.getElementById('deleteConfirmModal3').classList.remove('show');
+          window.closeEditModal();
+          
+          alert(`Character "${window.deletionContext.charName}" has been permanently deleted.`);
+          await reloadAllData();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error deleting character:', err);
+          window.showEditFeedback('Error: ' + err.message, 'error');
+        }
+      };
+
+      window.closeDeleteModals = function() {
+        document.getElementById('deleteConfirmModal1').classList.remove('show');
+        document.getElementById('deleteConfirmModal2').classList.remove('show');
+        document.getElementById('deleteConfirmModal3').classList.remove('show');
+        window.deletionContext = null;
+      };
+
+      window.assignToUser = async function() {
+        if (!currentEditingDocId) {
+          window.showAssignFeedback('No character selected', 'error');
+          return;
+        }
+
+        const input = (document.getElementById('editUserEmail').value || '').trim();
+        if (!input) {
+          window.showAssignFeedback('Please enter a user email or UID', 'error');
+          return;
+        }
+
+        const assignBtn = document.getElementById('assignUserBtn');
+        assignBtn.disabled = true;
+        assignBtn.textContent = 'Assigning...';
+
+        try {
+          let targetUID = null;
+
+          // Check if input looks like a Firebase UID (28 chars, alphanumeric)
+          if (input.length >= 20 && !input.includes('@')) {
+            targetUID = input;
+          } else {
+            // Try to find user by email
+            const email = input.toLowerCase();
+            
+            // Search through all characters to find one with matching linkedUID that we can trace back
+            const charsSnap = await getDocs(collection(db, 'characters'));
+            const uidSet = new Set();
+            
+            charsSnap.forEach(charDoc => {
+              const charData = charDoc.data();
+              if (charData.linkedUID) {
+                uidSet.add(charData.linkedUID);
+              }
+            });
+
+            // We can't directly query auth users from client, so we'll try the users collection if it exists
+            try {
+              const usersSnap = await getDocs(collection(db, 'users'));
+              usersSnap.forEach(userDoc => {
+                const userData = userDoc.data();
+                if (userData.email && userData.email.toLowerCase() === email) {
+                  targetUID = userDoc.id;
+                }
+              });
+            } catch (err) {
+              // users collection might not exist
+              console.log('No users collection found');
+            }
+
+            // If still no UID found, check if current auth user matches the email
+            if (!targetUID && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase() === email) {
+              targetUID = auth.currentUser.uid;
+            }
+
+            if (!targetUID) {
+              window.showAssignFeedback(`Could not find user with email "${input}". Try entering the Firebase UID directly instead.`, 'error');
+              return;
+            }
+          }
+
+          // Update the character's linkedUID
+          await updateDoc(doc(db, 'characters', currentEditingDocId), {
+            linkedUID: targetUID
+          });
+
+          window.showAssignFeedback(`Character successfully assigned to UID: ${targetUID.substring(0, 8)}...`, 'success');
+          document.getElementById('editUserEmail').value = '';
+          
+          // Refresh the character links section if it's visible
+          loadCharacters();
+        } catch (err) {
+          console.error('Error assigning to user:', err);
+          window.showAssignFeedback('Error: ' + err.message, 'error');
+        } finally {
+          assignBtn.disabled = false;
+          assignBtn.textContent = 'Assign to User';
+        }
+      };
+
+      window.showAssignFeedback = function(message, type) {
+        const assignFeedback = document.getElementById('assignFeedback');
+        assignFeedback.className = 'feedback ' + type;
+        assignFeedback.textContent = message;
+        assignFeedback.style.display = 'block';
+      };
+
+      // Bulk Actions
+      window.updateBulkActionBar = function() {
+        const bulkBar = document.getElementById('bulkActionBar');
+        const count = selectedCharacters.size;
+        
+        if (count > 0) {
+          bulkBar.classList.add('show');
+          document.getElementById('bulkSelectedCount').textContent = count;
+        } else {
+          bulkBar.classList.remove('show');
+          document.getElementById('bulkStatusMenu').classList.remove('show');
+        }
+      };
+
+      window.bulkStatusAction = async function(newStatus) {
+        if (selectedCharacters.size === 0) return;
+        
+        document.getElementById('bulkStatusMenu').classList.remove('show');
+        
+        const characterIds = Array.from(selectedCharacters);
+        const characterName = `${selectedCharacters.size} character(s)`;
+        window.openStatusConfirmModal('bulk', newStatus, null, characterName, characterIds);
+      };
+
+      // Helper function to perform bulk status change
+      async function performBulkStatusChange(characterIds, newStatus, reason) {
+        document.getElementById('bulkStatusBtn').disabled = true;
+        
+        try {
+          let batch = writeBatch(db);
+          let count = 0;
+          for (const charId of characterIds) {
+            const ref = doc(db, 'characters', charId);
+            const updateData = { status: newStatus };
+            if (reason) {
+              updateData.disableReason = reason.trim();
+              updateData.disabledAt = new Date();
+            } else if (newStatus === 'active') {
+              updateData.disableReason = null;
+              updateData.disabledAt = null;
+            }
+            batch.update(ref, updateData);
+            count++;
+            if (count % 400 === 0) {
+              await batch.commit();
+              batch = writeBatch(db);
+            }
+          }
+          if (count % 400 !== 0) {
+            await batch.commit();
+          }
+
+          alert(`Status updated for ${characterIds.length} character(s).`);
+          selectedCharacters.clear();
+          selectedCharNames.clear();
+          window.updateBulkActionBar();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error updating status:', err);
+          throw err;
+        } finally {
+          document.getElementById('bulkStatusBtn').disabled = false;
+        }
+      }
+
+      document.getElementById('bulkDeleteBtn').addEventListener('click', async () => {
+        if (selectedCharacters.size === 0) return;
+        
+        if (!confirm(`PERMANENTLY DELETE ${selectedCharacters.size} character(s)?\n\nThis action cannot be undone.`)) {
+          return;
+        }
+
+        document.getElementById('bulkDeleteBtn').disabled = true;
+        
+        try {
+          for (const charId of selectedCharacters) {
+            await deleteDoc(doc(db, 'characters', charId));
+          }
+
+          alert(`${selectedCharacters.size} character(s) permanently deleted.`);
+          selectedCharacters.clear();
+          selectedCharNames.clear();
+          window.updateBulkActionBar();
+          
+          await reloadAllData();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error deleting characters:', err);
+          alert(`Error: ${err.message}`);
+        } finally {
+          document.getElementById('bulkDeleteBtn').disabled = false;
+        }
+      });
+
+      document.getElementById('bulkClearBtn').addEventListener('click', () => {
+        selectedCharacters.clear();
+        selectedCharNames.clear();
+        document.querySelectorAll('.personnel-card-checkbox').forEach(cb => {
+          cb.checked = false;
+        });
+        document.querySelectorAll('.personnel-card').forEach(card => {
+          card.classList.remove('selected');
+        });
+        window.updateBulkActionBar();
+      });
+
+      document.getElementById('bulkUserBtn').addEventListener('click', async () => {
+        if (selectedCharacters.size === 0) return;
+
+        const email = prompt(`Enter email or Firebase UID to assign ${selectedCharacters.size} character(s) to:`);
+        if (!email) return;
+
+        document.getElementById('bulkUserBtn').disabled = true;
+
+        try {
+          let targetUID = null;
+
+          if (email.length >= 20 && !email.includes('@')) {
+            targetUID = email;
+          } else {
+            const emailLower = email.toLowerCase();
+            try {
+              const usersSnap = await getDocs(collection(db, 'users'));
+              usersSnap.forEach(userDoc => {
+                const userData = userDoc.data();
+                if (userData.email && userData.email.toLowerCase() === emailLower) {
+                  targetUID = userDoc.id;
+                }
+              });
+            } catch (err) {
+              console.log('No users collection found');
+            }
+
+            if (!targetUID && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase() === emailLower) {
+              targetUID = auth.currentUser.uid;
+            }
+
+            if (!targetUID) {
+              alert(`Could not find user with email "${email}".`);
+              return;
+            }
+          }
+
+          const batch = db.batch();
+          let count = 0;
+          for (const charId of selectedCharacters) {
+            const ref = doc(db, 'characters', charId);
+            batch.update(ref, { linkedUID: targetUID });
+            count++;
+            if (count % 400 === 0) {
+              await batch.commit();
+              batch = db.batch();
+            }
+          }
+          if (count % 400 !== 0) {
+            await batch.commit();
+          }
+
+          alert(`${selectedCharacters.size} character(s) assigned successfully.`);
+          selectedCharacters.clear();
+          selectedCharNames.clear();
+          window.updateBulkActionBar();
+          filterAndSortPersonnel();
+          window.updateDashboard();
+        } catch (err) {
+          console.error('Error assigning characters:', err);
+          alert(`Error: ${err.message}`);
+        } finally {
+          document.getElementById('bulkUserBtn').disabled = false;
+        }
+      });
+
+      // Dashboard Functions
+      window.updateDashboard = function() {
+        const total = allPersonnel.length;
+        const active = allPersonnel.filter(p => (p.status || 'active') === 'active').length;
+        const inactive = allPersonnel.filter(p => p.status === 'inactive').length;
+        // Use archivedCount from arch-char collection instead of filtering allPersonnel
+        const archived = archivedCount;
+        const assigned = allPersonnel.filter(p => p.linkedUID).length;
+        // Count characters without user assignment OR without department assignment
+        const unassigned = allPersonnel.filter(p => !p.linkedUID || !p.department).length;
+
+        document.getElementById('statTotalChars').textContent = total;
+        document.getElementById('statActiveChars').textContent = active;
+        document.getElementById('statInactiveChars').textContent = inactive;
+        document.getElementById('statArchivedChars').textContent = archived;
+        document.getElementById('statAssignedChars').textContent = assigned;
+        document.getElementById('statUnassignedChars').textContent = unassigned;
+
+        // Build department data (tracking only the division, not the subdepartment)
+        const deptMap = {};
+        allPersonnel.forEach(p => {
+          const fullDept = p.department || 'Unassigned';
+          // Extract only the first part before "/" (e.g., "ScD/R&D" → "ScD")
+          const dept = fullDept.split('/')[0];
+          deptMap[dept] = (deptMap[dept] || 0) + 1;
+        });
+        
+        const deptLabels = Object.keys(deptMap).sort();
+        const deptData = deptLabels.map(dept => deptMap[dept]);
+        
+        // Build status data
+        const statusData = [active, inactive, archived];
+
+        // Update charts
+        const deptCtx = document.getElementById('deptChart');
+        if (deptChart) deptChart.destroy();
+        deptChart = new Chart(deptCtx, {
+          type: 'doughnut',
+          data: {
+            labels: deptLabels,
+            datasets: [{
+              data: deptData,
+              backgroundColor: [
+                'rgba(78, 250, 170, 0.8)',   // Site-89 Mint
+                'rgba(0, 124, 107, 0.8)',    // Deep Teal
+                'rgba(217, 119, 6, 0.8)',    // Warm Amber
+                'rgba(146, 0, 0, 0.8)',      // Emergency Red
+                'rgba(30, 155, 138, 0.8)',   // Teal Sage
+                'rgba(13, 110, 102, 0.8)',   // Forest Teal
+              ],
+              borderColor: 'rgba(0, 0, 0, 0.2)',
+              borderWidth: 2,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: { color: 'rgba(255, 255, 255, 0.8)', font: { size: 11 } },
+                position: 'bottom'
+              }
+            }
+          }
+        });
+
+        const statusCtx = document.getElementById('statusChart');
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(statusCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Active', 'Inactive', 'Archived'],
+            datasets: [{
+              label: 'Characters',
+              data: statusData,
+              backgroundColor: [
+                'rgba(78, 250, 170, 0.8)',   // Active - Site-89 Mint
+                'rgba(217, 119, 6, 0.8)',    // Inactive - Warm Amber
+                'rgba(146, 0, 0, 0.8)',      // Archived - Emergency Red
+              ],
+              borderColor: 'rgba(0, 0, 0, 0.2)',
+              borderWidth: 2,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { ticks: { color: 'rgba(255, 255, 255, 0.8)' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+              y: { ticks: { color: 'rgba(255, 255, 255, 0.8)' }, grid: { display: false } }
+            }
+          }
+        });
       };
 
       async function savePID(e) {
@@ -638,6 +1771,11 @@
         }
       });
 
+      // Assign to user handler
+      document.getElementById('assignUserBtn').addEventListener('click', () => {
+        window.assignToUser();
+      });
+
       // Event listeners
 
       pidModal.addEventListener('click', (e) => {
@@ -651,6 +1789,7 @@
       pidForm.addEventListener('submit', savePID);
       searchInput.addEventListener('input', () => filterAndSortPersonnel());
       document.getElementById('sortSelect').addEventListener('change', () => filterAndSortPersonnel());
+      document.getElementById('statusFilter').addEventListener('change', () => filterAndSortPersonnel());
       document.getElementById('prevPageBtn').addEventListener('click', () => {
         if (currentPage > 1) {
           currentPage--;
@@ -808,14 +1947,40 @@
         }
       });
 
-      // Auth check and load
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
+      // Auth check and load with timeout protection
+      let authCheckComplete = false;
+      const loadingState = document.getElementById('loadingState');
+      
+      const authTimeout = setTimeout(() => {
+        if (!authCheckComplete) {
+          console.error('[IA Manager] Auth check timed out after 10 seconds - Firebase may not be responding');
+          loadingState.style.display = 'none';
           accessDeniedDiv.style.display = 'block';
+          accessDeniedDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="font-size:3rem;margin-bottom:1rem;opacity:0.6;display:block;"></i>
+            <h2>Connection Timeout</h2>
+            <p>The page took too long to authenticate with Firebase. This may be a network issue or Firebase may be temporarily unavailable.</p>
+            <p style="font-size:0.9rem;color:var(--text-light);margin-top:1rem;">Try refreshing the page or contact support if the problem persists.</p>
+          `;
+        }
+      }, 10000);
+
+      console.log('[IA Manager] Starting auth state check...');
+
+      onAuthStateChanged(auth, async (user) => {
+        authCheckComplete = true;
+        clearTimeout(authTimeout);
+        console.log('[IA Manager] Auth state changed, user:', user ? user.uid.substring(0, 8) + '...' : 'null');
+        
+        if (!user) {
+          loadingState.style.display = 'none';
+          accessDeniedDiv.style.display = 'block';
+          console.log('[IA Manager] No user logged in');
           return;
         }
 
         try {
+          console.log('[IA Manager] Checking user access for UID:', user.uid.substring(0, 8) + '...');
           const q = query(collection(db, 'characters'), where('linkedUID', '==', user.uid));
           const charSnap = await getDocs(q);
           
@@ -828,39 +1993,50 @@
           });
 
           if (!hasAccess) {
+            loadingState.style.display = 'none';
             accessDeniedDiv.style.display = 'block';
+            console.log('[IA Manager] User does not have IA/RAISA access:', user.uid);
             return;
           }
 
+          console.log('[IA Manager] User has access, loading interface...');
+          // User has access, load the interface
+          loadingState.style.display = 'none';
           managementContainer.style.display = 'block';
           personnelGrid.style.display = 'grid';
           document.getElementById('pidListSection').style.display = 'block';
           document.getElementById('charLinksSection').style.display = 'block';
           
-          const allChars = await getDocs(collection(db, 'characters'));
-          allPersonnel = [];
-          allChars.forEach(doc => {
-            const char = doc.data();
-            if (char.pid) {
-              allPersonnel.push({ docId: doc.id, ...char });
-            }
-          });
+          await reloadAllData();
 
           filterAndSortPersonnel();
           loadPersonnelIDList();
           loadCharacters();
+          window.updateDashboard();
+          
+          console.log('[IA Manager] Loaded successfully with', allPersonnel.length, 'characters');
 
         } catch (err) {
-          console.error('Error checking access:', err);
+          console.error('[IA Manager] Error checking access or loading:', err);
+          loadingState.style.display = 'none';
           accessDeniedDiv.style.display = 'block';
+          accessDeniedDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle" style="font-size:3rem;margin-bottom:1rem;opacity:0.6;display:block;"></i>
+            <h2>Error Loading Manager</h2>
+            <p>${err.message || 'An unknown error occurred'}</p>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-top:0.5rem;">Check the browser console for more details.</p>
+          `;
         }
       });
     }
 
     // Initialize when includes load
+    console.log('[IA Manager] readyState:', document.readyState);
     if (document.readyState === 'loading') {
+      console.log('[IA Manager] Setting up includesLoaded listener');
       document.addEventListener('includesLoaded', initializeManager);
     } else {
+      console.log('[IA Manager] Document ready, calling initializeManager directly');
       initializeManager();
     }
   </script>

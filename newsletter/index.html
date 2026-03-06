@@ -3,7 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site-89 Newsletter — Lore Updates</title>
+  <title>Newsletter — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Stay updated with the Site-89 newsletter. Get the latest lore updates, server events, and Foundation news.">
+  <meta name="keywords" content="Site-89 newsletter, SCP lore updates, server news, Foundation updates">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Newsletter — Site-89">
+  <meta property="og:description" content="Stay updated with the Site-89 newsletter. Get the latest lore updates, server events, and Foundation news.">
+  <meta property="og:url" content="https://site89.github.io/newsletter/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Newsletter — Site-89">
+  <meta name="twitter:description" content="Stay updated with the Site-89 newsletter.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/newsletter/">
+
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/assets/css/main.css">
@@ -132,6 +155,11 @@
         <input type="checkbox" id="articleFeatured" style="width:auto;margin-right:0.5rem;">
         Feature this article (appears prominently)
       </label>
+
+      <label>
+        <input type="checkbox" id="articleInCharacter" style="width:auto;margin-right:0.5rem;">
+        In-character post (unchecked = Out-of-character)
+      </label>
       
       <div class="modal-buttons">
         <button class="btn-save" onclick="saveArticle()">Publish Article</button>
@@ -208,6 +236,8 @@
           const date = article.createdAt ? new Date(article.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown Date';
           const featuredClass = article.featured ? 'featured' : '';
           const featuredBadge = article.featured ? '<div class="featured-badge">FEATURED</div>' : '';
+          const roleplayTag = article.inCharacter ? 'In-Character' : 'Out-of-Character';
+          const roleplayIcon = article.inCharacter ? 'fa-user-secret' : 'fa-comments';
           
           // Simple markdown to HTML conversion
           let content = article.content || '';
@@ -234,6 +264,7 @@
                   <h3 class="article-title">${article.title || 'Untitled'}</h3>
                   <div class="article-meta">
                     <span class="meta-tag"><i class="fas fa-tag"></i> ${article.category || 'General'}</span>
+                    <span class="meta-tag"><i class="fas ${roleplayIcon}"></i> ${roleplayTag}</span>
                     <span class="meta-tag"><i class="fas fa-calendar"></i> ${date}</span>
                     ${featuredBadge}
                   </div>
@@ -266,6 +297,7 @@
       document.getElementById('articleCategory').value = '';
       document.getElementById('articleContent').value = '';
       document.getElementById('articleFeatured').checked = false;
+      document.getElementById('articleInCharacter').checked = false;
       document.getElementById('articleModal').classList.add('active');
     };
 
@@ -281,6 +313,7 @@
       const category = document.getElementById('articleCategory').value;
       const content = document.getElementById('articleContent').value.trim();
       const featured = document.getElementById('articleFeatured').checked;
+      const inCharacter = document.getElementById('articleInCharacter').checked;
       
       if (!title || !category || !content) {
         alert('Please fill in all required fields (Title, Category, Content)');
@@ -293,6 +326,7 @@
           category: category,
           content: content,
           featured: featured,
+          inCharacter: inCharacter,
           authorName: userCharacter.name || 'Anonymous',
           authorId: currentUser.uid,
           updatedAt: serverTimestamp()
@@ -333,6 +367,7 @@
         document.getElementById('articleCategory').value = article.category || '';
         document.getElementById('articleContent').value = article.content || '';
         document.getElementById('articleFeatured').checked = article.featured || false;
+        document.getElementById('articleInCharacter').checked = !!article.inCharacter;
         document.getElementById('articleModal').classList.add('active');
       } catch (err) {
         alert('Error loading article: ' + err.message);

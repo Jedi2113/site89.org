@@ -406,7 +406,7 @@ async function createThread() {
       content,
       category,
       authorUid: currentUser.uid,
-      authorName: currentCharacter.name || currentUser.email,
+      authorName: currentCharacter ? currentCharacter.name : null,
       authorClearance: userClearance,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

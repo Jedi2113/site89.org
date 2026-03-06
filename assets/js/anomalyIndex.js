@@ -12,7 +12,7 @@ function userClearance(){ const ch = getSelectedCharacter(); return ch ? parseCl
 function userDepartment(){ const ch = getSelectedCharacter(); return ch && ch.department ? ch.department : ''; }
 function isDeptAllowed(dept){ if(!dept) return false; const d = dept.toLowerCase().replace(/[^a-z0-9]/g, ''); return d.includes('research') || d.includes('rd') || d.includes('scien') || d.includes('scd') || d.includes('scientificdepartment'); }
 function canEdit(){ const c = userClearance(); if(!isNaN(c) && c >= 5) return true; return isDeptAllowed(userDepartment()); }
-function displayName(){ const ch = getSelectedCharacter(); if(ch && ch.name) return ch.name; if(auth.currentUser && auth.currentUser.email) return auth.currentUser.email; return 'Unknown'; }
+function displayName(){ const ch = getSelectedCharacter(); if(ch && ch.name) return ch.name; return null; }
 function characterId(){ const ch = getSelectedCharacter(); return ch && ch.id ? ch.id : null; }
 
 function docIdFromItemNumber(itemNumber){ const m = (itemNumber || '').match(/\d+/); if(m) return m[0]; return (itemNumber || 'scp-000').replace(/[^A-Za-z0-9]/g,'-'); }
@@ -404,7 +404,29 @@ function subscribe(){
   });
 }
 
-function kickoff(){ if(window.__anomalyIndexReady) return; window.__anomalyIndexReady=true; refreshPreview(); subscribe(); if(searchInput) searchInput.addEventListener('input', renderList); classFilter?.addEventListener('change', renderList); riskFilter?.addEventListener('change', renderList); disruptionFilter?.addEventListener('change', renderList); 
+function kickoff(){ 
+  if(window.__anomalyIndexReady) return; 
+  
+  // Verify character is selected before allowing any interactions
+  const selectedChar = getSelectedCharacter();
+  if (!selectedChar || !selectedChar.name) {
+    if(newBtn) newBtn.disabled = true;
+    if(newBtn) newBtn.title = 'You must select a character first. Go to Character Select.';
+    if(newBtn) newBtn.style.opacity = '0.5';
+    if(newBtn) newBtn.style.cursor = 'not-allowed';
+    if(form) form.style.opacity = '0.5';
+    if(form) form.style.pointerEvents = 'none';
+    if(formStatus) setStatus('You must select a character before creating or editing anomaly records.', true);
+    return;
+  }
+  
+  window.__anomalyIndexReady=true; 
+  refreshPreview(); 
+  subscribe(); 
+  if(searchInput) searchInput.addEventListener('input', renderList); 
+  classFilter?.addEventListener('change', renderList); 
+  riskFilter?.addEventListener('change', renderList); 
+  disruptionFilter?.addEventListener('change', renderList); 
   // Wire modal after a small delay to ensure character is loaded
   setTimeout(() => { wireModal(); }, 50);
   // auto-load anomaly if id or item param provided

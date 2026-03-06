@@ -34,46 +34,103 @@ async function getEmailDirectory(db){
       const snap = await getDocs(collection(db,'characters'));
       snap.forEach(docSnap => {
         const data = docSnap.data();
-        if(data && data.name) raw.push(data);
+        if(data && data.name) raw.push({ docId: docSnap.id, ...data });
       });
     } catch(err) {
       console.error('Failed to load characters for email directory:', err);
-      return { entries: [], byPid: new Map(), byBase: new Map(), countsSnapshot: new Map() };
+      return { entries: [], byPid: new Map(), byBase: new Map(), byDocId: new Map(), countsSnapshot: new Map() };
     }
 
-    raw.sort((a,b)=>{
-      const aName = (a.name||'').toLowerCase();
-      const bName = (b.name||'').toLowerCase();
-      if(aName !== bName) return aName.localeCompare(bName);
-      const aPid = (a.pid||'').toString();
-      const bPid = (b.pid||'').toString();
-      return aPid.localeCompare(bPid);
+    // Separate characters with existing emails from those without
+    const withEmail = raw.filter(char => char.email);
+    const withoutEmail = raw.filter(char => !char.email);
+
+    // Sort characters without emails by creation time (older first) for stable assignment
+    withoutEmail.sort((a,b)=>{
+      const aSec = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+      const bSec = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+      const aNanos = a.createdAt && a.createdAt.nanoseconds ? a.createdAt.nanoseconds : 0;
+      const bNanos = b.createdAt && b.createdAt.nanoseconds ? b.createdAt.nanoseconds : 0;
+      if (aSec !== bSec) return aSec - bSec;
+      if (aNanos !== bNanos) return aNanos - bNanos;
+
+      const aPid = String(a.pid || '');
+      const bPid = String(b.pid || '');
+      if (aPid !== bPid) return aPid.localeCompare(bPid);
+
+      return String(a.docId || '').localeCompare(String(b.docId || ''));
     });
 
+    // Build counts from existing emails
     const counts = new Map();
-    const entries = raw.map(char => {
+    const usedEmails = new Set();
+    
+    withEmail.forEach(char => {
+      const email = char.email.toLowerCase();
+      usedEmails.add(email);
       const baseLocal = baseLocalFromName(char.name);
-      const email = makeUniqueEmail(baseLocal, counts);
+      if (baseLocal) {
+        const match = email.match(/@/);
+        if (match) {
+          const localPart = email.substring(0, match.index);
+          const numMatch = localPart.match(/(\d+)$/);
+          if (numMatch) {
+            const num = parseInt(numMatch[1], 10);
+            const currentMax = counts.get(baseLocal) || 0;
+            counts.set(baseLocal, Math.max(currentMax, num));
+          } else if (localPart === baseLocal) {
+            const currentMax = counts.get(baseLocal) || 0;
+            counts.set(baseLocal, Math.max(currentMax, 1));
+          }
+        }
+      }
+    });
+
+    // Create entries for characters with existing emails
+    const entries = withEmail.map(char => {
+      const baseLocal = baseLocalFromName(char.name);
       return {
-        email,
+        email: char.email.toLowerCase(),
         baseLocal,
         pid: char.pid ? String(char.pid) : '',
         department: char.department || '',
         name: char.name || '',
-        pfp: char.pfp || char.image || char.photo || char.photoUrl || char.photoURL || char.profileImage || char.avatar || char.picture || '/assets/img/logo.png'
+        pfp: char.pfp || char.image || char.photo || char.photoUrl || char.photoURL || char.profileImage || char.avatar || char.picture || '/assets/img/logo.png',
+        docId: char.docId
       };
-    }).filter(entry => !!entry.email);
+    });
+
+    // Generate emails for characters without them
+    withoutEmail.forEach(char => {
+      const baseLocal = baseLocalFromName(char.name);
+      if (baseLocal) {
+        const email = makeUniqueEmail(baseLocal, counts);
+        entries.push({
+          email,
+          baseLocal,
+          pid: char.pid ? String(char.pid) : '',
+          department: char.department || '',
+          name: char.name || '',
+          pfp: char.pfp || char.image || char.photo || char.photoUrl || char.photoURL || char.profileImage || char.avatar || char.picture || '/assets/img/logo.png',
+          docId: char.docId
+        });
+      }
+    });
+
+    const filteredEntries = entries.filter(entry => !!entry.email);
 
     const byPid = new Map();
     const byBase = new Map();
-    entries.forEach(entry => {
+    const byDocId = new Map();
+    filteredEntries.forEach(entry => {
       if(entry.pid) byPid.set(entry.pid, entry.email);
+      if(entry.docId) byDocId.set(entry.docId, entry.email);
       const list = byBase.get(entry.baseLocal) || [];
       list.push(entry);
       byBase.set(entry.baseLocal, list);
     });
 
-    emailDirectory = { entries, byPid, byBase, countsSnapshot: new Map(counts) };
+    emailDirectory = { entries: filteredEntries, byPid, byBase, byDocId, countsSnapshot: new Map(counts) };
     return emailDirectory;
   })();
 
@@ -82,11 +139,22 @@ async function getEmailDirectory(db){
 
 function resolveEmailForCharacter(char, directory){
   if(!char || !char.name) return '';
+  
+  // If character has a stored email, use it
+  if(char.email) return char.email.toLowerCase();
+  
   const baseLocal = baseLocalFromName(char.name);
   if(!baseLocal) return '';
 
+  // Try to find by PID first
   const pidKey = char.pid ? String(char.pid) : '';
   if(pidKey && directory.byPid.has(pidKey)) return directory.byPid.get(pidKey);
+
+  // Try to find by docId
+  const docId = char.docId || char.id || '';
+  if(docId && directory.byDocId && directory.byDocId.has(docId)) {
+    return directory.byDocId.get(docId);
+  }
 
   const bucket = directory.byBase.get(baseLocal);
   if(bucket && bucket.length){
@@ -112,7 +180,19 @@ function requestNotificationPermission() {
 let mailAudio = null;
 let audioEnabled = false;
 
+const isMobileDevice = (() => {
+  const ua = navigator.userAgent || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isCoarsePointer = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  return isMobileUA || isCoarsePointer;
+})();
+
 function preloadMailSound() {
+  if (isMobileDevice) {
+    console.log('[MailNotifier] Mobile device detected - skipping mail sound preload');
+    return;
+  }
+
   console.log('[MailNotifier] Preloading mail sound...');
   if (!mailAudio) {
     try {
@@ -141,6 +221,11 @@ function preloadMailSound() {
 
 // Play notification sound
 async function playNotificationSound() {
+  if (isMobileDevice) {
+    console.log('[MailNotifier] Mobile device detected - skipping notification sound playback');
+    return;
+  }
+
   console.log('[MailNotifier] 🔔 Attempting to play notification sound...');
   console.log('[MailNotifier] - audioEnabled:', audioEnabled);
   console.log('[MailNotifier] - mailAudio exists:', !!mailAudio);
@@ -220,6 +305,11 @@ async function showDesktopNotification(sender, subject, senderEmail, db) {
 
 // Enable audio on first user interaction (required by browsers)
 function enableAudioOnInteraction() {
+  if (isMobileDevice) {
+    audioEnabled = false;
+    return;
+  }
+
   console.log('[MailNotifier] Setting up audio interaction listeners...');
   if (!audioEnabled) {
     const enableAudio = async () => {
@@ -302,6 +392,11 @@ function updateSoundToggleUI() {
 function initSoundToggle() {
   const toggleContainer = document.getElementById('soundNotificationToggle');
   const toggleSwitch = document.getElementById('soundToggleSwitch');
+
+  if (isMobileDevice) {
+    audioEnabled = false;
+    return;
+  }
   
   if (!toggleContainer || !toggleSwitch) {
     console.log('[MailNotifier] Sound toggle not found on this page');
@@ -383,9 +478,14 @@ function initMailNotifier() {
   console.log('[MailNotifier] Requesting notification permission...');
   requestNotificationPermission();
   
-  // Enable audio on user interaction
-  console.log('[MailNotifier] Setting up audio enablement...');
-  enableAudioOnInteraction();
+  // Enable audio on user interaction (desktop only)
+  if (!isMobileDevice) {
+    console.log('[MailNotifier] Setting up audio enablement...');
+    enableAudioOnInteraction();
+  } else {
+    console.log('[MailNotifier] Mobile device detected - mail audio disabled');
+    audioEnabled = false;
+  }
   
   // Initialize sound toggle if on emails page (wait for DOM to be ready)
   setTimeout(() => {

@@ -32,7 +32,7 @@ function userClearance(){ const ch = getSelectedCharacter(); return ch ? parseCl
 function userDepartment(){ const ch = getSelectedCharacter(); return ch && ch.department ? ch.department : ''; }
 function isDeptAllowed(dept){ if(!dept) return false; const d = dept.toLowerCase().replace(/[^a-z0-9]/g, ''); return d.includes('research') || d.includes('rd') || d.includes('scien') || d.includes('scd') || d.includes('scientificdepartment'); }
 function canSubmit(){ const c = userClearance(); if(!isNaN(c) && c >= 5) return true; return isDeptAllowed(userDepartment()); }
-function displayName(){ const ch = getSelectedCharacter(); if(ch && ch.name) return ch.name; if(currentUser && currentUser.email) return currentUser.email; return 'Unknown'; }
+function displayName(){ const ch = getSelectedCharacter(); if(ch && ch.name) return ch.name; return null; }
 function characterId(){ const ch = getSelectedCharacter(); return ch && ch.id ? ch.id : null; }
 
 function formatItemNumber(raw){ const s = (raw || '').toUpperCase().replace(/\s+/g,''); const digits = s.match(/\d+/); if(!digits) return s || 'SCP-000'; const padded = digits[0].padStart(3,'0'); return `SCP-${padded}`; }
@@ -441,8 +441,19 @@ function init(){
     currentUser = user; 
     if(!user){ 
       setStatus('Login is required to save.', true); 
-    } else { 
-      setStatus(''); 
+      form.style.opacity = '0.5';
+      form.style.pointerEvents = 'none';
+    } else {
+      const selectedChar = getSelectedCharacter();
+      if(!selectedChar || !selectedChar.name) {
+        setStatus('You must select a character before submitting anomaly forms. Go to Character Select.', true);
+        form.style.opacity = '0.5';
+        form.style.pointerEvents = 'none';
+      } else {
+        setStatus(''); 
+        form.style.opacity = '1';
+        form.style.pointerEvents = 'auto';
+      }
     } 
   });
 

@@ -37,50 +37,194 @@ function makeUniqueEmail(baseLocal, counts) {
   return `${localPart}@site89.org`.toLowerCase();
 }
 
-async function resolveCharacterEmail(account) {
-  if (!account || !account.name) return '';
+function sortCharsForDeterministicOrder(a, b) {
+  const aSec = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+  const bSec = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+  const aNanos = a.createdAt && a.createdAt.nanoseconds ? a.createdAt.nanoseconds : 0;
+  const bNanos = b.createdAt && b.createdAt.nanoseconds ? b.createdAt.nanoseconds : 0;
+  if (aSec !== bSec) return aSec - bSec;
+  if (aNanos !== bNanos) return aNanos - bNanos;
 
+  const aPid = String(a.pid || '');
+  const bPid = String(b.pid || '');
+  if (aPid !== bPid) return aPid.localeCompare(bPid);
+
+  return String(a.docId || '').localeCompare(String(b.docId || ''));
+}
+
+function seedCountsFromStoredEmail(char, counts) {
+  const email = String(char.email || '').toLowerCase();
+  const baseLocal = baseLocalFromName(char.name);
+  if (!email || !baseLocal) return;
+
+  const atIndex = email.indexOf('@');
+  if (atIndex === -1) return;
+
+  const localPart = email.substring(0, atIndex);
+  const numMatch = localPart.match(/(\d+)$/);
+  if (numMatch) {
+    const num = parseInt(numMatch[1], 10);
+    const currentMax = counts.get(baseLocal) || 0;
+    counts.set(baseLocal, Math.max(currentMax, num));
+    return;
+  }
+
+  if (localPart === baseLocal) {
+    const currentMax = counts.get(baseLocal) || 0;
+    counts.set(baseLocal, Math.max(currentMax, 1));
+  }
+}
+
+async function backfillMissingCharacterEmails() {
   const snap = await db.collection('characters').get();
-  const raw = [];
+  const withEmail = [];
+  const withoutEmail = [];
+
   snap.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data && data.name) raw.push(data);
+    const data = docSnap.data() || {};
+    if (!data.name) return;
+    const row = { docId: docSnap.id, ...data };
+    if (row.email) withEmail.push(row);
+    else withoutEmail.push(row);
   });
 
-  raw.sort((a, b) => {
-    const aName = (a.name || '').toLowerCase();
-    const bName = (b.name || '').toLowerCase();
-    if (aName !== bName) return aName.localeCompare(bName);
-    const aPid = (a.pid || '').toString();
-    const bPid = (b.pid || '').toString();
-    return aPid.localeCompare(bPid);
-  });
+  if (!withoutEmail.length) {
+    return { updated: 0, scanned: withEmail.length + withoutEmail.length };
+  }
 
   const counts = new Map();
-  const entries = raw.map(char => {
-    const baseLocal = baseLocalFromName(char.name);
-    const email = makeUniqueEmail(baseLocal, counts);
-    return {
-      email,
-      baseLocal,
-      pid: char.pid ? String(char.pid) : '',
-      department: char.department || '',
-      name: char.name || ''
-    };
-  }).filter(entry => !!entry.email);
+  withEmail.forEach(char => seedCountsFromStoredEmail(char, counts));
 
-  const byPid = new Map();
-  const byBase = new Map();
-  entries.forEach(entry => {
-    if (entry.pid) byPid.set(entry.pid, entry.email);
-    const list = byBase.get(entry.baseLocal) || [];
-    list.push(entry);
-    byBase.set(entry.baseLocal, list);
+  withoutEmail.sort(sortCharsForDeterministicOrder);
+
+  const updates = [];
+  withoutEmail.forEach(char => {
+    const baseLocal = baseLocalFromName(char.name);
+    if (!baseLocal) return;
+    const email = makeUniqueEmail(baseLocal, counts);
+    updates.push({ docId: char.docId, email });
   });
 
+  let applied = 0;
+  let batch = db.batch();
+  let batchCount = 0;
+
+  for (const update of updates) {
+    const ref = db.collection('characters').doc(update.docId);
+    batch.set(ref, { email: update.email }, { merge: true });
+    batchCount += 1;
+
+    if (batchCount >= 400) {
+      await batch.commit();
+      applied += batchCount;
+      batch = db.batch();
+      batchCount = 0;
+    }
+  }
+
+  if (batchCount > 0) {
+    await batch.commit();
+    applied += batchCount;
+  }
+
+  return { updated: applied, scanned: withEmail.length + withoutEmail.length };
+}
+
+async function resolveCharacterEmail(account) {
+  if (!account || !account.name) return '';
+  
+  // If character has a stored email, use it
+  if (account.email) return account.email.toLowerCase();
+
+  const snap = await db.collection('characters').get();
+  
+  // Separate characters with existing emails from those without
+  const withEmail = [];
+  const withoutEmail = [];
+  const targetCharId = account.docId || account.id || '';
+  
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    if (data && data.name) {
+      const char = { docId: docSnap.id, ...data };
+      if (char.email) {
+        withEmail.push(char);
+      } else {
+        withoutEmail.push(char);
+      }
+    }
+  });
+
+  // Sort characters without emails by creation time (older first)
+  withoutEmail.sort((a, b) => {
+    const aSec = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+    const bSec = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+    const aNanos = a.createdAt && a.createdAt.nanoseconds ? a.createdAt.nanoseconds : 0;
+    const bNanos = b.createdAt && b.createdAt.nanoseconds ? b.createdAt.nanoseconds : 0;
+    if (aSec !== bSec) return aSec - bSec;
+    if (aNanos !== bNanos) return aNanos - bNanos;
+
+    const aPid = String(a.pid || '');
+    const bPid = String(b.pid || '');
+    if (aPid !== bPid) return aPid.localeCompare(bPid);
+
+    return String(a.docId || '').localeCompare(String(b.docId || ''));
+  });
+
+  // Build counts from existing emails
+  const counts = new Map();
+  const byPid = new Map();
+  const byDocId = new Map();
+  const byBase = new Map();
+
+  withEmail.forEach(char => {
+    const email = char.email.toLowerCase();
+    const baseLocal = baseLocalFromName(char.name);
+    
+    if (char.pid) byPid.set(String(char.pid), email);
+    if (char.docId) byDocId.set(char.docId, email);
+    
+    if (baseLocal) {
+      const match = email.match(/@/);
+      if (match) {
+        const localPart = email.substring(0, match.index);
+        const numMatch = localPart.match(/(\d+)$/);
+        if (numMatch) {
+          const num = parseInt(numMatch[1], 10);
+          const currentMax = counts.get(baseLocal) || 0;
+          counts.set(baseLocal, Math.max(currentMax, num));
+        } else if (localPart === baseLocal) {
+          const currentMax = counts.get(baseLocal) || 0;
+          counts.set(baseLocal, Math.max(currentMax, 1));
+        }
+      }
+      
+      const list = byBase.get(baseLocal) || [];
+      list.push({ email, department: char.department || '' });
+      byBase.set(baseLocal, list);
+    }
+  });
+
+  // Generate emails for characters without them
+  withoutEmail.forEach(char => {
+    const baseLocal = baseLocalFromName(char.name);
+    if (baseLocal) {
+      const email = makeUniqueEmail(baseLocal, counts);
+      if (char.pid) byPid.set(String(char.pid), email);
+      if (char.docId) byDocId.set(char.docId, email);
+      
+      const list = byBase.get(baseLocal) || [];
+      list.push({ email, department: char.department || '' });
+      byBase.set(baseLocal, list);
+    }
+  });
+
+  // Resolve for target character
   const baseLocal = baseLocalFromName(account.name);
   const pidKey = account.pid ? String(account.pid) : '';
+  
   if (pidKey && byPid.has(pidKey)) return byPid.get(pidKey);
+  if (targetCharId && byDocId.has(targetCharId)) return byDocId.get(targetCharId);
 
   const bucket = byBase.get(baseLocal);
   if (bucket && bucket.length) {
@@ -149,6 +293,15 @@ exports.processPayroll = onSchedule('every day 06:00', async () => {
   });
 
   await Promise.all(tasks);
+});
+
+exports.backfillCharacterEmails = onSchedule('every 15 minutes', async () => {
+  try {
+    const result = await backfillMissingCharacterEmails();
+    console.log('character email backfill complete', result);
+  } catch (error) {
+    console.error('character email backfill failed', error);
+  }
 });
 
 exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/{txId}', async (event) => {

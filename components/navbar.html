@@ -204,6 +204,18 @@
   </div>
 </nav>
 
+<!-- Breadcrumb Navigation -->
+<div id="breadcrumbNav" class="breadcrumb-nav">
+  <div class="breadcrumb-container">
+    <a href="/" class="breadcrumb-item">
+      <i class="fa-solid fa-home"></i>
+      <span>Home</span>
+    </a>
+    <span class="breadcrumb-separator">/</span>
+    <div id="breadcrumbPath" class="breadcrumb-path"></div>
+  </div>
+</div>
+
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -230,6 +242,97 @@
     display: flex;
     align-items: center;
     gap: 15px;
+  }
+
+  /* Breadcrumb Navigation */
+  .breadcrumb-nav {
+    position: fixed;
+    top: 61px; /* Below the main nav */
+    left: 0;
+    right: 0;
+    background: rgba(14, 17, 19, 0.85);
+    border-bottom: 1px solid rgba(78, 250, 170, 0.1);
+    z-index: 9998;
+    backdrop-filter: blur(8px);
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    display: none; /* Hidden by default, shown by JS when needed */
+  }
+
+  .breadcrumb-nav.visible {
+    display: block;
+  }
+
+  .breadcrumb-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .breadcrumb-item:hover {
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.05);
+  }
+
+  .breadcrumb-item i {
+    font-size: 0.8rem;
+  }
+
+  .breadcrumb-separator {
+    color: var(--text-dim);
+    opacity: 0.4;
+    user-select: none;
+  }
+
+  .breadcrumb-path {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb-current {
+    color: var(--accent-mint);
+    font-weight: 500;
+    padding: 4px 8px;
+  }
+
+  /* Light mode breadcrumb styling */
+  html[data-theme="light"] .breadcrumb-nav {
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom-color: rgba(30, 155, 138, 0.2);
+  }
+
+  html[data-theme="light"] .breadcrumb-item {
+    color: #666;
+  }
+
+  html[data-theme="light"] .breadcrumb-item:hover {
+    color: #1E9B8A;
+    background: rgba(30, 155, 138, 0.08);
+  }
+
+  html[data-theme="light"] .breadcrumb-separator {
+    color: #999;
+  }
+
+  html[data-theme="light"] .breadcrumb-current {
+    color: #1E9B8A;
   }
 
   /* Clocks in center */
@@ -1105,6 +1208,25 @@
       order: 10;
     }
 
+    /* Breadcrumb mobile adjustments */
+    .breadcrumb-nav {
+      padding: 6px 15px;
+      font-size: 0.75rem;
+    }
+
+    .breadcrumb-item span {
+      display: none; /* Hide text, keep icons on mobile for home */
+    }
+
+    .breadcrumb-item i {
+      margin: 0;
+    }
+
+    .breadcrumb-current {
+      padding: 4px;
+      font-size: 0.8rem;
+    }
+
     .mobile-accounts-btn {
       display: block !important;
       order: 9;
@@ -1469,50 +1591,141 @@
     const resultsEl = document.getElementById('siteSearchResults');
     if(!input || !resultsEl) return;
 
-    // Build index from navbar links + a few manual entries
-    const anchors = Array.from(document.querySelectorAll('#main-nav a'));
-    const manual = [
-      { title: 'Home', href: '/' , desc: 'Site-89 Home' },
-      { title: 'Archives Hub', href: '/archives/', desc: 'Browse all archives' },
-      { title: 'Personnel Files', href: '/personnel-files/', desc: 'Personnel records and PIDs' },
-      { title: 'Anomalies', href: '/anomalies/', desc: 'Anomalies index' },
-      { title: 'Research Logs', href: '/research-logs/', desc: 'Research entries' },
-      { title: 'Incident Reports', href: '/incident-reports/', desc: 'Incident reporting' },
-      { title: 'Emails', href: '/emails/', desc: 'Site Mail' },
-      { title: 'About', href: '/about/', desc: 'About Site-89' },
-      { title: 'Guides', href: '/guides/', desc: 'Operational guides' },
-      { title: 'Newcomer Guide', href: '/guides/newcomer-guide/', desc: 'Getting started at Site-89' },
-      { title: 'Installation Guide', href: '/guides/installation-guide/', desc: 'Install the Technic Launcher & Site-89 pack' },
-      { title: 'Skins Guide', href: '/guides/skins-guide/', desc: 'Skinning, HD skins, and the /setskin command' },
-      { title: 'Character Guide', href: '/guides/character-guide/', desc: 'Advice on creating and maintaining characters' },
-      { title: 'Roleplay Guide', href: '/guides/roleplay-guide/', desc: 'Rules, syntax, and RP principles' },
-      { title: 'Site Management', href: '/site-management/', desc: 'Site management tools' }
+    // Comprehensive search index with categorized entries
+    const searchIndex = [
+      // Main pages
+      { title: 'Home', href: '/', desc: 'Site-89 Main Page', category: 'Main' },
+      { title: 'About Site-89', href: '/about/', desc: 'Learn about Site-89 and our community', category: 'Main' },
+      { title: 'Staff Directory', href: '/about/staff/', desc: 'View our staff team', category: 'Main' },
+      { title: 'Credits', href: '/credits/', desc: 'Contributors and acknowledgements', category: 'Main' },
+      { title: 'Brand Guidelines', href: '/brand/', desc: 'Site-89 branding and assets', category: 'Main' },
+      
+      // Departments
+      { title: 'Departments Overview', href: '/departments/', desc: 'All Site-89 departments', category: 'Departments' },
+      { title: 'Administrative Department', href: '/departments/AD/', desc: 'Site administration and management', category: 'Departments' },
+      { title: 'Technical Services', href: '/departments/TSD/', desc: 'Technical support and infrastructure', category: 'Departments' },
+      { title: 'Internal Affairs', href: '/departments/IA/', desc: 'Personnel oversight and compliance', category: 'Departments' },
+      { title: 'Scientific Department', href: '/departments/ScD/', desc: 'Research and analysis division', category: 'Departments' },
+      { title: 'Security Department', href: '/departments/SD/', desc: 'Site security and containment', category: 'Departments' },
+      
+      // Archives
+      { title: 'Foundation Archives', href: '/archives/', desc: 'Browse all foundation records', category: 'Archives' },
+      { title: 'Personnel Files', href: '/personnel-files/', desc: 'Personnel records and profiles', category: 'Archives' },
+      { title: 'Anomalies Database', href: '/anomalies/', desc: 'Classified anomaly documentation', category: 'Archives' },
+      { title: 'View Anomalies', href: '/anomalies/view/', desc: 'Browse all documented anomalies', category: 'Archives' },
+      { title: 'Add New Anomaly', href: '/anomalies/new/', desc: 'Submit a new anomaly report', category: 'Archives' },
+      { title: 'Research Logs', href: '/research-logs/', desc: 'Scientific research documentation', category: 'Archives' },
+      { title: 'Incident Reports', href: '/incident-reports/', desc: 'Security incident documentation', category: 'Archives' },
+      { title: 'Case Files', href: '/archives/case-files/', desc: 'Investigation case files', category: 'Archives' },
+      { title: 'Groups of Interest', href: '/archives/goi/', desc: 'External organization profiles', category: 'Archives' },
+      { title: 'Persons of Interest', href: '/archives/poi/', desc: 'Individual person profiles', category: 'Archives' },
+      
+      // Community
+      { title: 'Forum', href: '/forum/', desc: 'Community discussion board', category: 'Community' },
+      { title: 'Events Calendar', href: '/events/', desc: 'Upcoming site events and activities', category: 'Community' },
+      { title: 'Gallery', href: '/gallery/', desc: 'Community screenshots and media', category: 'Community' },
+      { title: 'Newsletter', href: '/newsletter/', desc: 'Site-89 news and updates', category: 'Community' },
+      { title: 'Feedback Form', href: '/feedback/', desc: 'Submit feedback and suggestions', category: 'Community' },
+      
+      // Guides & Resources
+      { title: 'All Guides', href: '/guides/', desc: 'Complete guide collection', category: 'Guides' },
+      { title: 'Newcomer Guide', href: '/guides/newcomer-guide/', desc: 'Start here - Getting started at Site-89', category: 'Guides' },
+      { title: 'Installation Guide', href: '/guides/installation-guide/', desc: 'Install Minecraft and join the server', category: 'Guides' },
+      { title: 'Character Creation Guide', href: '/guides/character-guide/', desc: 'Create compelling characters', category: 'Guides' },
+      { title: 'Roleplay Guide', href: '/guides/roleplay-guide/', desc: 'RP rules and best practices', category: 'Guides' },
+      { title: 'Skins Guide', href: '/guides/skins-guide/', desc: 'Custom skins and HD textures', category: 'Guides' },
+      { title: 'Codes & Alarms', href: '/guides/codes-alarms/', desc: 'Emergency codes and procedures', category: 'Guides' },
+      { title: 'Status Page', href: '/status/', desc: 'Server and service status', category: 'Resources' },
+      { title: 'Roadmap', href: '/roadmap/', desc: 'Development plans and updates', category: 'Resources' },
+      { title: 'Image Uploads', href: '/uploads/', desc: 'Upload and manage images', category: 'Resources' },
+      
+      // Account & User
+      { title: 'Login', href: '/login/', desc: 'Sign in to your account', category: 'Account' },
+      { title: 'Character Select', href: '/character-select/', desc: 'Choose your active character', category: 'Account' },
+      { title: 'Manage Account', href: '/accounts/', desc: 'Account settings and preferences', category: 'Account' },
+      { title: 'Orientation', href: '/orientation/', desc: 'New member orientation program', category: 'Account' },
+      { title: 'Bank', href: '/bank/', desc: 'Foundation credit system', category: 'Account' },
+      { title: 'Emails', href: '/emails/', desc: 'In-character mail system', category: 'Account' },
+      
+      // Other
+      { title: 'Rules & Guidelines', href: '/rules/', desc: 'Community rules and policies', category: 'Other' },
+      { title: 'Org Chart', href: '/org-chart/', desc: 'Organizational hierarchy', category: 'Other' },
+      { title: 'Merchandise', href: '/merch/', desc: 'Official Site-89 merchandise', category: 'Other' },
+      { title: 'Games', href: '/games/', desc: 'Mini-games and entertainment', category: 'Other' },
+      { title: 'Snake Game', href: '/games/snake/', desc: 'Play classic Snake', category: 'Other' },
+      { title: 'Pong Game', href: '/games/pong/', desc: 'Play classic Pong', category: 'Other' },
+      { title: 'Doom Game', href: '/games/doom/', desc: 'Play browser Doom', category: 'Other' }
     ];
 
+    // Build combined index from navbar links + comprehensive manual entries
     const indexMap = new Map();
-    anchors.forEach(a => {
-      const t = a.textContent.trim(); const h = a.getAttribute('href') || '/';
-      if(t && !indexMap.has(h)) indexMap.set(h, { title: t, href: h, desc: a.title || '' });
+    
+    // Add all manual entries first (they have better descriptions)
+    searchIndex.forEach(item => {
+      indexMap.set(item.href, item);
     });
-    manual.forEach(m => { if(!indexMap.has(m.href)) indexMap.set(m.href, m); });
+    
+    // Add navbar links only if not already in index
+    const anchors = Array.from(document.querySelectorAll('#main-nav a'));
+    anchors.forEach(a => {
+      const t = a.textContent.trim();
+      const h = a.getAttribute('href') || '/';
+      if(t && !indexMap.has(h)) {
+        indexMap.set(h, { 
+          title: t, 
+          href: h, 
+          desc: a.title || `Navigate to ${t}`,
+          category: 'Other'
+        });
+      }
+    });
+    
     const index = Array.from(indexMap.values());
 
     let active = -1;
+    
     function renderResults(list){
       resultsEl.innerHTML = '';
-      if(!list || list.length === 0){ resultsEl.innerHTML = '<div class="search-empty">No results</div>'; resultsEl.classList.add('active'); resultsEl.setAttribute('aria-hidden','false'); return; }
-      list.slice(0,8).forEach((r, i) => {
+      if(!list || list.length === 0){ 
+        resultsEl.innerHTML = '<div class="search-empty">No results found</div>'; 
+        resultsEl.classList.add('active'); 
+        resultsEl.setAttribute('aria-hidden','false'); 
+        return; 
+      }
+      
+      list.slice(0,10).forEach((r, i) => {
         const el = document.createElement('div');
         el.className = 'search-result';
         el.setAttribute('role','option');
-        el.innerHTML = `<div style="flex:1"><div class='title'>${r.title}</div><div class='desc' style='font-size:.85rem;color:var(--text-light);opacity:.8'>${r.desc || r.href}</div></div>`;
-        el.addEventListener('mousedown', (ev)=>{ ev.preventDefault(); window.location.href = r.href; });
+        
+        // Create category badge if category exists
+        const categoryBadge = r.category ? `<span class="search-category">${r.category}</span>` : '';
+        
+        el.innerHTML = `
+          <div style="flex:1">
+            <div class='search-title'>${r.title} ${categoryBadge}</div>
+            <div class='search-desc'>${r.desc}</div>
+          </div>
+        `;
+        
+        el.addEventListener('mousedown', (ev)=>{ 
+          ev.preventDefault(); 
+          window.location.href = r.href; 
+        });
+        
         resultsEl.appendChild(el);
       });
-      resultsEl.classList.add('active'); resultsEl.setAttribute('aria-hidden','false');
+      
+      resultsEl.classList.add('active'); 
+      resultsEl.setAttribute('aria-hidden','false');
     }
 
-    function clearResults(){ resultsEl.classList.remove('active'); resultsEl.setAttribute('aria-hidden','true'); resultsEl.innerHTML = ''; active = -1; }
+    function clearResults(){ 
+      resultsEl.classList.remove('active'); 
+      resultsEl.setAttribute('aria-hidden','true'); 
+      resultsEl.innerHTML = ''; 
+      active = -1; 
+    }
 
     let debounceTimer = null;
     input.addEventListener('input', (e)=>{
@@ -1520,21 +1733,177 @@
       debounceTimer = setTimeout(()=>{
         const q = input.value.trim().toLowerCase();
         if(!q){ clearResults(); return; }
-        const matches = index.filter(it => (it.title||'').toLowerCase().includes(q) || (it.desc||'').toLowerCase().includes(q) || (it.href||'').toLowerCase().includes(q));
+        
+        // Search through title, description, and category
+        const matches = index.filter(it => 
+          (it.title || '').toLowerCase().includes(q) || 
+          (it.desc || '').toLowerCase().includes(q) ||
+          (it.category || '').toLowerCase().includes(q)
+        );
+        
+        // Sort results by relevance (title matches first)
+        matches.sort((a, b) => {
+          const aTitleMatch = (a.title || '').toLowerCase().startsWith(q);
+          const bTitleMatch = (b.title || '').toLowerCase().startsWith(q);
+          if(aTitleMatch && !bTitleMatch) return -1;
+          if(!aTitleMatch && bTitleMatch) return 1;
+          return 0;
+        });
+        
         renderResults(matches);
       }, 150);
     });
 
     input.addEventListener('keydown', (e)=>{
       const items = Array.from(resultsEl.querySelectorAll('.search-result'));
-      if(e.key === 'ArrowDown'){ e.preventDefault(); if(items.length){ active = Math.min(items.length-1, active+1); items.forEach((it,i)=> it.classList.toggle('active', i===active)); items[Math.max(active,0)]?.scrollIntoView({block:'nearest'}); }}
-      else if(e.key === 'ArrowUp'){ e.preventDefault(); if(items.length){ active = Math.max(0, active-1); items.forEach((it,i)=> it.classList.toggle('active', i===active)); items[active]?.scrollIntoView({block:'nearest'}); }}
-      else if(e.key === 'Enter'){ e.preventDefault(); const items = Array.from(resultsEl.querySelectorAll('.search-result')); if(items[active]) items[active].dispatchEvent(new MouseEvent('mousedown')); }
-      else if(e.key === 'Escape'){ input.value=''; clearResults(); }
+      if(e.key === 'ArrowDown'){ 
+        e.preventDefault(); 
+        if(items.length){ 
+          active = Math.min(items.length-1, active+1); 
+          items.forEach((it,i)=> it.classList.toggle('active', i===active)); 
+          items[Math.max(active,0)]?.scrollIntoView({block:'nearest'}); 
+        }
+      }
+      else if(e.key === 'ArrowUp'){ 
+        e.preventDefault(); 
+        if(items.length){ 
+          active = Math.max(0, active-1); 
+          items.forEach((it,i)=> it.classList.toggle('active', i===active)); 
+          items[active]?.scrollIntoView({block:'nearest'}); 
+        }
+      }
+      else if(e.key === 'Enter'){ 
+        e.preventDefault(); 
+        const items = Array.from(resultsEl.querySelectorAll('.search-result')); 
+        if(items[active]) items[active].dispatchEvent(new MouseEvent('mousedown')); 
+      }
+      else if(e.key === 'Escape'){ 
+        input.value=''; 
+        clearResults(); 
+      }
     });
 
-    document.addEventListener('click', (ev)=>{ if(!document.getElementById('navSearch').contains(ev.target)) clearResults(); });
+    document.addEventListener('click', (ev)=>{ 
+      if(!document.getElementById('navSearch').contains(ev.target)) clearResults(); 
+    });
   });
 </script>
+
+<!-- Breadcrumb Navigation Script -->
+<script>
+  document.addEventListener('includesLoaded', () => {
+    const breadcrumbNav = document.getElementById('breadcrumbNav');
+    const breadcrumbPath = document.getElementById('breadcrumbPath');
+    
+    if (!breadcrumbNav || !breadcrumbPath) return;
+
+    // Mapping of paths to readable names
+    const pathNames = {
+      'departments': 'Departments',
+      'AD': 'Administrative Department',
+      'TSD': 'Technical Services',
+      'IA': 'Internal Affairs',
+      'ScD': 'Scientific Department',
+      'SD': 'Security Department',
+      'archives': 'Foundation Archives',
+      'personnel-files': 'Personnel Files',
+      'anomalies': 'Anomalies',
+      'research-logs': 'Research Logs',
+      'incident-reports': 'Incident Reports',
+      'case-files': 'Case Files',
+      'goi': 'Groups of Interest',
+      'poi': 'Persons of Interest',
+      'forum': 'Forum',
+      'events': 'Events',
+      'gallery': 'Gallery',
+      'newsletter': 'Newsletter',
+      'feedback': 'Feedback',
+      'guides': 'Guides',
+      'newcomer-guide': 'Newcomer Guide',
+      'installation-guide': 'Installation Guide',
+      'character-guide': 'Character Guide',
+      'roleplay-guide': 'Roleplay Guide',
+      'skins-guide': 'Skins Guide',
+      'codes-alarms': 'Codes & Alarms',
+      'status': 'Status',
+      'roadmap': 'Roadmap',
+      'uploads': 'Image Uploads',
+      'login': 'Login',
+      'character-select': 'Character Select',
+      'accounts': 'Manage Account',
+      'orientation': 'Orientation',
+      'bank': 'Bank',
+      'emails': 'Emails',
+      'about': 'About',
+      'staff': 'Staff',
+      'credits': 'Credits',
+      'brand': 'Brand',
+      'rules': 'Rules & Guidelines',
+      'org-chart': 'Org Chart',
+      'merch': 'Merchandise',
+      'games': 'Games',
+      'snake': 'Snake',
+      'pong': 'Pong',
+      'doom': 'Doom',
+      'view': 'View All',
+      'new': 'Add New',
+      'admin': 'Admin',
+      'analytics': 'Analytics',
+      'bank-manager': 'Bank Manager',
+      'io-personnel-manager': 'Personnel Manager',
+      'portal': 'Portal'
+    };
+
+    function generateBreadcrumbs() {
+      const path = window.location.pathname;
+      
+      // Don't show breadcrumbs on home page
+      if (path === '/' || path === '/index.html') {
+        breadcrumbNav.classList.remove('visible');
+        return;
+      }
+
+      // Split path and filter out empty segments
+      const segments = path.split('/').filter(seg => seg && seg !== 'index.html');
+      
+      // Don't show if only one segment (direct page from root)
+      if (segments.length === 0) {
+        breadcrumbNav.classList.remove('visible');
+        return;
+      }
+
+      // Clear existing breadcrumbs
+      breadcrumbPath.innerHTML = '';
+      
+      // Build breadcrumb items
+      let currentPath = '';
+      segments.forEach((segment, index) => {
+        currentPath += '/' + segment;
+        
+        // Get readable name or use segment as fallback
+        const name = pathNames[segment] || segment.split('-').map(w => 
+          w.charAt(0).toUpperCase() + w.slice(1)
+        ).join(' ');
+        
+        // Last item is current page (not a link)
+        if (index === segments.length - 1) {
+          breadcrumbPath.innerHTML += `<span class="breadcrumb-current">${name}</span>`;
+        } else {
+          // Add separator
+          breadcrumbPath.innerHTML += `<span class="breadcrumb-separator">/</span>`;
+          // Add link
+          breadcrumbPath.innerHTML += `<a href="${currentPath}/" class="breadcrumb-item"><span>${name}</span></a>`;
+        }
+      });
+
+      // Show breadcrumb nav
+      breadcrumbNav.classList.add('visible');
+    }
+
+    // Generate breadcrumbs on page load
+    generateBreadcrumbs();
+  });
+</script>
+
 <!-- Global mail notifier for unread badge -->
 <script type="module" src="/assets/js/mailNotifier.js"></script>

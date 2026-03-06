@@ -305,7 +305,7 @@ async function handleSubmit(e){
   const ch = getSelectedCharacter();
   const payload = {
     title,
-    author: ch ? (ch.name || auth.currentUser.email) : auth.currentUser.email,
+    author: ch ? ch.name : null,
     department: ch ? (ch.department || '') : '',
     clearanceLevel,
     tags,

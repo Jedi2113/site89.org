@@ -5,7 +5,29 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site-89 Personnel Files</title>
+  <title>Personnel Files — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Access personnel records and character profiles at Site-89. View Foundation staff, researchers, and MTF operatives in our Minecraft SCP roleplay server.">
+  <meta name="keywords" content="Minecraft SCP characters, SCP roleplay characters, Foundation personnel, Site-89 staff, Minecraft roleplay characters">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Personnel Files — Site-89">
+  <meta property="og:description" content="Access personnel records and character profiles at Site-89. View Foundation staff, researchers, and MTF operatives.">
+  <meta property="og:url" content="https://site89.github.io/personnel-files/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Personnel Files — Site-89">
+  <meta name="twitter:description" content="Access personnel records and character profiles at Site-89.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/personnel-files/">
 
   <!-- Fonts & CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
@@ -605,23 +627,68 @@
 
         const rawPersonnel = [];
         querySnapshot.forEach(docSnap => {
-          rawPersonnel.push(docSnap.data());
+          const charData = docSnap.data();
+          // Filter out archived characters from public personnel files
+          if ((charData.status || 'active') !== 'archived') {
+            rawPersonnel.push({ docId: docSnap.id, ...charData });
+          }
         });
 
-        rawPersonnel.sort((a,b)=>{
-          const aName = (a.name || '').toLowerCase();
-          const bName = (b.name || '').toLowerCase();
-          if(aName !== bName) return aName.localeCompare(bName);
-          const aPid = (a.pid || '').toString();
-          const bPid = (b.pid || '').toString();
-          return aPid.localeCompare(bPid);
+        // Separate characters with existing emails from those without
+        const withEmail = rawPersonnel.filter(char => char.email);
+        const withoutEmail = rawPersonnel.filter(char => !char.email);
+
+        // Sort characters without emails by creation time (older first) for stable assignment
+        withoutEmail.sort((a,b)=>{
+          const aSec = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+          const bSec = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+          const aNanos = a.createdAt && a.createdAt.nanoseconds ? a.createdAt.nanoseconds : 0;
+          const bNanos = b.createdAt && b.createdAt.nanoseconds ? b.createdAt.nanoseconds : 0;
+          if (aSec !== bSec) return aSec - bSec;
+          if (aNanos !== bNanos) return aNanos - bNanos;
+
+          const aPid = String(a.pid || '');
+          const bPid = String(b.pid || '');
+          if (aPid !== bPid) return aPid.localeCompare(bPid);
+
+          return String(a.docId || '').localeCompare(String(b.docId || ''));
         });
 
+        // Build counts from existing emails
         const counts = new Map();
-        allPersonnel = rawPersonnel.map(char => {
+        withEmail.forEach(char => {
+          const email = char.email.toLowerCase();
+          const baseLocal = baseLocalFromName(char.name);
+          if (baseLocal) {
+            const match = email.match(/@/);
+            if (match) {
+              const localPart = email.substring(0, match.index);
+              const numMatch = localPart.match(/(\d+)$/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1], 10);
+                const currentMax = counts.get(baseLocal) || 0;
+                counts.set(baseLocal, Math.max(currentMax, num));
+              } else if (localPart === baseLocal) {
+                const currentMax = counts.get(baseLocal) || 0;
+                counts.set(baseLocal, Math.max(currentMax, 1));
+              }
+            }
+          }
+        });
+
+        // Build personnel list with emails (preserve existing, generate for new)
+        allPersonnel = [];
+        
+        // Add characters with existing emails
+        withEmail.forEach(char => {
+          allPersonnel.push({ ...char, email: char.email.toLowerCase() });
+        });
+
+        // Generate emails for characters without them
+        withoutEmail.forEach(char => {
           const baseLocal = baseLocalFromName(char.name);
           const email = makeUniqueEmail(baseLocal, counts);
-          return { ...char, email };
+          allPersonnel.push({ ...char, email });
         });
 
         // Initial render with default sort
