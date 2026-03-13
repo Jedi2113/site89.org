@@ -172,6 +172,233 @@ function userHasRsvped(eventId) {
   return attendees.some(attendee => attendee.id === character.id);
 }
 
+function getNearestEvent() {
+  const now = Date.now();
+  const withDates = eventsData.filter(event => event.startDate instanceof Date && !Number.isNaN(event.startDate.getTime()));
+  if (!withDates.length) return null;
+
+  const upcoming = withDates
+    .filter(event => event.startDate.getTime() >= now)
+    .sort((a, b) => a.startDate - b.startDate);
+
+  if (upcoming.length) return upcoming[0];
+
+  return withDates
+    .slice()
+    .sort((a, b) => Math.abs(a.startDate.getTime() - now) - Math.abs(b.startDate.getTime() - now))[0] || null;
+}
+
+function getEventDebugState() {
+  const selectedCharacter = getSelectedCharacter();
+  const nearestEvent = getNearestEvent();
+  return {
+    page: window.location.pathname,
+    loggedIn: !!currentUser,
+    user: currentUser ? {
+      uid: currentUser.uid,
+      email: currentUser.email || null
+    } : null,
+    selectedCharacter: selectedCharacter ? {
+      id: selectedCharacter.id || null,
+      name: selectedCharacter.name || null,
+      clearance: selectedCharacter.clearance ?? null,
+      rank: selectedCharacter.rank || null
+    } : null,
+    loadedEventCount: eventsData.length,
+    nearestEvent: nearestEvent ? {
+      id: nearestEvent.id,
+      title: nearestEvent.title,
+      start: nearestEvent.startDate?.toISOString?.() || null,
+      zone: nearestEvent.zone || null
+    } : null
+  };
+}
+
+function logEventDebug(label, details) {
+  console.log(`[Site-89 Debug] ${label}`, details);
+}
+
+async function triggerEventNotification(notificationType, eventId) {
+  const normalizedType = String(notificationType || '').trim();
+  const normalizedEventId = String(eventId || '').trim();
+  const requestBody = {
+    notificationType: normalizedType,
+    eventId: normalizedEventId || undefined
+  };
+
+  console.group(`[Site-89 Debug] triggerEvent(${normalizedType || 'missing'}, ${normalizedEventId || 'nearest/none'})`);
+  logEventDebug('State before trigger', getEventDebugState());
+
+  try {
+    if (!currentUser) {
+      throw new Error('You must be logged in to trigger notifications.');
+    }
+
+    if (!normalizedType) {
+      throw new Error('notificationType is required.');
+    }
+
+    logEventDebug('Fetching Firebase ID token', { uid: currentUser.uid });
+    const token = await currentUser.getIdToken();
+    logEventDebug('ID token fetched', { tokenLength: token.length });
+    logEventDebug('Sending trigger request', requestBody);
+
+    const response = await fetch('/api/trigger-event-notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    let payload = null;
+    let rawText = '';
+    try {
+      rawText = await response.text();
+      payload = rawText ? JSON.parse(rawText) : null;
+    } catch (_error) {
+      payload = null;
+    }
+
+    logEventDebug('Trigger response received', {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      payload,
+      rawText: rawText || null
+    });
+
+    if (!response.ok) {
+      const errorMessage = payload?.message || rawText || `Request failed with status ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    console.groupEnd();
+    return payload;
+  } catch (error) {
+    console.error('[Site-89 Debug] Trigger failed', {
+      error: error?.message || String(error),
+      state: getEventDebugState(),
+      requestBody
+    });
+    console.groupEnd();
+    throw error;
+  }
+}
+
+async function triggerNearestEventNotification(notificationType) {
+  const nearestEvent = getNearestEvent();
+  logEventDebug('Resolved nearest event', nearestEvent ? {
+    id: nearestEvent.id,
+    title: nearestEvent.title,
+    start: nearestEvent.startDate,
+    zone: nearestEvent.zone
+  } : null);
+
+  if (!nearestEvent) {
+    console.warn('[Site-89 Debug] No nearest event was found.', getEventDebugState());
+    throw new Error('No events available to trigger.');
+  }
+
+  const result = await triggerEventNotification(notificationType, nearestEvent.id);
+  const pinged = (result?.attendees || []).filter(a => a.pinged).map(a => a.name);
+  const listed = (result?.attendees || []).filter(a => !a.pinged).map(a => a.name);
+  console.log(`[Site-89 Debug] Triggered ${notificationType} for nearest event:`, {
+    eventId: nearestEvent.id,
+    title: nearestEvent.title,
+    start: nearestEvent.startDate,
+    totalAttendees: (result?.attendees || []).length,
+    pinged,
+    listedOnly: listed,
+    result
+  });
+  return { event: nearestEvent, result };
+}
+
+function listDebuggableEvents(limit = 5) {
+  return eventsData
+    .filter(event => event.startDate instanceof Date && !Number.isNaN(event.startDate.getTime()))
+    .slice()
+    .sort((a, b) => a.startDate - b.startDate)
+    .slice(0, limit)
+    .map(event => ({
+      id: event.id,
+      title: event.title,
+      start: event.startDate.toISOString(),
+      zone: event.zone,
+      departments: [...(event.departments || [])]
+    }));
+}
+
+function installEventDebugCommands() {
+  const debugApi = {
+    help() {
+      const state = getEventDebugState();
+      const summary = {
+        ...state,
+        commands: [
+          'site89EventDebug.status()',
+          'site89EventDebug.listEvents()',
+          'site89EventDebug.nearestEvent()',
+          'site89EventDebug.triggerNearestDayOf()',
+          'site89EventDebug.triggerNearest30Min()',
+          'site89EventDebug.triggerNearestStart()',
+          'site89EventDebug.triggerNearestThreeDay()',
+          'site89EventDebug.triggerEvent("start", "EVENT_ID")'
+        ]
+      };
+      console.log('[Site-89 Debug] Event debug commands', summary);
+      return summary;
+    },
+    status() {
+      const state = getEventDebugState();
+      console.log('[Site-89 Debug] Current status', state);
+      return state;
+    },
+    listEvents(limit = 5) {
+      const items = listDebuggableEvents(limit);
+      if (!items.length) {
+        console.warn('[Site-89 Debug] No loaded events available to list.', getEventDebugState());
+      } else {
+        console.table(items);
+      }
+      return items;
+    },
+    nearestEvent() {
+      const nearest = getNearestEvent();
+      if (!nearest) {
+        console.warn('[Site-89 Debug] No nearest event found.', getEventDebugState());
+      } else {
+        console.log('[Site-89 Debug] Nearest event', nearest);
+      }
+      return nearest;
+    },
+    triggerEvent: triggerEventNotification,
+    triggerNearest: triggerNearestEventNotification,
+    triggerNearestDayOf() {
+      return triggerNearestEventNotification('day_of');
+    },
+    triggerNearest30Min() {
+      return triggerNearestEventNotification('thirty_min');
+    },
+    triggerNearestStart() {
+      return triggerNearestEventNotification('start');
+    },
+    triggerNearestThreeDay() {
+      return triggerNearestEventNotification('three_day');
+    }
+  };
+
+  window.site89EventDebug = debugApi;
+  window.triggerNearestEventDayOf = debugApi.triggerNearestDayOf;
+  window.triggerNearestEvent30Min = debugApi.triggerNearest30Min;
+  window.triggerNearestEventStart = debugApi.triggerNearestStart;
+  window.triggerNearestEventThreeDay = debugApi.triggerNearestThreeDay;
+
+  console.log('[Site-89 Debug] Event debug commands installed. Run site89EventDebug.help()', getEventDebugState());
+}
+
 async function toggleRsvp(eventId) {
   if (!currentUser) {
     alert('You must log in to RSVP.');
@@ -717,3 +944,4 @@ onAuthStateChanged(auth, (user) => {
 updateRsvpIdentity();
 updateAdminUI();
 subscribeEvents();
+installEventDebugCommands();

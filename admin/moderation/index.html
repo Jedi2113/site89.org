@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moderation Panel — Site-89</title>
+  <meta name="description" content="Site-89 moderation panel for account status management and rule enforcement.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Moderation Panel — Site-89">
+  <meta property="og:description" content="Manage moderation actions, strikes, and bans.">
+  <meta property="og:url" content="https://site89.github.io/admin/moderation/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Moderation Panel — Site-89">
+  <meta name="twitter:description" content="Manage moderation actions, strikes, and bans.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+  <link rel="canonical" href="https://site89.github.io/admin/moderation/">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .access-denied { text-align: center; padding: 3rem; color: var(--text-light); }
+
+    .mod-header {
+      background: linear-gradient(135deg, rgba(78, 250, 170, 0.15) 0%, rgba(13, 202, 240, 0.15) 100%);
+      border-bottom: 2px solid var(--accent-teal);
+      padding: 2.2rem 2rem;
+      margin-bottom: 1.6rem;
+      border-radius: 12px;
+    }
+
+    .mod-toolbar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+      align-items: center;
+    }
+
+    .mod-input,
+    .mod-select,
+    .mod-textarea {
+      background: var(--bg-card);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-family: var(--font-body);
+      box-sizing: border-box;
+    }
+
+    .mod-input,
+    .mod-select {
+      min-height: 40px;
+      padding: 0.6rem;
+    }
+
+    .mod-textarea {
+      width: 100%;
+      padding: 0.7rem;
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .mod-input { min-width: 280px; flex: 1; }
+
+    .mod-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .mod-card {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-teal);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 170px;
+    }
+
+    .mod-card:hover,
+    .mod-card.active {
+      border-color: var(--accent-mint);
+      box-shadow: 0 0 14px rgba(78, 250, 170, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .mod-card h3 {
+      margin: 0 0 0.6rem 0;
+      color: var(--accent-mint);
+      font-size: 1.1rem;
+    }
+
+    .mod-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.14);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .mod-pill.clean { background: rgba(78, 250, 170, 0.12); color: var(--accent-mint); border-color: rgba(78, 250, 170, 0.35); }
+    .mod-pill.warned { background: rgba(255, 193, 7, 0.14); color: #ffd24a; border-color: rgba(255, 193, 7, 0.36); }
+    .mod-pill.strike { background: rgba(245, 204, 107, 0.14); color: #f5cc6b; border-color: rgba(245, 204, 107, 0.35); }
+    .mod-pill.temp-ban { background: rgba(255, 140, 66, 0.14); color: #ffb47a; border-color: rgba(255, 140, 66, 0.35); }
+    .mod-pill.ban { background: rgba(255, 107, 107, 0.14); color: #ff8c8c; border-color: rgba(255, 107, 107, 0.35); }
+
+    .mod-muted { opacity: 0.78; font-size: 0.9rem; color: var(--text-light); }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: var(--accent-mint);
+      font-weight: 700;
+    }
+
+    .panel-body { padding: 1rem; }
+
+    .detail-top {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .detail-card {
+      border: 1px solid rgba(78, 250, 170, 0.24);
+      border-radius: 8px;
+      padding: 0.8rem;
+      background: var(--bg-soft);
+    }
+
+    .action-list { display: grid; gap: 0.8rem; }
+
+    .action-item {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 0.8rem;
+      background: rgba(0,0,0,0.22);
+    }
+
+    .action-title { font-weight: 700; color: var(--accent-mint); margin-bottom: 0.3rem; }
+
+    .btn-primary,
+    .btn-secondary {
+      border-radius: 6px;
+      border: none;
+      min-height: 40px;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-primary { background: var(--accent-mint); color: var(--bg-dark); }
+    .btn-secondary { background: transparent; color: var(--text-light); border: 1px solid rgba(255,255,255,0.24); }
+
+    .feedback { margin-top: 0.8rem; font-size: 0.92rem; }
+    .feedback.success { color: var(--accent-mint); }
+    .feedback.error { color: #ff7f7f; }
+
+    .modal { display: none; position: fixed; z-index: 2400; inset: 0; background: rgba(0,0,0,0.72); }
+    .modal.show { display: flex; align-items: center; justify-content: center; }
+    .modal-content {
+      width: 92%;
+      max-width: 860px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 2px solid var(--accent-mint);
+      border-radius: 10px;
+      padding: 1.3rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--accent-teal);
+      margin-bottom: 1rem;
+      padding-bottom: 0.7rem;
+    }
+
+    .modal-close {
+      border: none;
+      background: none;
+      color: var(--accent-mint);
+      font-size: 1.9rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .suggestion {
+      margin-top: 0.7rem;
+      padding: 0.7rem;
+      border-radius: 8px;
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      background: rgba(78, 250, 170, 0.08);
+    }
+
+    .severity-block {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 8px;
+      padding: 0.8rem;
+      background: rgba(0,0,0,0.2);
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .severity-total {
+      font-weight: 700;
+      color: var(--accent-mint);
+    }
+
+    .severity-list {
+      margin: 0;
+      padding-left: 1rem;
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .severity-item-top {
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    .severity-item-top.primary {
+      color: var(--accent-mint);
+    }
+
+    .severity-step {
+      color: var(--text-light);
+      opacity: 0.88;
+      font-size: 0.9rem;
+      margin-top: 0.15rem;
+    }
+
+    .mod-pager {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.4rem;
+      flex-wrap: wrap;
+    }
+
+    .mod-page-info {
+      color: var(--text-light);
+      opacity: 0.8;
+      min-width: 110px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 1150px) {
+      .mod-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 720px) {
+      .mod-grid { grid-template-columns: 1fr; }
+      .detail-top { grid-template-columns: 1fr; }
+      .mod-input { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="content">
+    <div id="loadingState" style="display:block; padding: 4rem 2rem; text-align:center;">
+      <div style="background: linear-gradient(135deg, rgba(78, 250, 170, 0.1) 0%, rgba(13, 202, 240, 0.1) 100%); border-radius: 12px; padding: 3rem; border: 2px solid var(--accent-teal);">
+        <h2 style="color: var(--accent-mint); margin-top: 0;"><i class="fas fa-spinner fa-spin"></i> Loading Moderation Panel</h2>
+        <p style="color: var(--text-light); opacity: 0.8;">Authenticating and loading account moderation data...</p>
+      </div>
+    </div>
+
+    <div id="accessDenied" class="access-denied" style="display:none;">
+      <i class="fas fa-lock" style="font-size:3rem;margin-bottom:1rem;opacity:0.6;display:block;"></i>
+      <h2>Access Denied</h2>
+      <p>Only IA or RAISA personnel can access this moderation panel.</p>
+    </div>
+
+    <div id="managementContainer" style="display:none;">
+      <div class="mod-header">
+        <h1 style="margin:0 0 0.4rem 0; color:var(--accent-mint); font-size:2rem;"><i class="fas fa-gavel"></i> Moderation Panel</h1>
+        <p style="margin:0; color:var(--text-light); opacity:0.85;">Manage account-level moderation records, violations, and enforcement actions.</p>
+      </div>
+
+      <div class="mod-toolbar">
+        <button id="newViolationBtn" class="btn-primary" type="button"><i class="fas fa-plus-circle"></i> New Violation</button>
+        <input id="searchInput" class="mod-input" type="text" placeholder="Search by IGN, email, UID, or character...">
+        <select id="statusFilter" class="mod-select">
+          <option value="all">All Statuses</option>
+          <option value="Clean">Clean</option>
+          <option value="Warned">Warned</option>
+          <option value="Strike I">Strike I</option>
+          <option value="Strike II">Strike II</option>
+          <option value="Strike III">Strike III</option>
+          <option value="Banned (Temporary)">Banned (Temporary)</option>
+          <option value="Banned">Banned</option>
+        </select>
+      </div>
+
+      <div id="moderationGrid" class="mod-grid">
+        <div class="access-denied">Loading accounts...</div>
+      </div>
+
+      <div class="mod-pager">
+        <button id="prevPageBtn" class="btn-secondary" type="button">Previous</button>
+        <div id="pageInfo" class="mod-page-info">Page 1 / 1</div>
+        <button id="nextPageBtn" class="btn-secondary" type="button">Next</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="violationModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="margin:0; color:var(--accent-mint);">New Violation</h2>
+        <button type="button" class="modal-close" id="violationModalClose">&times;</button>
+      </div>
+
+      <div style="display:grid; gap:0.8rem;">
+        <label>
+          Account / Username (IGN)
+          <select id="violationAccount" class="mod-select" style="width:100%; margin-top:0.3rem;"></select>
+        </label>
+
+        <label>
+          Rule Violated (from Rulebook)
+          <select id="violationRule" class="mod-select" multiple size="9" style="width:100%; margin-top:0.3rem; min-height:220px;"></select>
+          <div class="mod-muted" style="margin-top:0.35rem;">Use Ctrl/Cmd + Click to select multiple rules.</div>
+        </label>
+
+        <label>
+          Description / Reason
+          <textarea id="violationReason" class="mod-textarea" placeholder="Describe what happened and include context/evidence notes."></textarea>
+        </label>
+
+        <label>
+          Issued By
+          <input id="violationIssuer" class="mod-input" type="text" placeholder="Moderator name">
+        </label>
+
+        <div id="suggestedAction" class="suggestion mod-muted">Select one or more rules to view severity score and escalation guidance.</div>
+        <div id="severityBreakdown" class="severity-block">
+          <div class="severity-total">Total Severity Score: 0</div>
+          <div class="mod-muted">No rules selected.</div>
+        </div>
+
+        <label>
+          Action Taken
+          <select id="violationAction" class="mod-select" style="width:100%; margin-top:0.3rem;">
+            <option value="verbal_warning">Verbal Warning (off-record)</option>
+            <option value="written_warning">Written Warning</option>
+            <option value="add_strike">Add Strike</option>
+            <option value="add_2_strikes">Add 2 Strikes</option>
+            <option value="add_3_strikes">Add 3 Strikes</option>
+            <option value="temp_ban">Ban (Temporary)</option>
+            <option value="ban">Ban (Permanent)</option>
+          </select>
+        </label>
+
+        <div style="display:flex; gap:0.8rem; justify-content:flex-end; margin-top:0.2rem;">
+          <button id="cancelViolationBtn" class="btn-secondary" type="button">Cancel</button>
+          <button id="submitViolationBtn" class="btn-primary" type="button">Submit Violation</button>
+        </div>
+        <div id="violationFeedback" class="feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="accountModal" class="modal" aria-hidden="true">
+    <div class="modal-content" style="max-width: 980px;">
+      <div class="modal-header">
+        <h2 style="margin:0; color:var(--accent-mint);">Account Moderation Record</h2>
+        <button type="button" class="modal-close" id="accountModalClose">&times;</button>
+      </div>
+      <div id="accountModalBody">
+        <div class="mod-muted">Loading account data...</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/moderation-manager.js"></script>
+</body>
+</html>

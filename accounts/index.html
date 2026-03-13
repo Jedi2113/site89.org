@@ -129,6 +129,30 @@
       <p id="passwordFeedback" class="feedback"></p>
     </div>
 
+    <!-- Discord Integration -->
+    <div class="about-box">
+      <h3><i class="fab fa-discord"></i> Discord Integration</h3>
+      <p>Link your Discord account to receive email notifications in the <code>#email-notifier</code> channel when <strong>any of your characters</strong> receive an email.</p>
+      <div style="margin-top: 1rem;">
+        <label for="discordUserId" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Discord User ID</label>
+        <input type="text" id="discordUserId" placeholder="e.g., 123456789012345678" maxlength="20" style="margin: 0;">
+        <div style="margin-top: 0.5rem; margin-bottom: 1rem;">
+          <button id="linkDiscordBtn">Link Discord Account</button>
+          <button id="unlinkDiscordBtn" style="background-color: #666; margin-left: 0.5rem;">Unlink</button>
+        </div>
+        <p class="feedback" id="discordFeedback"></p>
+        <details style="margin-top: 1rem; font-size: 0.85rem; color: #888;">
+          <summary style="cursor: pointer; user-select: none;">How to find your Discord User ID</summary>
+          <ol style="margin-top: 0.5rem; padding-left: 1.5rem;">
+            <li>Open Discord and go to Settings → Advanced</li>
+            <li>Enable "Developer Mode"</li>
+            <li>Right-click your profile picture or username</li>
+            <li>Select "Copy User ID"</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
     <!-- Department Portals -->
     <div class="about-box">
       <h2>Department Portals</h2>
@@ -152,7 +176,7 @@
 
   <script type="module">
     import { getAuth, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, updateDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
     const auth = getAuth();
     const db = getFirestore();
@@ -164,6 +188,10 @@
     const changePasswordForm = document.getElementById("changePasswordForm");
     const passwordFeedback = document.getElementById("passwordFeedback");
     const departmentPortalsDiv = document.getElementById("departmentPortals");
+    const discordUserIdInput = document.getElementById("discordUserId");
+    const linkDiscordBtn = document.getElementById("linkDiscordBtn");
+    const unlinkDiscordBtn = document.getElementById("unlinkDiscordBtn");
+    const discordFeedback = document.getElementById("discordFeedback");
 
     // Load user data and department portals
     onAuthStateChanged(auth, async (user) => {
@@ -171,8 +199,31 @@
         accountEmail.textContent = user.email;
         accountUID.textContent = user.uid.substring(0, 12) + "...";
 
-        // Load user's character and check department
+        // Load Discord info for current account
         try {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.discordUserId) {
+              discordUserIdInput.value = userData.discordUserId;
+              discordFeedback.textContent = "✓ Discord account linked";
+              discordFeedback.style.color = "var(--accent-mint)";
+            } else {
+              discordFeedback.textContent = "No Discord account linked";
+              discordFeedback.style.color = "#888";
+            }
+          } else {
+            discordFeedback.textContent = "No Discord account linked";
+            discordFeedback.style.color = "#888";
+          }
+        } catch (err) {
+          console.error("Error loading Discord info:", err);
+        }
+
+        // Load user's characters and check department
+        try {
+
           const q = query(collection(db, "characters"), where("linkedUID", "==", user.uid));
           const querySnapshot = await getDocs(q);
 
@@ -241,6 +292,94 @@
       } catch (err) {
         passwordFeedback.textContent = "Error: " + err.message;
         passwordFeedback.style.color = "var(--accent-red)";
+      }
+    });
+
+    // Discord linking functions
+    function validateDiscordUserId(userId) {
+      // Discord User IDs are numeric strings, typically 17-19 digits
+      const trimmed = userId.trim();
+      if (!/^\d{17,20}$/.test(trimmed)) {
+        return { valid: false, error: "Invalid Discord User ID format. Must be 17-20 digits." };
+      }
+      return { valid: true, userId: trimmed };
+    }
+
+    // Link Discord account
+    linkDiscordBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        discordFeedback.textContent = "Error: Not logged in";
+        discordFeedback.style.color = "var(--accent-red)";
+        return;
+      }
+
+      const userIdInput = discordUserIdInput.value;
+      const validation = validateDiscordUserId(userIdInput);
+      
+      if (!validation.valid) {
+        discordFeedback.textContent = validation.error;
+        discordFeedback.style.color = "var(--accent-red)";
+        return;
+      }
+
+      try {
+        linkDiscordBtn.disabled = true;
+        linkDiscordBtn.textContent = "Linking...";
+        
+        const userDocRef = doc(db, "users", user.uid);
+        await setDoc(userDocRef, {
+          email: user.email || null,
+          discordUserId: validation.userId,
+          discordLinkedAt: new Date().toISOString()
+        }, { merge: true });
+
+        discordFeedback.textContent = "✓ Discord account linked successfully! You'll be notified for emails to any of your characters.";
+        discordFeedback.style.color = "var(--accent-mint)";
+        discordUserIdInput.value = validation.userId;
+      } catch (err) {
+        console.error("Error linking Discord:", err);
+        discordFeedback.textContent = "Error: " + err.message;
+        discordFeedback.style.color = "var(--accent-red)";
+      } finally {
+        linkDiscordBtn.disabled = false;
+        linkDiscordBtn.textContent = "Link Discord Account";
+      }
+    });
+
+    // Unlink Discord account
+    unlinkDiscordBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        discordFeedback.textContent = "Error: Not logged in";
+        discordFeedback.style.color = "var(--accent-red)";
+        return;
+      }
+
+      if (!confirm("Are you sure you want to unlink your Discord account? You will no longer receive email notifications for any of your characters.")) {
+        return;
+      }
+
+      try {
+        unlinkDiscordBtn.disabled = true;
+        unlinkDiscordBtn.textContent = "Unlinking...";
+        
+        const userDocRef = doc(db, "users", user.uid);
+        await setDoc(userDocRef, {
+          discordUserId: null,
+          discordLinkedAt: null
+        }, { merge: true });
+
+        discordFeedback.textContent = "Discord account unlinked";
+        discordFeedback.style.color = "#888";
+        discordUserIdInput.value = "";
+      } catch (err) {
+        console.error("Error unlinking Discord:", err);
+        discordFeedback.textContent = "Error: " + err.message;
+        discordFeedback.style.color = "var(--accent-red)";
+      } finally {
+        unlinkDiscordBtn.disabled = false;
+        unlinkDiscordBtn.textContent = "Unlink";
       }
     });
   </script>

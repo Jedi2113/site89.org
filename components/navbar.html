@@ -1792,10 +1792,17 @@
 <!-- Breadcrumb Navigation Script -->
 <script>
   document.addEventListener('includesLoaded', () => {
+    const mainNav = document.getElementById('main-nav');
     const breadcrumbNav = document.getElementById('breadcrumbNav');
     const breadcrumbPath = document.getElementById('breadcrumbPath');
     
-    if (!breadcrumbNav || !breadcrumbPath) return;
+    if (!mainNav || !breadcrumbNav || !breadcrumbPath) return;
+
+    function updatePageTopOffset() {
+      const navHeight = mainNav.offsetHeight || 0;
+      const breadcrumbHeight = breadcrumbNav.classList.contains('visible') ? (breadcrumbNav.offsetHeight || 0) : 0;
+      document.body.style.paddingTop = `${navHeight + breadcrumbHeight}px`;
+    }
 
     // Mapping of paths to readable names
     const pathNames = {
@@ -1860,6 +1867,7 @@
       // Don't show breadcrumbs on home page
       if (path === '/' || path === '/index.html') {
         breadcrumbNav.classList.remove('visible');
+        updatePageTopOffset();
         return;
       }
 
@@ -1869,6 +1877,7 @@
       // Don't show if only one segment (direct page from root)
       if (segments.length === 0) {
         breadcrumbNav.classList.remove('visible');
+        updatePageTopOffset();
         return;
       }
 
@@ -1898,10 +1907,12 @@
 
       // Show breadcrumb nav
       breadcrumbNav.classList.add('visible');
+      updatePageTopOffset();
     }
 
     // Generate breadcrumbs on page load
     generateBreadcrumbs();
+    window.addEventListener('resize', updatePageTopOffset);
   });
 </script>
 

@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js';
 
 // Normalize a name into a local-part seed like "lastname.firstname"
@@ -319,6 +319,10 @@ document.addEventListener('includesLoaded', () => {
   const folderTitle = document.getElementById('folderTitle');
   const refreshBtn = document.getElementById('refreshBtn');
   const mailApp = document.querySelector('.mail-app');
+  const discordLinkModalOverlay = document.getElementById('discordLinkModalOverlay');
+  const discordPromptDontShowAgain = document.getElementById('discordPromptDontShowAgain');
+  const discordPromptDismiss = document.getElementById('discordPromptDismiss');
+  const discordPromptLink = document.getElementById('discordPromptLink');
 
   let currentFolder = 'inbox';
   let myAddress = '';
@@ -334,9 +338,82 @@ document.addEventListener('includesLoaded', () => {
   let contactsList = new Set();
   let charactersCache = {};
   let isMobile = window.innerWidth <= 768;
+  let discordPromptShownThisSession = false;
+  const DISCORD_PROMPT_HIDE_KEY = 'emails.discordPrompt.hide';
 
   function isValidEmail(e){
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+
+  function shouldHideDiscordPrompt(){
+    try {
+      return localStorage.getItem(DISCORD_PROMPT_HIDE_KEY) === '1';
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function persistDiscordPromptPreference(){
+    if(!discordPromptDontShowAgain) return;
+    if(!discordPromptDontShowAgain.checked) return;
+    try {
+      localStorage.setItem(DISCORD_PROMPT_HIDE_KEY, '1');
+    } catch (_e) {
+      // Ignore storage failures
+    }
+  }
+
+  function hideDiscordLinkPrompt(){
+    if(!discordLinkModalOverlay) return;
+    discordLinkModalOverlay.classList.remove('show');
+    discordLinkModalOverlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function showDiscordLinkPrompt(){
+    if(!discordLinkModalOverlay) return;
+    discordLinkModalOverlay.classList.add('show');
+    discordLinkModalOverlay.setAttribute('aria-hidden', 'false');
+    discordPromptShownThisSession = true;
+  }
+
+  async function maybeShowDiscordLinkPrompt(user){
+    if(!user || !user.uid) return;
+    if(discordPromptShownThisSession || shouldHideDiscordPrompt()) return;
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? (userSnap.data() || {}) : {};
+      const linkedDiscordId = String(userData.discordUserId || '').trim();
+      if(!linkedDiscordId){
+        showDiscordLinkPrompt();
+      }
+    } catch (err) {
+      console.warn('Unable to verify Discord link status:', err);
+    }
+  }
+
+  if(discordPromptDismiss){
+    discordPromptDismiss.addEventListener('click', ()=> {
+      persistDiscordPromptPreference();
+      hideDiscordLinkPrompt();
+    });
+  }
+
+  if(discordPromptLink){
+    discordPromptLink.addEventListener('click', ()=> {
+      persistDiscordPromptPreference();
+      window.location.href = '/accounts/';
+    });
+  }
+
+  if(discordLinkModalOverlay){
+    discordLinkModalOverlay.addEventListener('click', (event)=> {
+      if(event.target === discordLinkModalOverlay){
+        persistDiscordPromptPreference();
+        hideDiscordLinkPrompt();
+      }
+    });
   }
   
   // Track mobile state
@@ -1018,6 +1095,8 @@ document.addEventListener('includesLoaded', () => {
       if (emailsUnsubscribe){ emailsUnsubscribe(); emailsUnsubscribe = null; }
       return;
     }
+
+    await maybeShowDiscordLinkPrompt(user);
 
     await ensureSampleData();
     startRealtimeMessages();

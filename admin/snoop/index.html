@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Email Snoop Console — Site-89</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Restricted Site-89 email audit and monitoring console.">
+  <link rel="canonical" href="https://site89.github.io/admin/snoop/">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+  <style>
+    .snoop-shell {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .snoop-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .snoop-title-row h1 {
+      margin: 0;
+      letter-spacing: 0.01em;
+    }
+
+    .snoop-muted {
+      color: var(--text-light);
+      opacity: 0.74;
+      font-size: 0.9rem;
+    }
+
+    .snoop-filter-panel,
+    .snoop-table-panel,
+    .snoop-preview-panel {
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      overflow: hidden;
+    }
+
+    .snoop-filter-head,
+    .snoop-panel-head {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      font-size: 0.87rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-light);
+      opacity: 0.92;
+    }
+
+    .snoop-filter-body {
+      padding: 0.9rem 1rem 1rem;
+    }
+
+    .snoop-controls {
+      display: grid;
+      grid-template-columns: minmax(260px, 2.2fr) repeat(4, minmax(130px, 1fr)) auto;
+      gap: 0.7rem;
+      align-items: end;
+    }
+
+    .snoop-field {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+    }
+
+    .snoop-field label {
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      opacity: 0.75;
+    }
+
+    .snoop-controls input,
+    .snoop-controls select {
+      width: 100%;
+      min-width: 0;
+      height: 38px;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(10, 14, 22, 0.95);
+      color: #edf2f9;
+      box-sizing: border-box;
+    }
+
+    .snoop-controls input:focus,
+    .snoop-controls select:focus {
+      outline: none;
+      border-color: rgba(78,250,170,0.65);
+      box-shadow: 0 0 0 3px rgba(78,250,170,0.16);
+    }
+
+    .snoop-btn {
+      height: 38px;
+      padding: 0 0.95rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-light);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .snoop-btn:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .snoop-stats {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 0.85rem;
+    }
+
+    .snoop-chip {
+      padding: 0.35rem 0.62rem;
+      border-radius: 999px;
+      background: rgba(78,250,170,0.12);
+      color: var(--accent-mint);
+      font-size: 0.78rem;
+      border: 1px solid rgba(78,250,170,0.28);
+    }
+
+    .snoop-table-wrap {
+      overflow: auto;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .snoop-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    .snoop-table th,
+    .snoop-table td {
+      text-align: left;
+      padding: 0.7rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: top;
+    }
+
+    .snoop-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #131c29;
+      color: #c8d3e2;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .snoop-table tr {
+      cursor: pointer;
+    }
+
+    .snoop-table tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .snoop-table tr.selected {
+      background: rgba(78,250,170,0.11);
+      box-shadow: inset 3px 0 0 rgba(78,250,170,0.9);
+    }
+
+    .snoop-subject {
+      font-weight: 600;
+      color: #eef4ff;
+      max-width: 230px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .snoop-snippet {
+      opacity: 0.8;
+      font-size: 0.84rem;
+      color: #d1dae8;
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .snoop-pill {
+      display: inline-block;
+      padding: 0.2rem 0.52rem;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .snoop-pill.sent {
+      color: var(--accent-mint);
+      border-color: rgba(78,250,170,0.35);
+      background: rgba(78,250,170,0.08);
+    }
+
+    .snoop-pill.draft {
+      color: #f5cc6b;
+      border-color: rgba(245,204,107,0.35);
+      background: rgba(245,204,107,0.08);
+    }
+
+    .snoop-pager {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.85rem 1rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.01);
+    }
+
+    .snoop-detail {
+      white-space: pre-wrap;
+      background: #0f1724;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.95rem;
+      min-height: 96px;
+      color: #e5edf8;
+    }
+
+    .muted {
+      opacity: 0.72;
+      font-size: 0.86rem;
+    }
+
+    .snoop-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 14, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1400;
+      backdrop-filter: blur(2px);
+    }
+
+    .snoop-modal-overlay.show {
+      display: flex;
+    }
+
+    .snoop-modal {
+      width: min(980px, 96vw);
+      max-height: 92vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #0f1724;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 12px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.52);
+    }
+
+    .snoop-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.95rem 1.1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: #162235;
+    }
+
+    .snoop-modal-title {
+      margin: 0;
+      font-size: 1.02rem;
+      color: #edf3fd;
+      letter-spacing: 0.01em;
+    }
+
+    .snoop-modal-close {
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+      color: #edf3fd;
+      border-radius: 6px;
+      padding: 0.42rem 0.72rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .snoop-modal-body {
+      overflow: auto;
+      padding: 1rem 1.12rem 1.15rem;
+      background: #101a2a;
+    }
+
+    .snoop-meta {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 0.36rem 0.75rem;
+      margin-bottom: 0.95rem;
+      font-size: 0.9rem;
+      color: #e4ebf8;
+    }
+
+    .snoop-meta-label {
+      opacity: 0.72;
+      color: #c2cedf;
+    }
+
+    .snoop-full-body {
+      white-space: pre-wrap;
+      line-height: 1.56;
+      background: #0b1320;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 1rem;
+      color: #f0f5ff;
+      font-size: 0.92rem;
+      opacity: 1;
+    }
+
+    html[data-theme="light"] .snoop-filter-panel,
+    html[data-theme="light"] .snoop-table-panel,
+    html[data-theme="light"] .snoop-preview-panel {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.12);
+    }
+
+    html[data-theme="light"] .snoop-filter-head,
+    html[data-theme="light"] .snoop-panel-head,
+    html[data-theme="light"] .snoop-pager {
+      background: #f4f7fb;
+      border-color: rgba(0,0,0,0.08);
+      color: #1a2431;
+      opacity: 1;
+    }
+
+    html[data-theme="light"] .snoop-controls input,
+    html[data-theme="light"] .snoop-controls select {
+      background: #ffffff;
+      color: #1b2433;
+      border-color: rgba(0,0,0,0.2);
+    }
+
+    html[data-theme="light"] .snoop-table th {
+      background: #e9eef5;
+      color: #2b3646;
+    }
+
+    html[data-theme="light"] .snoop-subject,
+    html[data-theme="light"] .snoop-snippet,
+    html[data-theme="light"] .snoop-detail,
+    html[data-theme="light"] .snoop-muted {
+      color: #1f2b3a;
+      opacity: 1;
+    }
+
+    html[data-theme="light"] .snoop-detail {
+      background: #f8fbff;
+      border-color: rgba(0,0,0,0.12);
+    }
+
+    html[data-theme="light"] .snoop-modal {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.2);
+    }
+
+    html[data-theme="light"] .snoop-modal-header {
+      background: #eaf0f7;
+      border-color: rgba(0,0,0,0.1);
+    }
+
+    html[data-theme="light"] .snoop-modal-title,
+    html[data-theme="light"] .snoop-modal-close,
+    html[data-theme="light"] .snoop-meta,
+    html[data-theme="light"] .snoop-full-body {
+      color: #152133;
+    }
+
+    html[data-theme="light"] .snoop-modal-body {
+      background: #f5f9ff;
+    }
+
+    html[data-theme="light"] .snoop-full-body {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.16);
+    }
+
+    @media (max-width: 1200px) {
+      .snoop-controls {
+        grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, 1fr));
+      }
+
+      .snoop-controls .snoop-field:nth-child(4),
+      .snoop-controls .snoop-field:nth-child(5),
+      .snoop-controls .snoop-action {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .snoop-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .snoop-action .snoop-btn {
+        width: 100%;
+      }
+
+      .snoop-meta {
+        grid-template-columns: 1fr;
+        gap: 0.2rem 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="content">
+    <div class="snoop-shell">
+      <div class="about-box">
+        <div class="snoop-title-row">
+          <h1>Email Monitoring Console</h1>
+          <p class="snoop-muted">Restricted communications oversight for authorized administrator only.</p>
+        </div>
+      </div>
+
+      <div class="snoop-filter-panel">
+        <div class="snoop-filter-head">Filters & Search</div>
+        <div class="snoop-filter-body">
+          <div class="snoop-controls">
+            <div class="snoop-field">
+              <label for="searchInput">Keyword Search</label>
+              <input id="searchInput" placeholder="Search sender, recipient, subject, or body..." type="text">
+            </div>
+            <div class="snoop-field">
+              <label for="folderFilter">Folder</label>
+              <select id="folderFilter">
+                <option value="">All</option>
+                <option value="inbox">Inbox</option>
+                <option value="sent">Sent</option>
+                <option value="drafts">Drafts</option>
+                <option value="trash">Trash</option>
+              </select>
+            </div>
+            <div class="snoop-field">
+              <label for="statusFilter">Status</label>
+              <select id="statusFilter">
+                <option value="">All</option>
+                <option value="sent">Sent</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+            <div class="snoop-field">
+              <label for="fromDate">From Date</label>
+              <input id="fromDate" type="date">
+            </div>
+            <div class="snoop-field">
+              <label for="toDate">To Date</label>
+              <input id="toDate" type="date">
+            </div>
+            <div class="snoop-action">
+              <button id="clearFiltersBtn" class="snoop-btn" type="button">Clear Filters</button>
+            </div>
+          </div>
+
+          <div class="snoop-stats">
+            <span class="snoop-chip" id="totalCount">Total: 0</span>
+            <span class="snoop-chip" id="filteredCount">Filtered: 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="snoop-table-panel">
+        <div class="snoop-panel-head">Communication Records</div>
+        <div class="snoop-table-wrap">
+        <table class="snoop-table">
+          <thead>
+            <tr>
+              <th style="width:140px">Time</th>
+              <th style="width:220px">From</th>
+              <th style="width:240px">To</th>
+              <th style="width:220px">Subject</th>
+              <th>Snippet</th>
+              <th style="width:90px">Status</th>
+              <th style="width:90px">Folder</th>
+            </tr>
+          </thead>
+          <tbody id="emailsTableBody">
+            <tr><td colspan="7" class="muted">Loading emails…</td></tr>
+          </tbody>
+        </table>
+      </div>
+        <div class="snoop-pager">
+          <button id="prevPageBtn" class="snoop-btn" type="button">Previous</button>
+          <span id="pageInfo" class="muted">Page 1</span>
+          <button id="nextPageBtn" class="snoop-btn" type="button">Next</button>
+        </div>
+      </div>
+
+      <div class="snoop-preview-panel">
+        <div class="snoop-panel-head">Quick Preview</div>
+        <div style="padding:1rem;">
+          <div id="emailDetail" class="snoop-detail muted">Click a row to open the full email viewer.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div data-include="/components/footer.html"></div>
+
+  <div id="emailModalOverlay" class="snoop-modal-overlay" aria-hidden="true">
+    <div class="snoop-modal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
+      <div class="snoop-modal-header">
+        <h2 id="emailModalTitle" class="snoop-modal-title">Email Viewer</h2>
+        <button id="emailModalClose" class="snoop-modal-close" type="button">Close</button>
+      </div>
+      <div class="snoop-modal-body">
+        <div id="emailModalMeta" class="snoop-meta"></div>
+        <div id="emailModalBody" class="snoop-full-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/admin-snoop.js"></script>
+</body>
+</html>
