@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-89 Personnel</title>
+
+  <!-- Fonts & CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+
+  <style>
+    .tabs {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .tab {
+      padding: 8px 15px;
+      background-color: #1f2125;
+      border: 2px solid #666;
+      border-radius: 6px;
+      color: var(--accent-teal);
+    }
+    .tab.active {
+      background-color: var(--accent-teal);
+      color: #1f1f1f;
+    }
+    .personnel-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 15px;
+    }
+    .personnel-card {
+      background-color: #1f2125;
+      border: 2px solid #666;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .personnel-card img {
+      width: 150px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      margin-bottom: 8px;
+    }
+    .create-btn {
+      background-color: var(--accent-teal);
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div data-include="../components/header.html"></div>
+<div data-include="../components/navbar.html"></div>
+
+<section class="content">
+
+  <div class="tabs">
+    <div class="tab active" data-tab="current">Current</div>
+    <div class="tab" data-tab="pending">Pending</div>
+    <div class="tab" data-tab="former">Former</div>
+  </div>
+
+  <!-- Current Personnel -->
+  <div id="current" class="tab-content">
+    <div class="personnel-list" id="currentList"></div>
+  </div>
+
+  <!-- Pending (non-functional for now) -->
+  <div id="pending" class="tab-content" style="display:none;">
+    <button class="create-btn">+ Create New Entry</button>
+    <div class="personnel-list" id="pendingList"></div>
+  </div>
+
+  <!-- Former Personnel -->
+  <div id="former" class="tab-content" style="display:none;">
+    <div class="personnel-list" id="formerList"></div>
+  </div>
+
+</section>
+
+<div data-include="../components/footer.html"></div>
+
+<script src="../assets/js/include.js"></script>
+
+<script>
+  // Tab switching
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      tabContents.forEach(c => c.style.display = 'none');
+      document.getElementById(tab.dataset.tab).style.display = 'block';
+    });
+  });
+
+  // Load current personnel dynamically
+  async function loadPersonnel() {
+    try {
+      const res = await fetch('../personnel/current/personnel.json');
+      const personnel = await res.json();
+      const container = document.getElementById('currentList');
+
+      personnel.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'personnel-card';
+        card.innerHTML = `
+          <img src="${p.photo}" alt="${p.name}">
+          <h4>${p.name}</h4>
+          <p>${p.position}</p>
+          <a href="../personnel/current/${p.file}">View File</a>
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      console.error('Failed to load personnel:', err);
+    }
+  }
+
+  loadPersonnel();
+</script>
+
+</body>
+</html>

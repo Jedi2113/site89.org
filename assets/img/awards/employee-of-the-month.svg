@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 80">
+  <!-- Employee of the Month Award -->
+  <defs>
+    <linearGradient id="ribbonGrad6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a3a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3a2a0a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="50" height="80" fill="url(#ribbonGrad6)"/>
+  <polygon points="25,20 35,35 32,50 25,45 18,50 15,35" fill="#ffd700" stroke="#b8860b" stroke-width="1"/>
+  <text x="25" y="65" font-size="8" font-weight="bold" text-anchor="middle" fill="#ffcc00">EOM</text>
+</svg>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Site-89 Staff Management</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&family=Roboto+Mono&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="assets/css/main.css">
+
+  <style>
+    .staff-section {
+      margin-bottom: 40px;
+    }
+    .staff-section h2 {
+      color: #8B0000;
+      border-bottom: 2px solid #8B0000;
+      padding-bottom: 5px;
+      margin-bottom: 20px;
+    }
+    .staff-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .staff-card {
+      background-color: #1F2125;
+      border: 2px solid #666;
+      border-radius: 8px;
+      width: 200px;
+      text-align: center;
+      padding: 15px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .staff-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+    .staff-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+    .staff-card strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #fff;
+    }
+    .staff-card span {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div data-include="components/header.html"></div> 
+
+  <!-- Navbar -->
+  <div data-include="components/navbar.html"></div>
+
+  <section class="content">
+    <div class="staff-section">
+      <h2>Roleplay Staff</h2>
+      <div class="staff-cards">
+        <div class="staff-card">
+          <img src="https://i.imgur.com/pydXKDz.png" alt="Mystic Fury">
+          <strong>Mystic Fury</strong>
+          <span>Junior Researcher</span>
+        </div>
+        <div class="staff-card">
+          <img src="https://i.imgur.com/pydXKDz.png" alt="Echo">
+          <strong>Echo</strong>
+          <span>Senior Researcher</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="staff-section">
+      <h2>Building Team</h2>
+      <div class="staff-cards">
+        <div class="staff-card">
+          <img src="https://i.imgur.com/pydXKDz.png" alt="BuilderBob">
+          <strong>BuilderBob</strong>
+          <span>Lead Builder</span>
+        </div>
+        <div class="staff-card">
+          <img src="https://i.imgur.com/pydXKDz.png" alt="Crafty">
+          <strong>Crafty</strong>
+          <span>Architect</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="staff-section">
+      <h2>Administration</h2>
+      <div class="staff-cards">
+        <div class="staff-card">
+          <img src="https://i.imgur.com/pydXKDz.png" alt="Rosewood">
+          <strong>Avery Rosewood</strong>
+          <span>Site Director</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div data-include="components/footer.html"></div>
+
+  <script src="assets/js/include.js"></script>
+  <script type="module" src="assets/js/auth.js"></script>
+
+</body>
+</html>

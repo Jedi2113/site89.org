@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Analytics Dashboard | SITE-89</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <!-- Theme System -->
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #0a0e1a 100%);
+      color: var(--text-light);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* World map background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cg fill='none' stroke='%2300ffcc' stroke-width='1' opacity='0.05'%3E%3Cpath d='M100,200 Q150,150 200,200 T300,200'/%3E%3Cpath d='M350,300 L450,250 L500,350'/%3E%3Cpath d='M600,100 Q650,150 700,100'/%3E%3Cpath d='M750,400 L800,350 L850,400 L800,450'/%3E%3Cpath d='M100,600 Q200,550 300,600'/%3E%3Cpath d='M400,650 L500,600 L550,700'/%3E%3Cpath d='M650,550 Q700,600 750,550'/%3E%3Cpath d='M850,600 L900,650 L950,600'/%3E%3C/g%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 800px 600px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .analytics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--accent-teal);
+    }
+
+    .analytics-header h1 {
+      font-size: 2.5rem;
+      color: var(--accent-teal);
+      text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      font-weight: 900;
+    }
+
+    .auth-status {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .auth-status.authorized {
+      color: var(--accent-mint);
+    }
+
+    .auth-status.unauthorized {
+      color: var(--accent-red);
+    }
+
+    .auth-status i {
+      font-size: 1.2rem;
+    }
+
+    /* Situation Room Grid Layout */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 40, 60, 0.8) 100%);
+      border: 2px solid var(--accent-teal);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 255, 204, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-teal), transparent);
+      animation: scan 3s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent-mint);
+      box-shadow: 0 8px 32px rgba(0, 255, 204, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transform: translateY(-5px);
+    }
+
+    .stat-card h2 {
+      color: var(--accent-teal);
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .stat-card h2 i {
+      font-size: 1.5rem;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: 1rem 0;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--accent-mint);
+      margin: 1rem 0;
+      text-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+    }
+
+    .stat-change {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .stat-change.positive {
+      color: #00ff7f;
+    }
+
+    .stat-change.negative {
+      color: #ff3366;
+    }
+
+    /* Full width sections */
+    .full-width-card {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 40, 60, 0.8) 100%);
+      border: 2px solid var(--accent-teal);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 255, 204, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .full-width-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-teal), transparent);
+      animation: scan 3s ease-in-out infinite;
+    }
+
+    .full-width-card h2 {
+      color: var(--accent-teal);
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Tabs for year selection */
+    .year-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .year-tab {
+      padding: 0.6rem 1.2rem;
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid var(--accent-teal);
+      border-radius: 6px;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .year-tab:hover {
+      border-color: var(--accent-mint);
+      background: rgba(0, 255, 200, 0.2);
+    }
+
+    .year-tab.active {
+      background: var(--accent-teal);
+      color: #000;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+    }
+
+    /* Markers editor */
+    .markers-editor {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--accent-teal);
+      border-radius: 8px;
+    }
+
+    .marker-input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .marker-input-group input,
+    .marker-input-group button {
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--accent-teal);
+      background: rgba(0, 20, 40, 0.8);
+      color: var(--text-light);
+      font-family: inherit;
+    }
+
+    .marker-input-group input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .marker-input-group button {
+      background: var(--accent-teal);
+      color: #000;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .marker-input-group button:hover {
+      background: var(--accent-mint);
+      box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+    }
+
+    .markers-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .marker-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid var(--accent-teal);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    .marker-tag button {
+      background: none;
+      border: none;
+      color: #ff3366;
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0;
+    }
+
+    /* Event attendance section */
+    .event-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .event-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--accent-teal);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .event-card:hover {
+      border-color: var(--accent-mint);
+      background: rgba(0, 255, 204, 0.05);
+      transform: translateY(-3px);
+    }
+
+    .event-card h4 {
+      color: var(--accent-mint);
+      margin-bottom: 0.5rem;
+    }
+
+    .event-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin: 0.25rem 0;
+    }
+
+    .event-attendance {
+      font-size: 1.5rem;
+      color: var(--accent-teal);
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+
+    /* Finance section */
+    .finance-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .finance-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--accent-teal);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .finance-card h3 {
+      color: var(--accent-mint);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .finance-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(0, 255, 204, 0.1);
+      font-size: 0.95rem;
+    }
+
+    .finance-item:last-child {
+      border-bottom: none;
+    }
+
+    .finance-label {
+      color: var(--text-muted);
+    }
+
+    .finance-value {
+      color: var(--accent-mint);
+      font-weight: bold;
+    }
+
+    /* Data editor overlay */
+    .editor-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .editor-overlay.active {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 5vh;
+    }
+
+    .editor-panel {
+      background: linear-gradient(135deg, rgba(0, 20, 40, 0.95) 0%, rgba(0, 40, 60, 0.9) 100%);
+      border: 2px solid var(--accent-teal);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--accent-teal);
+    }
+
+    .editor-header h2 {
+      color: var(--accent-teal);
+      font-size: 1.5rem;
+    }
+
+    .close-editor {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-editor:hover {
+      color: var(--accent-mint);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--accent-teal);
+      font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--accent-teal);
+      border-radius: 6px;
+      background: rgba(0, 20, 40, 0.8);
+      color: var(--text-light);
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent-mint);
+      box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .form-actions button {
+      flex: 1;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-save {
+      background: var(--accent-teal);
+      color: #000;
+    }
+
+    .btn-save:hover {
+      background: var(--accent-mint);
+      box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+    }
+
+    .btn-cancel {
+      background: rgba(255, 51, 102, 0.1);
+      color: #ff3366;
+      border: 1px solid #ff3366;
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 51, 102, 0.2);
+    }
+
+    /* Edit button for authorized users */
+    .edit-button {
+      padding: 0.6rem 1.2rem;
+      background: var(--accent-teal);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .edit-button:hover {
+      background: var(--accent-mint);
+      box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+    }
+
+    .edit-button.hidden {
+      display: none;
+    }
+
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      border: 3px solid rgba(0, 255, 204, 0.2);
+      border-top: 3px solid var(--accent-teal);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analytics-header h1 {
+        font-size: 1.8rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+      }
+
+      main {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="include-header"></div>
+  <div id="include-navbar"></div>
+
+  <main>
+    <div class="analytics-header">
+      <h1><i class="fas fa-chart-line"></i> ANALYTICS DASHBOARD</h1>
+      <div class="auth-status" id="authStatus">
+        <i class="fas fa-lock"></i>
+        <span>Checking authorization...</span>
+      </div>
+    </div>
+
+    <div class="analytics-grid" id="analyticsContainer">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading analytics data...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit Data Overlay -->
+  <div class="editor-overlay" id="editorOverlay">
+    <div class="editor-panel">
+      <div class="editor-header">
+        <h2 id="editorTitle">Edit Data</h2>
+        <button class="close-editor" id="closeEditorBtn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="editorContent"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { app, auth, onAuthStateChanged } from '/assets/js/auth.js';
+    import { initializeAnalytics } from '/assets/js/analytics.js';
+
+    let currentUser = null;
+    const ADMIN_EMAIL = 'jedi21132@gmail.com';
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      const authStatus = document.getElementById('authStatus');
+      
+      if (!user) {
+        authStatus.className = 'auth-status unauthorized';
+        authStatus.innerHTML = '<i class="fas fa-lock-open"></i><span>Not logged in</span>';
+        document.getElementById('analyticsContainer').innerHTML = '<div class="loading"><p>Please log in to view analytics.</p></div>';
+        return;
+      }
+
+      const isAuthorized = user.email === ADMIN_EMAIL;
+      authStatus.className = `auth-status ${isAuthorized ? 'authorized' : 'unauthorized'}`;
+      
+      if (isAuthorized) {
+        authStatus.innerHTML = '<i class="fas fa-check-circle"></i><span>Authorized - Editing enabled</span>';
+      } else {
+        authStatus.innerHTML = '<i class="fas fa-eye"></i><span>Viewing only</span>';
+      }
+
+      // Initialize analytics dashboard
+      initializeAnalytics(app, currentUser, isAuthorized);
+    });
+
+    // Close editor on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const overlay = document.getElementById('editorOverlay');
+        if (overlay.classList.contains('active')) {
+          overlay.classList.remove('active');
+        }
+      }
+    });
+
+    // Close editor on background click
+    document.getElementById('editorOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'editorOverlay') {
+        e.target.classList.remove('active');
+      }
+    });
+  </script>
+
+  <script src="/assets/js/include.js"></script>
+</body>
+</html>

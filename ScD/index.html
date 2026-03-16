@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Site-89 Departments</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    /* Scientific Department theme: lighter blue accents */
+    .scd-theme { --accent-mint: #7FD9FF; --accent-teal: #4FB3FF; }
+
+    .page-hero {
+      padding: 3rem 1rem;
+      text-align: center;
+      background: radial-gradient(circle at top left, rgba(79,179,255,0.04), transparent);
+      margin-bottom: 1rem;
+    }
+    .page-hero .hero-title { font-family: var(--font-head); font-size: 2.5rem; color: var(--accent-teal); margin-bottom: 0.35rem; }
+    .page-hero .hero-sub { color: var(--text-light); opacity: 0.86; }
+
+    .welcome-section { max-width: 900px; margin: 1.5rem auto; padding: 1.5rem; border-radius: 8px; background: linear-gradient(135deg, rgba(79,179,255,0.02), transparent); border: 1px solid rgba(79,179,255,0.03); }
+    .welcome-section h1 { color: var(--accent-teal); font-family: var(--font-head); font-size: 2rem; margin: 0; }
+    .welcome-section p { color: var(--text-light); opacity: 0.86; }
+
+    .department-panel { display:flex; background: var(--bg-card); border: 1px solid rgba(79,179,255,0.04); border-radius: 8px; margin:1.25rem auto; max-width:1000px; overflow:hidden; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+    .department-panel:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.45); }
+    .dept-image { width: 320px; object-fit:cover; }
+    .dept-content { padding:1.25rem; }
+    .dept-title { font-size: 1.25rem; font-weight:800; color: var(--accent-teal); text-decoration:none; }
+    .dept-description { color: var(--text-light); opacity:0.9; line-height:1.6; }
+
+    @media (max-width: 840px){ .department-panel{flex-direction:column}.dept-image{width:100%;height:220px;} }
+  </style>
+</head>
+<body class="scd-theme">
+
+  <!-- Header -->
+  <div data-include="/components/header.html"></div>
+
+  <!-- Navbar -->
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="page-hero">
+    <div class="hero-title">Scientific Department</div>
+    <div class="hero-sub">Research, containment oversight, and anomaly study.</div>
+  </section>
+
+  <section class="content">
+    <div class="welcome-section">
+      <h1>Welcome to The Scientific Department!</h1>
+      <p>Lorem Ipsum Dolor Sit Amet</p>
+    </div>
+
+  <!-- Research and Development -->
+  <div class="department-panel">
+    <img src="https://i.imgur.com/014T3jC.png" alt="Research and Development" class="dept-image">
+    <div class="dept-content">
+      <a href="/departments/RnD/" class="dept-title">» Research and Development «</a>
+      <p class="dept-description">
+        "TBD"
+      </p>
+    </div>
+  </div>
+
+  <!-- Medical -->
+  <div class="department-panel">
+    <img src="https://i.imgur.com/g0mce8B.png" alt="Medical Department" class="dept-image">
+    <div class="dept-content">
+      <a href="/departments/MD/" class="dept-title">» The Medical Department «</a>
+      <p class="dept-description">
+        "We keep the personnel in good health. If it wasn't for us, the site would be on fire." - Dr. P. James PhD.
+      </p>
+    </div>
+  </div>
+
+  <!-- Command -->
+  <div class="department-panel">
+    <div class="dept-content">
+      <a href="/departments/ScDCMD/" class="dept-title">» Scientific Department Heads «</a>
+      <p class="dept-description">
+        The People Who Run The Scientific Department.
+      </p>
+    </div>
+  </div>
+
+      </section>
+
+  <!-- Footer -->
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+
+  <script>
+    document.addEventListener("scroll", () => {
+      const nav = document.getElementById("main-nav");
+      nav.classList.toggle("is-sticky", window.scrollY > 120);
+    });
+  </script>
+</body>
+</html>

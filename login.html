@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- SECURITY LOCKDOWN - LOAD FIRST -->
+  <script src="/assets/js/security-lockdown.js"></script>
+
+  <meta charset="UTF-8">
+  <title>Site-89 Login</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&family=Roboto+Mono&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Global style -->
+  <link rel="stylesheet" href="assets/css/main.css">
+
+  <style>
+    /* Center login/auth boxes */
+    .center-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 70vh;
+      padding: 2rem;
+      flex-direction: column;
+    }
+
+    .auth-box {
+      background: var(--bg-card);
+      border: 1px solid var(--accent-teal);
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: opacity 0.3s ease;
+    }
+
+    .auth-box.fade-out {
+      opacity: 0;
+    }
+
+    .auth-box.fade-in {
+      opacity: 1;
+    }
+
+    .auth-box input {
+      width: 80%;
+      padding: 0.6rem 1rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #1f1f1f;
+      color: var(--text-light);
+    }
+
+    .auth-box button {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--accent-teal);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .auth-box button:hover {
+      background-color: var(--accent-mint);
+    }
+
+    .feedback {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .auth-switch a {
+      cursor: pointer;
+      color: var(--accent-mint);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Header -->
+  <div data-include="components/header.html"></div> 
+
+<div data-include="components/navbar.html"></div>
+
+<section class="content center-content">
+  <div class="auth-box fade-in" id="authBox">
+    <!-- Dynamic content will go here -->
+  </div>
+</section>
+
+<div data-include="components/footer.html"></div>
+
+<script src="assets/js/include.js"></script>
+<script type="module" src="assets/js/auth.js"></script>
+<script type="module">
+import { app, auth } from "assets/js/auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const db = getFirestore(app);
+
+const authBox = document.getElementById("authBox");
+
+const templates = {
+  login: `
+    <h2>User Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+    <p class="feedback" id="errorMessage"></p>
+    <p class="auth-switch">
+      Need an account? <a id="goRegister">Register Here</a>
+    </p>
+    <p><a id="goForgot">Forgot your password?</a></p>
+  `,
+  register: `
+    <h2>Create Account</h2>
+    <form id="registerForm">
+      <input type="email" id="regEmail" placeholder="Email" required>
+      <input type="password" id="regPassword" placeholder="Password" required>
+      <button type="submit">Register</button>
+    </form>
+    <p class="feedback" id="registerFeedback"></p>
+    <p class="auth-switch">
+      Already have an account? <a id="goLogin">Login Here</a>
+    </p>
+  `,
+  forgot: `
+    <h2>Reset Password</h2>
+    <form id="forgotForm">
+      <input type="email" id="forgotEmail" placeholder="Email" required>
+      <button type="submit">Send Reset Email</button>
+    </form>
+    <p class="feedback" id="forgotFeedback"></p>
+    <p class="auth-switch">
+      Remembered your password? <a id="goLogin">Login Here</a>
+    </p>
+  `
+};
+
+function showTemplate(templateName) {
+  authBox.classList.remove("fade-in");
+  authBox.classList.add("fade-out");
+
+  setTimeout(() => {
+    authBox.innerHTML = templates[templateName];
+    authBox.classList.remove("fade-out");
+    authBox.classList.add("fade-in");
+    attachHandlers(templateName);
+  }, 300);
+}
+
+function attachHandlers(templateName) {
+  if(templateName === "login") {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // Redirect to the main page instead of alert
+      window.location.href = "index.html";
+    } catch (err) {
+      document.getElementById("errorMessage").textContent = err.message;
+    }
+  });
+  document.getElementById("goRegister").addEventListener("click", () => showTemplate("register"));
+  document.getElementById("goForgot").addEventListener("click", () => showTemplate("forgot"));
+}
+
+  if(templateName === "register") {
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("Account created! You can now log in.");
+        showTemplate("login");
+      } catch (err) {
+        document.getElementById("registerFeedback").textContent = err.message;
+      }
+    });
+    document.getElementById("goLogin").addEventListener("click", () => showTemplate("login"));
+  }
+
+  if(templateName === "forgot") {
+    document.getElementById("forgotForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("forgotEmail").value;
+      try {
+        await sendPasswordResetEmail(auth, email);
+        document.getElementById("forgotFeedback").textContent = "Password reset email sent!";
+      } catch (err) {
+        document.getElementById("forgotFeedback").textContent = err.message;
+      }
+    });
+    document.getElementById("goLogin").addEventListener("click", () => showTemplate("login"));
+  }
+}
+
+// Initial load
+showTemplate("login");
+
+</script>
+
+</body>
+</html>

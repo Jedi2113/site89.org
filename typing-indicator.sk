@@ -1,0 +1,52 @@
+# Typing Indicator Script for Skript 2.5.3
+# Shows animated typing indicator [...] above player's head during chat
+# Requires: skript-packet 1.2, protocollib 4.4.0
+
+options:
+	indicator-duration: 4 seconds
+
+on async player chat:
+	set {typing::%player%} to true
+	set {typing-start::%player%} to now
+	
+	# Create task to show indicator
+	send action bar "§7Typing..." to player
+	schedule show typing indicator for player in next tick
+
+function show typing indicator for p as player:
+	set {_end} to {typing-start::%p%} + {@indicator-duration}
+	
+	loop while now < {_end} and {typing::%p%} is true:
+		set {_dots} to 0
+		loop 4 times:
+			set {_dot-text} to ""
+			loop {_dots} times:
+				set {_dot-text} to "%{_dot-text}%."
+			set {_indicator} to "§7[%{_dot-text}%]"
+			
+			# Send action bar with indicator
+			send action bar "%{_indicator}%" to p
+			wait 0.4 seconds
+			increase {_dots} by 1
+			
+			if now >= {_end} or {typing::%p%} is false:
+				exit loop
+		
+		# Count back down from 3 to 0
+		set {_dots} to 2
+		loop while {_dots} >= 0:
+			set {_dot-text} to ""
+			loop {_dots} times:
+				set {_dot-text} to "%{_dot-text}%."
+			set {_indicator} to "§7[%{_dot-text}%]"
+			
+			send action bar "%{_indicator}%" to p
+			wait 0.4 seconds
+			decrease {_dots} by 1
+			
+			if now >= {_end} or {typing::%p%} is false:
+				exit loop
+	
+	delete {typing::%p%}
+	delete {typing-start::%p%}
+	send action bar "" to p

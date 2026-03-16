@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-89 Anomalies</title>
+
+  <!-- Fonts & CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+
+  <style>
+    .tab-buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .tab-buttons div {
+      padding: 8px 15px;
+      background-color: #1f2125;
+      border: 2px solid #8B0000;
+      border-radius: 6px;
+      color: #fff;
+    }
+    .tab-buttons div.active {
+      background-color: #8B0000;
+      color: #fff;
+    }
+    .tab-content {
+      display: none;
+      background-color: #1f2125;
+      padding: 15px;
+      border: 2px solid #8B0000;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .tab-content table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #fff;
+    }
+    .tab-content th, .tab-content td {
+      padding: 8px;
+      border: 1px solid #444;
+      text-align: left;
+    }
+    .tab-content th {
+      background-color: #8B0000;
+    }
+    .section-header {
+      background-color: #8B0000;
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header & Navbar -->
+  <div data-include="components/header.html"></div>
+  <div data-include="components/navbar.html"></div>
+
+  <section class="content">
+
+    <div class="section-header">
+      <h2>ON-SITE ANOMALIES</h2>
+    </div>
+
+    <div class="tab-buttons">
+      <div class="tab-button active" data-tab="light">Light Containment Zone</div>
+      <div class="tab-button" data-tab="medium">Medium Containment Zone</div>
+      <div class="tab-button" data-tab="heavy">Heavy Containment Zone</div>
+    </div>
+
+    <!-- Light Containment Zone -->
+    <div class="tab-content" id="light" style="display:block;">
+      <table>
+        <thead>
+          <tr>
+            <th>SCP ID</th>
+            <th>Object Class</th>
+            <th>Risk/Disruption</th>
+            <th>Nickname / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:131">SCP-131</a></td>
+            <td>Safe</td>
+            <td>Notice / Vlam</td>
+            <td>The Eye Pods</td>
+          </tr>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:160">SCP-160</a></td>
+            <td>Euclid</td>
+            <td>Warning / Vlam</td>
+            <td>Autonomous predator drone</td>
+          </tr>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:178">SCP-178</a></td>
+            <td>Safe</td>
+            <td>Warning / Vlam</td>
+            <td>3-D Glasses</td>
+          </tr>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:330">SCP-330</a></td>
+            <td>Safe</td>
+            <td>Caution / Vlam</td>
+            <td>Take Only Two</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Medium Containment Zone -->
+    <div class="tab-content" id="medium">
+      <h4>Upper Floor</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>SCP ID</th>
+            <th>Object Class</th>
+            <th>Risk/Disruption</th>
+            <th>Nickname / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:009">SCP-009</a></td>
+            <td>Euclid</td>
+            <td>Warning / Vlam</td>
+            <td>Red Ice</td>
+          </tr>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:049">SCP-049</a></td>
+            <td>Euclid</td>
+            <td>Warning / Vlam</td>
+            <td>The Plague Doctor</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Lower Floor</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>SCP ID</th>
+            <th>Object Class</th>
+            <th>Risk/Disruption</th>
+            <th>Nickname / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:098">SCP-098</a></td>
+            <td>Euclid</td>
+            <td>Caution / Vlam</td>
+            <td>Surgeon Crabs</td>
+          </tr>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:914">SCP-914</a></td>
+            <td>Safe</td>
+            <td>Caution / Vlam</td>
+            <td>The Clockworks</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Heavy Containment Zone -->
+    <div class="tab-content" id="heavy">
+      <h4>Upper Floor</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>SCP ID</th>
+            <th>Object Class</th>
+            <th>Risk/Disruption</th>
+            <th>Nickname / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:689">SCP-689</a></td>
+            <td>Keter</td>
+            <td>Danger / Vlam</td>
+            <td>Haunter in the Dark</td>
+          </tr>
+          <tr>
+            <td><a href="http://s89.wikidot.com/anomalies:718">SCP-718</a></td>
+            <td>Keter</td>
+            <td>Warning / Keneq</td>
+            <td>Eyeball</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <div data-include="components/footer.html"></div>
+
+  <script src="assets/js/include.js"></script>
+  <script>
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const tab = btn.dataset.tab;
+        tabContents.forEach(c => c.style.display = c.id === tab ? 'block' : 'none');
+      });
+    });
+  </script>
+</body>
+</html>

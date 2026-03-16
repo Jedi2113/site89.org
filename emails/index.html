@@ -74,6 +74,7 @@
       display: flex; 
       width: 100%; 
       height: 100%; 
+      min-height: 0;
       overflow: hidden;
       max-width: 100%;
       margin: 0;
@@ -411,6 +412,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
       overflow: hidden;
       background: #0f0f10;
     }
@@ -419,6 +421,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
       overflow: hidden;
     }
     
@@ -612,6 +615,7 @@
       display: none;
       flex-direction: column;
       height: 100%;
+      min-height: 0;
       overflow: hidden;
     }
     
@@ -620,9 +624,10 @@
     }
     
     .compose-inner {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
       height: 100%;
+      min-height: 0;
       overflow: hidden;
     }
     
@@ -642,9 +647,33 @@
       font-weight: 600;
       color: var(--text-light);
     }
+
+    .compose-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .compose-header-actions button {
+      padding: 0.55rem 1rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .compose-header-actions button:hover {
+      transform: translateY(-1px);
+    }
     
     .compose-body { 
-      flex: 1;
+      min-height: 0;
       padding: 1.5rem;
       overflow-y: auto;
       display: flex;
@@ -689,15 +718,14 @@
     }
     
     .compose-editor {
-      flex: 1;
-      min-height: 250px;
       margin-bottom: 1rem;
       display: flex;
       flex-direction: column;
     }
     
     .compose-editor textarea {
-      flex: 1;
+      height: 220px;
+      max-height: 35vh;
       padding: 0.7rem;
       border-radius: 4px;
       border: 1px solid rgba(255,255,255,0.15);
@@ -705,8 +733,9 @@
       color: var(--text-light);
       font-size: 0.9rem;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-      resize: vertical;
+      resize: none;
       margin-top: 0.4rem;
+      overflow-y: auto;
     }
     
     .compose-editor textarea:focus {
@@ -738,17 +767,11 @@
       background: rgba(78,250,170,0.1);
     }
     
-    .compose-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      display: flex;
-      gap: 0.8rem;
-      justify-content: flex-end;
-      background: var(--bg-panel);
-      flex-shrink: 0;
+    #sendBtn {
+      min-width: 130px;
     }
     
-    .compose-footer button {
+    .compose-header-actions button {
       padding: 0.6rem 1.5rem;
       border-radius: 4px;
       border: none;
@@ -758,7 +781,7 @@
       transition: transform 0.1s;
     }
     
-    .compose-footer button:hover {
+    .compose-header-actions button:hover {
       transform: translateY(-1px);
     }
     
@@ -887,12 +910,36 @@
       }
       
       .compose-area {
-        max-height: 70vh;
-        overflow-y: auto;
+        max-height: none;
+        height: 100%;
+        overflow: hidden;
       }
       
       .compose-inner {
+        padding: 0;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .compose-header {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+
+      .compose-body {
         padding: 1rem;
+      }
+
+      .compose-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .compose-header-actions button {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
       }
       
       .compose-field input,
@@ -1077,9 +1124,20 @@
             <div class="compose-inner">
               <div class="compose-header">
                 <h3>New Message</h3>
-                <button id="composeClose" class="btn-secondary" style="border:1px solid rgba(255,255,255,0.15)">
-                  <i class="fas fa-times"></i>
-                </button>
+                <div class="compose-header-actions">
+                  <button id="saveDraftBtn" class="btn-secondary">
+                    <i class="fas fa-save"></i>
+                    Save Draft
+                  </button>
+                  <button id="sendBtn" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    Send Message
+                  </button>
+                  <button id="composeClose" class="btn-secondary" style="border:1px solid rgba(255,255,255,0.15)">
+                    <i class="fas fa-times"></i>
+                    Close
+                  </button>
+                </div>
               </div>
               
               <div class="compose-body">
@@ -1107,16 +1165,6 @@
                 </div>
               </div>
               
-              <div class="compose-footer">
-                <button id="saveDraftBtn" class="btn-secondary">
-                  <i class="fas fa-save"></i>
-                  Save Draft
-                </button>
-                <button id="sendBtn" class="btn-primary">
-                  <i class="fas fa-paper-plane"></i>
-                  Send
-                </button>
-              </div>
             </div>
           </div>
         </section>

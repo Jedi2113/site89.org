@@ -1,0 +1,37 @@
+# Typing Indicator Script for Skript 2.5.3 on 1.12.2
+# Shows animated typing indicator [...] above player's head during chat
+
+on chat:
+	set {typing::%player%} to true
+	set {typing-name::%player%} to the display name of player
+	
+	# Run animation for 4 seconds
+	set {_counter} to 0
+	loop 40 times:
+		if {typing::%player%} is true:
+			set {_stage} to {_counter}
+			set {_display} to "§7["
+			
+			if {_stage} < 4:
+				loop {_stage} times:
+					set {_display} to "%{_display}%."
+			else:
+				set {_dots} to 6 - {_stage}
+				if {_dots} < 0:
+					set {_dots} to 0
+				loop {_dots} times:
+					set {_display} to "%{_display}%."
+			
+			set {_display} to "%{_display}%]"
+			set the display name of player to {_display}
+			
+			increase {_counter} by 1
+			if {_counter} > 7:
+				set {_counter} to 0
+			
+			wait 0.1 seconds
+	
+	# Restore original name
+	set the display name of player to {typing-name::%player%}
+	delete {typing::%player%}
+	delete {typing-name::%player%}

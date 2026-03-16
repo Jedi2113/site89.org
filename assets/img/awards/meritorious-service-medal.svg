@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 80">
+  <!-- Meritorious Service Medal Ribbon -->
+  <defs>
+    <linearGradient id="ribbonGrad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a1a3a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2a0d2a;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="stripes5" x="0" y="0" width="5" height="80" patternUnits="userSpaceOnUse">
+      <rect width="2" height="80" style="fill:#ff69b4"/>
+      <rect x="2" width="3" height="80" style="fill:#3a1a3a"/>
+    </pattern>
+  </defs>
+  <rect width="50" height="80" fill="url(#ribbonGrad5)"/>
+  <rect width="50" height="80" fill="url(#stripes5)"/>
+  <polygon points="25,30 30,45 20,45" fill="#ffd700" stroke="#b8860b" stroke-width="1"/>
+</svg>

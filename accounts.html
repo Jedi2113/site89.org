@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-89 Account Management</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&family=Roboto+Mono&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="assets/css/main.css">
+
+  <style>
+    /* Center content */
+    .content {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .about-box {
+      background: var(--bg-card);
+      border: 1px solid var(--accent-teal);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .about-box h2, .about-box h3 {
+      margin-top: 0;
+      color: var(--text-light);
+    }
+
+    .about-box input {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #1f1f1f;
+      color: var(--text-light);
+    }
+
+    .about-box button {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--accent-teal);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .about-box button:hover {
+      background-color: var(--accent-mint);
+    }
+
+    .feedback {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    #characterList button {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero Header -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>SITE-89 ACCOUNT PORTAL</h1>
+        <p>Manage your account and security settings</p>
+      </div>
+      <img class="hero-logo" src="assets/img/logo.png" alt="Site-89 Logo">
+    </div>
+  </header>
+
+  <!-- Navbar -->
+  <div data-include="components/navbar.html"></div>
+
+  <!-- Main Content -->
+  <main class="content">
+    <!-- Account Details -->
+    <div class="about-box">
+      <h2>Account Details</h2>
+      <p><strong>Email:</strong> <span id="accountEmail">Loading...</span></p>
+      <p><strong>User ID:</strong> <span id="accountUID">Loading...</span></p>
+    </div>
+
+    <!-- Change Password -->
+    <div class="about-box">
+      <h2>Change Password</h2>
+      <form id="changePasswordForm">
+        <input type="password" id="currentPassword" placeholder="Current Password" required>
+        <input type="password" id="newPassword" placeholder="New Password" required>
+        <button type="submit">Update Password</button>
+      </form>
+      <p id="passwordFeedback" class="feedback"></p>
+    </div>
+
+    <!-- Logout -->
+    <div class="about-box">
+      <button id="logoutBtn" style="background-color:#920000;">Logout</button>
+    </div>
+
+    <!-- Characters -->
+    <div class="about-box">
+      <h2>Your Characters</h2>
+      <div id="characterList">Loading characters...</div>
+      <button id="showCharFormBtn" style="margin-top:1rem;">Create New Character</button>
+
+      <!-- Character Creation Form -->
+      <div id="charFormContainer" style="display:none; margin-top:1rem;">
+        <h3>Create New Character</h3>
+        <form id="charForm">
+          <input type="text" id="charName" placeholder="Character Name" required>
+          <input type="text" id="charDept" placeholder="Department" required>
+          <input type="text" id="charRank" placeholder="Rank" required>
+          <input type="text" id="charClearance" placeholder="Clearance Level" required>
+          <button type="submit">Add Character</button>
+          <button type="button" id="cancelCharForm" style="background-color:#920000; margin-left:0.5rem;">Cancel</button>
+        </form>
+        <p id="charFormFeedback" class="feedback"></p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <div data-include="components/footer.html"></div>
+
+  <script src="assets/js/include.js"></script>
+  <script type="module" src="assets/js/auth.js"></script>
+
+  <script type="module">
+    import { getAuth, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    const auth = getAuth();
+    const db = getFirestore();
+
+    // DOM elements
+    const accountEmail = document.getElementById("accountEmail");
+    const accountUID = document.getElementById("accountUID");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const changePasswordForm = document.getElementById("changePasswordForm");
+    const passwordFeedback = document.getElementById("passwordFeedback");
+
+    const characterList = document.getElementById("characterList");
+    const showCharFormBtn = document.getElementById("showCharFormBtn");
+    const charFormContainer = document.getElementById("charFormContainer");
+    const charForm = document.getElementById("charForm");
+    const cancelCharForm = document.getElementById("cancelCharForm");
+    const charFormFeedback = document.getElementById("charFormFeedback");
+
+    // Show character creation form
+    showCharFormBtn.addEventListener("click", () => {
+      charFormContainer.style.display = "block";
+      showCharFormBtn.style.display = "none";
+    });
+
+    // Cancel character form
+    cancelCharForm.addEventListener("click", () => {
+      charFormContainer.style.display = "none";
+      showCharFormBtn.style.display = "inline-block";
+      charForm.reset();
+      charFormFeedback.textContent = "";
+    });
+
+    // Display current user info
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) return window.location.href = "login.html";
+
+      accountEmail.textContent = user.email;
+      accountUID.textContent = user.uid;
+
+      // Load characters
+      const q = query(collection(db, "characters"), where("uid", "==", user.uid));
+      const snapshot = await getDocs(q);
+      characterList.innerHTML = "";
+      if (snapshot.empty) {
+        characterList.innerHTML = "<p>No characters yet.</p>";
+      } else {
+        snapshot.forEach(doc => {
+          const char = doc.data();
+          const btn = document.createElement("button");
+          btn.textContent = char.name + " (" + char.rank + ")";
+          btn.style.display = "block";
+          btn.style.marginBottom = "0.5rem";
+          btn.addEventListener("click", () => {
+            localStorage.setItem("selectedCharacter", JSON.stringify(char));
+            window.location.href = "index.html";
+          });
+          characterList.appendChild(btn);
+        });
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth).then(() => window.location.href = "login.html");
+    });
+
+    // Change password
+    changePasswordForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      const currentPassword = document.getElementById("currentPassword").value;
+      const newPassword = document.getElementById("newPassword").value;
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+      try {
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+        passwordFeedback.textContent = "Password updated successfully!";
+        passwordFeedback.style.color = "var(--accent-mint)";
+        changePasswordForm.reset();
+      } catch (err) {
+        passwordFeedback.textContent = "Error: " + err.message;
+        passwordFeedback.style.color = "var(--accent-red)";
+      }
+    });
+
+    // Character creation
+    charForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return alert("You must be logged in!");
+
+      const name = document.getElementById("charName").value;
+      const department = document.getElementById("charDept").value;
+      const rank = document.getElementById("charRank").value;
+      const clearance = document.getElementById("charClearance").value;
+
+      try {
+        await addDoc(collection(db, "characters"), { uid: user.uid, name, department, rank, clearance });
+        charFormFeedback.style.color = "var(--accent-mint)";
+        charFormFeedback.textContent = "Character created!";
+        charForm.reset();
+        location.reload();
+      } catch (err) {
+        charFormFeedback.style.color = "var(--accent-red)";
+        charFormFeedback.textContent = "Error creating character: " + err.message;
+      }
+    });
+  </script>
+
+</body>
+</html>

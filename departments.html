@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Site-89 Departments</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #ddd;
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .page-header {
+      background-color: #222;
+      padding: 2rem;
+      text-align: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    .department-panel {
+      display: flex;
+      background-color: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      margin: 2rem auto;
+      max-width: 900px;
+      overflow: hidden;
+      transition: transform 0.2s ease;
+    }
+    .department-panel:hover {
+      transform: scale(1.02);
+    }
+    .dept-image {
+      width: 300px;
+      object-fit: cover;
+      filter: invert(1);
+    }
+    .dept-content {
+      padding: 1.5rem;
+      flex: 1;
+    }
+    .dept-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: #00FFAA; /* mint accent */
+      text-decoration: none;
+    }
+    .dept-description {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #ccc;
+    }
+  </style>
+</head>
+
+ <!-- Header -->
+  <div data-include="components/header.html"></div> 
+  
+ <!-- Navbar -->
+  <div data-include="components/navbar.html"></div>
+
+
+<body>
+
+  <div class="page-header">Departments</div>
+
+  <!-- Administrative Department -->
+  <div class="department-panel">
+    <img src="https://i.imgur.com/luBORD2.png" alt="Administrative Department" class="dept-image">
+    <div class="dept-content">
+      <a href="AD.html" class="dept-title">» Administrative Department «</a>
+      <p class="dept-description">
+        The Administrative Department (AD) oversees the entire site, controlling financial operations, HR, diplomatic affairs, ethical politics, quality inspections, and more. Its goal is to ensure everything runs smoothly, efficiently, and ethically.
+      </p>
+    </div>
+  </div>
+
+  <!-- Department of External Operations -->
+  <div class="department-panel">
+    <img src="https://i.imgur.com/M5RWZyM.png" alt="External Operations" class="dept-image">
+    <div class="dept-content">
+      <a href="DEO.html" class="dept-title">» Department of External Operations «</a>
+      <p class="dept-description">
+        The DEO communicates with Groups of Interest and monitors everything outside the site. It manages Mobile Task Forces and its own internal Military Intelligence Agency.
+      </p>
+    </div>
+  </div>
+
+  <!-- Scientific Department -->
+  <div class="department-panel">
+    <img src="https://i.imgur.com/ICvO67n.png" alt="Scientific Department" class="dept-image">
+    <div class="dept-content">
+      <a href="ScD.html" class="dept-title">» Scientific Department «</a>
+      <p class="dept-description">
+        The Scientific Department (ScD) has multiple divisions specializing in research, anomaly testing, occult studies, and medical oversight. All divisions work to understand anomalies and ensure containment procedures protect the public.
+      </p>
+    </div>
+  </div>
+
+  <!-- Security Department -->
+  <div class="department-panel">
+    <img src="https://i.imgur.com/xQAI0eT.png" alt="Security Department" class="dept-image">
+    <div class="dept-content">
+      <a href="SD.html" class="dept-title">» Security Department «</a>
+      <p class="dept-description">
+        The Security Department (SD) ensures site security, anomaly containment, and personnel protection. All requests are processed through Security Command to the appropriate subdepartment.
+      </p>
+    </div>
+  </div>
+
+    <!-- Footer -->
+  <div data-include="components/footer.html"></div>
+
+  <script src="assets/js/include.js"></script>
+  <script type="module" src="assets/js/auth.js"></script>
+
+  <script>
+    document.addEventListener("scroll", () => {
+      const nav = document.getElementById("main-nav");
+      nav.classList.toggle("is-sticky", window.scrollY > 120);
+    });
+  </script>
+
+</body>
+</html>
