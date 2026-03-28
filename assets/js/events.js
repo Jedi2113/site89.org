@@ -517,7 +517,7 @@ function renderModal(eventId) {
   if (!attendees.length) {
     modalAttendees.innerHTML = '<span class="attendee-pill">No RSVPs yet</span>';
   } else {
-    modalAttendees.innerHTML = attendees.map(attendee => `<a href="/personnel-files/?character=${encodeURIComponent(attendee.id)}" class="attendee-pill" title="View ${attendee.name}'s profile">${attendee.name}</a>`).join('');
+    modalAttendees.innerHTML = attendees.map(attendee => `<a href="/personnel-files/view/?character=${encodeURIComponent(attendee.id)}" class="attendee-pill" title="View ${attendee.name}'s profile">${attendee.name}</a>`).join('');
   }
 
   modal.classList.add('active');

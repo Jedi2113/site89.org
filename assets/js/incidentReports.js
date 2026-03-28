@@ -1,6 +1,8 @@
 import { app } from "./auth.js";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js';
+import DOMPurify from 'https://cdn.jsdelivr.net/npm/dompurify@3.1.2/dist/purify.es.mjs';
 
 // Get references from the shared app
 const db = getFirestore(app);
@@ -31,14 +33,38 @@ function userDepartment(){
 function isDeptAllowedForIncident(dept){
   if(!dept) return false;
   const d = dept.toLowerCase().replace(/[^a-z0-9]/g, '');
-  // Check for SD (Security Department)
-  return d.includes('sd') || d.includes('security');
+  // Accept common Security Department aliases, including S&C naming.
+  if(d.includes('sd') || d.includes('security')) return true;
+  if(d === 'sc' || d === 'sandc') return true;
+  if(d.includes('securitycontainment') || d.includes('securityandcontainment')) return true;
+  return false;
 }
 
 function canCreateIncident(){
   // Only SD members can create incident reports
   const dept = userDepartment();
   return isDeptAllowedForIncident(dept);
+}
+
+function updateCreateButtonState(){
+  if(!newBtn) return;
+
+  const signedIn = !!auth.currentUser;
+  const allowed = signedIn && canCreateIncident();
+
+  // Keep button visible so users can understand permission requirements.
+  newBtn.style.display = 'inline-block';
+  newBtn.disabled = !allowed;
+  newBtn.style.opacity = allowed ? '1' : '0.65';
+  newBtn.style.cursor = allowed ? 'pointer' : 'not-allowed';
+
+  if(!signedIn){
+    newBtn.title = 'Sign in to create incident reports.';
+  } else if(!canCreateIncident()){
+    newBtn.title = 'SD membership required to create incident reports.';
+  } else {
+    newBtn.title = 'Create a new incident report.';
+  }
 }
 
 function formatDate(ts){
@@ -57,14 +83,89 @@ const closeIncidentModal = document.getElementById('closeIncidentModal');
 const cancelIncidentBtn = document.getElementById('cancelIncidentBtn');
 const createForm = document.getElementById('createIncidentForm');
 const tableBody = document.getElementById('incTableBody');
-const viewModal = document.getElementById('viewIncidentModal');
-const viewModalTitle = document.getElementById('viewIncidentTitle');
-const viewModalBody = document.getElementById('viewIncidentBody');
-const viewModalMeta = document.getElementById('viewIncidentMeta');
-const viewModalClose = document.getElementById('viewIncidentClose');
 const feedback = document.getElementById('incFeedback');
-const contentInput = document.getElementById('incContent');
 const previewDiv = document.getElementById('incPreview');
+const reportIdInput = document.getElementById('incReportId');
+const titleInput = document.getElementById('incTitle');
+const tagsInput = document.getElementById('incTags');
+const dateInput = document.getElementById('incDate');
+const locationInput = document.getElementById('incLocation');
+const causeInput = document.getElementById('incCause');
+const descriptionInput = document.getElementById('incDescription');
+const eventsInput = document.getElementById('incEvents');
+const deductionsInput = document.getElementById('incDeductions');
+const additionalInput = document.getElementById('incAdditionalInfo');
+
+marked.setOptions({ gfm: true, breaks: true });
+
+function sanitizeHtml(html){
+  return DOMPurify.sanitize(html || '', { USE_PROFILES: { html: true } });
+}
+
+function escapeHtml(text){
+  const div = document.createElement('div');
+  div.textContent = String(text || '');
+  return div.innerHTML;
+}
+
+async function renderMarkdown(raw){
+  const content = String(raw || '').trim();
+  if(!content) return '';
+
+  const parsed = marked.parse(content);
+  const html = (typeof parsed === 'string') ? parsed : await parsed;
+  return sanitizeHtml(html);
+}
+
+function parseTags(value){
+  if(!value) return [];
+  const unique = new Set();
+  value.split(',').forEach((raw) => {
+    const cleaned = raw.trim();
+    if(cleaned) unique.add(cleaned);
+  });
+  return Array.from(unique);
+}
+
+function buildComposedMarkdown(fields){
+  const lines = [];
+  lines.push('## Incident Summary');
+  lines.push(`- **Date of Incident:** ${fields.incidentDate || 'Unknown'}`);
+  lines.push(`- **Location:** ${fields.location || 'Unknown'}`);
+  lines.push(`- **Suspected Cause:** ${fields.cause || 'Unknown'}`);
+
+  lines.push('');
+  lines.push('## Report Description');
+  lines.push(fields.description || '_No description provided._');
+
+  lines.push('');
+  lines.push('## Events Transpired');
+  lines.push(fields.events || '_No event timeline provided._');
+
+  lines.push('');
+  lines.push('## Deductions and Findings');
+  lines.push(fields.deductions || '_No deductions provided._');
+
+  if(fields.additionalInfo){
+    lines.push('');
+    lines.push('## Additional Information');
+    lines.push(fields.additionalInfo);
+  }
+
+  return lines.join('\n');
+}
+
+function collectFormFields(){
+  return {
+    incidentDate: dateInput ? dateInput.value.trim() : '',
+    location: locationInput ? locationInput.value.trim() : '',
+    cause: causeInput ? causeInput.value.trim() : '',
+    description: descriptionInput ? descriptionInput.value.trim() : '',
+    events: eventsInput ? eventsInput.value.trim() : '',
+    deductions: deductionsInput ? deductionsInput.value.trim() : '',
+    additionalInfo: additionalInput ? additionalInput.value.trim() : ''
+  };
+}
 
 function setStatus(msg, isError = false){
   feedback.textContent = msg;
@@ -78,18 +179,34 @@ function resetForm(){
   setStatus('');
 }
 
-function updatePreview(){
-  if(!window.marked) return;
-  const content = contentInput.value;
-  previewDiv.innerHTML = content ? window.marked.parse(content) : '<em>Preview will appear here...</em>';
+let previewRenderId = 0;
+
+async function updatePreview(){
+  const fields = collectFormFields();
+  const content = buildComposedMarkdown(fields);
+  const renderId = ++previewRenderId;
+
+  if(!content.trim()){
+    previewDiv.innerHTML = '<em>Preview will appear here...</em>';
+    return;
+  }
+
+  try {
+    const html = await renderMarkdown(content);
+    if(renderId !== previewRenderId) return;
+    previewDiv.innerHTML = html || '<em>Preview will appear here...</em>';
+  } catch (err) {
+    console.error('Incident preview render failed:', err);
+    if(renderId !== previewRenderId) return;
+    previewDiv.innerHTML = `<pre style="white-space:pre-wrap">${escapeHtml(content)}</pre>`;
+  }
 }
 
 // Main initialization
-document.addEventListener('includesLoaded', ()=>{
+function initIncidentReportsPage(){
   // Show 'New' button for authorized users
   if(newBtn){
-    if(canCreateIncident()) newBtn.style.display = 'inline-block';
-    else newBtn.style.display = 'none';
+    updateCreateButtonState();
     
     newBtn.addEventListener('click', ()=>{ 
       if(canCreateIncident()){ 
@@ -97,9 +214,22 @@ document.addEventListener('includesLoaded', ()=>{
         createModal.style.display = 'flex'; 
         createModal.setAttribute('aria-hidden','false'); 
         document.getElementById('incReportId').focus(); 
-      } else alert('You do not have permission to create incident reports. SD membership required.'); 
+      } else if(!auth.currentUser){
+        alert('You must be signed in to create incident reports.');
+      } else {
+        alert('You do not have permission to create incident reports. SD membership required.');
+      }
     });
   }
+
+  onAuthStateChanged(auth, () => {
+    updateCreateButtonState();
+  });
+
+  window.addEventListener('focus', updateCreateButtonState);
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden) updateCreateButtonState();
+  });
 
   if(closeIncidentModal) closeIncidentModal.addEventListener('click', ()=>{ 
     createModal.style.display='none'; 
@@ -113,22 +243,24 @@ document.addEventListener('includesLoaded', ()=>{
     feedback.textContent=''; 
   });
 
-  // Live markdown preview
-  if(contentInput){
-    contentInput.addEventListener('input', updatePreview);
-  }
+  // Live markdown preview for all police report fields
+  [dateInput, locationInput, causeInput, descriptionInput, eventsInput, deductionsInput, additionalInput, titleInput]
+    .filter(Boolean)
+    .forEach(el => el.addEventListener('input', updatePreview));
 
   // Render table
   function render(list){
     const q = (searchInput && searchInput.value || '').trim().toLowerCase();
-    if(isNaN(userClearance()) || userClearance() < 0){ 
-      tableBody.innerHTML = '<tr><td colspan="2" class="empty">You need clearance ≥ 0 to view incident reports.</td></tr>'; 
+    if(isNaN(userClearance()) || userClearance() < 1){ 
+      tableBody.innerHTML = '<tr><td colspan="2" class="empty">You need clearance ≥ 1 to view incident reports.</td></tr>'; 
       return; 
     }
     const filtered = (!q) ? list : list.filter(d => 
       (d.title||'').toLowerCase().includes(q) || 
       (d.reportId||'').toLowerCase().includes(q) ||
-      (d.tags||[]).join(' ').toLowerCase().includes(q)
+      (d.tags||[]).join(' ').toLowerCase().includes(q) ||
+      (d.location||'').toLowerCase().includes(q) ||
+      (d.cause||'').toLowerCase().includes(q)
     );
     if(filtered.length === 0){ 
       tableBody.innerHTML = '<tr><td colspan="2" class="empty">No entries match.</td></tr>'; 
@@ -140,9 +272,8 @@ document.addEventListener('includesLoaded', ()=>{
       const titleCell = document.createElement('td');
       const link = document.createElement('a'); 
       link.className = 'click-row'; 
-      link.href = '#'; 
+      link.href = `/incident-reports/view/?id=${encodeURIComponent(d.id)}`;
       link.textContent = (d.reportId ? d.reportId + ': ' : '') + (d.title || '(untitled)');
-      link.addEventListener('click', (e)=>{ e.preventDefault(); openView(d); });
       titleCell.appendChild(link);
 
       const tagsCell = document.createElement('td');
@@ -171,10 +302,12 @@ document.addEventListener('includesLoaded', ()=>{
         return; 
       }
       
-      const reportId = document.getElementById('incReportId').value.trim();
-      const title = document.getElementById('incTitle').value.trim();
-      const tags = document.getElementById('incTags').value.split(',').map(s=>s.trim()).filter(Boolean);
-      const content = contentInput.value.trim();
+      const reportId = reportIdInput ? reportIdInput.value.trim() : '';
+      const titleRaw = titleInput ? titleInput.value.trim() : '';
+      const tags = parseTags(tagsInput ? tagsInput.value : '');
+      const fields = collectFormFields();
+      const content = buildComposedMarkdown(fields).trim();
+      const title = titleRaw || `${fields.cause || 'Incident'} at ${fields.location || 'Unknown Location'}`;
       
       // Validate report ID format
       const pattern = /^IR-\d{2}\.\d{2}\.\d{2}-\d{3}$/;
@@ -184,7 +317,12 @@ document.addEventListener('includesLoaded', ()=>{
       }
       
       if(!reportId || !title || !content) { 
-        setStatus('Report ID, title and content required.', true); 
+        setStatus('Report ID, title, and report details are required.', true); 
+        return; 
+      }
+
+      if(!fields.incidentDate || !fields.location || !fields.cause || !fields.description || !fields.events || !fields.deductions){
+        setStatus('Complete required police report fields: date, location, cause, description, events, and deductions.', true);
         return; 
       }
       
@@ -198,6 +336,13 @@ document.addEventListener('includesLoaded', ()=>{
           title, 
           tags, 
           contentMd: content,
+          incidentDate: fields.incidentDate,
+          location: fields.location,
+          cause: fields.cause,
+          reportDescriptionMd: fields.description,
+          eventsMd: fields.events,
+          deductionsMd: fields.deductions,
+          additionalInfoMd: fields.additionalInfo,
           author, 
           authorPid,
           department: ch ? ch.department || '' : '', 
@@ -206,8 +351,7 @@ document.addEventListener('includesLoaded', ()=>{
         });
         
         setStatus('Report created.');
-        createForm.reset(); 
-        updatePreview();
+        resetForm();
         setTimeout(() => {
           createModal.style.display='none'; 
           createModal.setAttribute('aria-hidden','true');
@@ -218,28 +362,6 @@ document.addEventListener('includesLoaded', ()=>{
     });
   }
 
-  // View modal
-  function openView(d){
-    viewModalTitle.textContent = (d.reportId ? d.reportId + ': ' : '') + (d.title || '(untitled)');
-    viewModalMeta.textContent = `${d.author || 'Unknown'} • ${d.department || ''} • ${formatDate(d.createdAt)}`;
-    if(d.contentMd && window.marked){
-      viewModalBody.innerHTML = window.marked.parse(d.contentMd);
-    } else if(d.content && window.marked){
-      // Support for old content field
-      viewModalBody.innerHTML = window.marked.parse(d.content);
-    } else {
-      viewModalBody.innerHTML = '<em>No content available.</em>';
-    }
-    viewModal.setAttribute('aria-hidden','false');
-  }
-
-  function closeView(){ 
-    viewModal.setAttribute('aria-hidden','true'); 
-  }
-
-  if(viewModalClose) viewModalClose.addEventListener('click', closeView);
-  if(viewModal) viewModal.addEventListener('click', (ev)=>{ if(ev.target === viewModal) closeView(); });
-
   // Live subscribe to incidents
   const q = query(collection(db,'incidentReports'), orderBy('createdAt','desc'));
   onSnapshot(q, snap => { 
@@ -249,13 +371,19 @@ document.addEventListener('includesLoaded', ()=>{
   }, (err)=>{ 
     tableBody.innerHTML = '<tr><td colspan="2" class="empty">Error loading incident reports: ' + err.message + '</td></tr>'; 
   });
-});
+}
+
+let booted = false;
+function kickoff(){
+  if(booted) return;
+  booted = true;
+  initIncidentReportsPage();
+}
+
+document.addEventListener('includesLoaded', kickoff);
+document.addEventListener('DOMContentLoaded', kickoff);
 
 // Check permissions on character change
 window.addEventListener('storage', () => {
-  const newBtn = document.getElementById('newIncidentBtn');
-  if(newBtn) {
-    if(canCreateIncident()) newBtn.style.display = 'inline-block';
-    else newBtn.style.display = 'none';
-  }
+  updateCreateButtonState();
 });

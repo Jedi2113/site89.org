@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="/assets/js/secure-access.js"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="required-clearance" content="1">
+  <title>Incident Report - Site-89</title>
+
+  <meta name="description" content="View Site-89 incident report details, chronology, and investigative deductions.">
+  <meta name="keywords" content="Site-89 incident report, breach report, security incident, investigation">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Incident Report - Site-89">
+  <meta property="og:description" content="View full incident report details and findings.">
+  <meta property="og:url" content="https://site89.github.io/incident-reports/view/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Incident Report - Site-89">
+  <meta name="twitter:description" content="View full incident report details and findings.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/incident-reports/view/">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .irv-shell{max-width:1100px;margin:1.5rem auto;padding:0 1rem 2rem}
+    .irv-back{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;color:var(--accent-teal);font-weight:700;margin-bottom:1rem}
+    .irv-card{background:var(--bg-card);border:1px solid rgba(78,250,170,.2);border-radius:12px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.24)}
+    .irv-head{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid rgba(78,250,170,.14);background:linear-gradient(135deg, rgba(78,250,170,.09), rgba(0,124,107,.05))}
+    .irv-eyebrow{font-size:.85rem;font-family:var(--font-mono);letter-spacing:.08em;color:var(--accent-teal);text-transform:uppercase}
+    .irv-title{margin:.35rem 0 0;font-size:1.8rem;line-height:1.2}
+    .irv-meta{margin:.55rem 0 0;color:var(--text-light);opacity:.92}
+    .irv-body{padding:1.2rem;display:grid;gap:1rem}
+    .irv-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+    .irv-fact{background:rgba(78,250,170,.06);border:1px solid rgba(78,250,170,.13);border-radius:8px;padding:.8rem}
+    .irv-fact-label{font-size:.78rem;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em}
+    .irv-fact-value{margin-top:.35rem;font-weight:700;color:var(--text-primary)}
+    .irv-section{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:1rem}
+    .irv-section h2{margin:0 0 .55rem;color:var(--accent-mint);font-size:1.1rem}
+    .irv-markdown{line-height:1.65}
+    .irv-empty{color:var(--text-light);opacity:.85;font-style:italic}
+    .irv-message{padding:2rem 1rem;text-align:center;color:var(--text-light)}
+    @media (max-width:900px){.irv-facts{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="irv-shell">
+    <a class="irv-back" href="/incident-reports/">Back to Incident Reports</a>
+
+    <section id="incidentView" class="irv-card" style="display:none;">
+      <header class="irv-head">
+        <div id="irvEyebrow" class="irv-eyebrow">Incident Report</div>
+        <h1 id="irvTitle" class="irv-title">Loading...</h1>
+        <p id="irvMeta" class="irv-meta"></p>
+      </header>
+
+      <div class="irv-body">
+        <div class="irv-facts">
+          <div class="irv-fact">
+            <div class="irv-fact-label">Date of Incident</div>
+            <div id="irvDate" class="irv-fact-value">-</div>
+          </div>
+          <div class="irv-fact">
+            <div class="irv-fact-label">Location</div>
+            <div id="irvLocation" class="irv-fact-value">-</div>
+          </div>
+          <div class="irv-fact">
+            <div class="irv-fact-label">Suspected Cause</div>
+            <div id="irvCause" class="irv-fact-value">-</div>
+          </div>
+        </div>
+
+        <section class="irv-section">
+          <h2>Report Description</h2>
+          <div id="irvDescription" class="irv-markdown"></div>
+        </section>
+
+        <section class="irv-section">
+          <h2>Events Transpired</h2>
+          <div id="irvEvents" class="irv-markdown"></div>
+        </section>
+
+        <section class="irv-section">
+          <h2>Deductions and Findings</h2>
+          <div id="irvDeductions" class="irv-markdown"></div>
+        </section>
+
+        <section id="irvAdditionalSection" class="irv-section" style="display:none;">
+          <h2>Additional Information</h2>
+          <div id="irvAdditional" class="irv-markdown"></div>
+        </section>
+
+        <section class="irv-section">
+          <h2>Full Filed Report</h2>
+          <div id="irvFullBody" class="irv-markdown"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="incidentMessage" class="irv-card">
+      <div id="irvMessageText" class="irv-message">Loading incident report...</div>
+    </section>
+  </main>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/incident-report-view.js"></script>
+</body>
+</html>

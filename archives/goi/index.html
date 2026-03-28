@@ -289,8 +289,8 @@
             <div class="goi-card ${stanceClass}">
               <div class="goi-header">
                 <div>
-                  <h3 class="goi-title">${goi.name || 'Unknown Group'}</h3>
-                  ${goi.designation ? `<div class="goi-designation">${goi.designation}</div>` : ''}
+                  <h3 class="goi-title"><a href="/archives/goi/view/?id=${encodeURIComponent(goiId)}" style="color:inherit;text-decoration:none">${goi.name || 'Unknown Group'}</a></h3>
+                  ${goi.designation ? `<div class="goi-designation"><a href="/archives/goi/view/?id=${encodeURIComponent(goi.designation)}" style="color:inherit;text-decoration:none">${goi.designation}</a></div>` : ''}
                 </div>
               </div>
               <div class="goi-meta">

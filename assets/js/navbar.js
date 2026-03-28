@@ -2,6 +2,7 @@
 import { app, auth } from '/assets/js/auth.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
 import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+import { calculateMerit, meritTitle } from '/assets/js/merit.js';
 
 const db = getFirestore(app);
 
@@ -16,6 +17,7 @@ const sitePages = [
   { title: 'Incident Reports', url: '/incident-reports/', type: 'page' },
   { title: 'Newsletter', url: '/newsletter/', type: 'page' },
   { title: 'Forum', url: '/forum/', type: 'page' },
+  { title: 'Articles', url: '/articles/', type: 'page' },
   { title: 'Gallery', url: '/gallery/', type: 'page' },
   { title: 'Rules & Guidelines', url: '/rules/', type: 'page' },
   { title: 'Guides', url: '/guides/', type: 'page' },
@@ -120,6 +122,14 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function formatCompactNumber(value) {
+  if (value >= 1000) {
+    const compact = (value / 1000).toFixed(value % 1000 === 0 ? 0 : 1);
+    return `${compact}k`;
+  }
+  return String(value);
+}
+
 // Account management
 onAuthStateChanged(auth, async (user) => {
   const accountsText = document.getElementById('navAccountsText');
@@ -146,6 +156,25 @@ onAuthStateChanged(auth, async (user) => {
       accountsText.textContent = user.email.split('@')[0];
     }
     
+    // Show merit score in dropdown
+    const meritDisplay = document.getElementById('navMeritDisplay');
+    const meritScore   = document.getElementById('navMeritScore');
+    const meritTier    = document.getElementById('navMeritTier');
+    try {
+      const merit = await calculateMerit(user.uid);
+      if (meritDisplay && meritScore && meritTier) {
+        meritScore.textContent = formatCompactNumber(merit);
+        meritTier.textContent  = meritTitle(merit);
+        meritDisplay.style.display = 'flex';
+      }
+    } catch {
+      if (meritDisplay && meritScore && meritTier) {
+        meritScore.textContent = '0';
+        meritTier.textContent = 'Newcomer';
+        meritDisplay.style.display = 'flex';
+      }
+    }
+
     // Logout handler
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {

@@ -71,7 +71,7 @@
       <div class="ms-header">
         <div class="ms-title">
           <h1>Incident Reports</h1>
-          <p class="ms-sub">Logged incident reports — click any title to open the full report. Anyone with clearance ≥ 1 can view; creation requires SD (Security Department) membership.</p>
+          <p class="ms-sub">Logged incident reports — click any title to open the full report page. Anyone with clearance ≥ 1 can view; creation requires SD (Security Department) membership.</p>
         </div>
 
         <div class="ms-toolbar">
@@ -89,16 +89,7 @@
           <tr><td colspan="2" class="empty">Loading…</td></tr>
         </tbody>
       </table>
-      <div id="incidentDesc" style="display:none">Click any title to view the full incident report.</div>
-
-      <!-- View modal -->
-      <div id="viewIncidentModal" class="view-modal" aria-hidden="true">
-        <div class="modal-box" role="dialog" aria-modal="true" style="max-width:1100px; max-height:90vh; overflow-y:auto;">
-          <div style="display:flex;justify-content:space-between;align-items:center"><h2 id="viewIncidentTitle">Title</h2><button id="viewIncidentClose" class="btn-link">✕</button></div>
-          <div id="viewIncidentMeta" class="meta" style="color:var(--text-light);opacity:.9;margin-top:.4rem"></div>
-          <div id="viewIncidentBody" style="margin-top:1rem; line-height:1.6; color:var(--text-primary);"></div>
-        </div>
-      </div>
+      <div id="incidentDesc" style="display:none">Click any title to open a dedicated incident report page.</div>
 
       <!-- Create modal (same pattern as research logs) -->
       <div id="createIncidentModal" class="modal" aria-hidden="true" style="display:none">
@@ -110,20 +101,30 @@
 
           <form id="createIncidentForm">
             <label>Report ID <input id="incReportId" placeholder="IR-MM.DD.YY-###" required></label>
-            <label>Title <input id="incTitle" placeholder="Title" required></label>
+            <label>Incident Title <input id="incTitle" placeholder="Short case title (optional)"></label>
             <label>Tags <input id="incTags" placeholder="Tags (comma separated)"></label>
-            <label style="display:block; margin-bottom:0.5rem;">Report Content (Markdown)
-              <div style="font-size:.9rem;color:var(--text-light);margin-top:.2rem">Use Markdown formatting: **bold**, *italic*, # headers, - lists, [links](url)</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.5rem">
-                <div>
-                  <div style="font-weight:600;margin-bottom:.5rem">Editor</div>
-                  <textarea id="incContent" style="width:100%; min-height:300px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;"></textarea>
-                </div>
-                <div>
-                  <div style="font-weight:600;margin-bottom:.5rem">Preview</div>
-                  <div id="incPreview" style="background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:1rem; min-height:300px; overflow-y:auto; line-height:1.6;"><em>Preview will appear here...</em></div>
-                </div>
-              </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:.35rem;">
+              <label>Date of Incident <input id="incDate" type="date" required></label>
+              <label>Location <input id="incLocation" placeholder="Where did this occur?" required></label>
+            </div>
+            <label>Suspected Cause
+              <textarea id="incCause" required style="width:100%; min-height:90px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;" placeholder="What triggered the incident?"></textarea>
+            </label>
+            <label>Report Description
+              <textarea id="incDescription" required style="width:100%; min-height:140px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;" placeholder="Provide an overall narrative summary."></textarea>
+            </label>
+            <label>Events Transpired
+              <textarea id="incEvents" required style="width:100%; min-height:160px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;" placeholder="Chronological timeline. Markdown supported."></textarea>
+            </label>
+            <label>Deductions and Findings
+              <textarea id="incDeductions" required style="width:100%; min-height:140px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;" placeholder="What conclusions were reached?"></textarea>
+            </label>
+            <label>Additional Information
+              <textarea id="incAdditionalInfo" style="width:100%; min-height:120px; font-family:monospace; padding:.6rem; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:var(--text-primary); resize:vertical;" placeholder="Witness statements, attachments, recommendations, or follow-up notes."></textarea>
+            </label>
+            <label style="display:block; margin-bottom:0.5rem;">Markdown Preview
+              <div style="font-size:.9rem;color:var(--text-light);margin-top:.2rem">Preview renders the compiled report template from all fields above.</div>
+              <div id="incPreview" style="background:var(--bg-dark); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:1rem; min-height:280px; overflow-y:auto; line-height:1.6; margin-top:.5rem;"><em>Preview will appear here...</em></div>
             </label>
             <div style="display:flex;gap:.5rem;margin-top:.6rem"><button id="createIncidentBtn" class="btn-primary" type="submit">Create</button><button id="cancelIncidentBtn" class="btn-secondary" type="button">Cancel</button></div>
             <p id="incFeedback" class="feedback"></p>
@@ -138,10 +139,6 @@
 
   <script src="/assets/js/include.js"></script>
   <script type="module" src="/assets/js/auth.js"></script>
-  <script type="module">
-    import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js';
-    window.marked = marked;
-  </script>
   <script type="module" src="/assets/js/incidentReports.js"></script>
 </body>
 </html>

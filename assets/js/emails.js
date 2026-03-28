@@ -232,10 +232,22 @@ function getSecurityDirectorAliases(selectedCharacter, user){
   return [];
 }
 
+function getADDirectorAliases(selectedCharacter){
+  const adAliases = [
+    'ad.mgmt@site89.org',
+    'hr.mgmt@site89.org'
+  ];
+  const selectedName = ((selectedCharacter && selectedCharacter.name) || '').toLowerCase();
+  if(selectedName.includes('avery') && selectedName.includes('rosewood')) return adAliases;
+  if(selectedName.includes('ashley') && selectedName.includes('youngblood')) return ['hr.mgmt@site89.org'];
+  return [];
+}
+
 function buildSendAsAddresses(divisions, selectedCharacter, user){
   const divisionAddresses = (divisions || []).map(div => `${div}.mgmt@site89.org`.toLowerCase());
   const securityAliases = getSecurityDirectorAliases(selectedCharacter, user);
-  return [...new Set([...divisionAddresses, ...securityAliases])];
+  const adAliases = getADDirectorAliases(selectedCharacter);
+  return [...new Set([...divisionAddresses, ...securityAliases, ...adAliases])];
 }
 
 function getOwnedAddresses(primaryAddress, sendAsAddresses){
@@ -305,7 +317,6 @@ document.addEventListener('includesLoaded', () => {
   const composeArea = document.getElementById('composeArea');
   const composeClose = document.getElementById('composeClose');
   const sendBtn = document.getElementById('sendBtn');
-  const saveDraftBtn = document.getElementById('saveDraftBtn');
   const composeTo = document.getElementById('composeTo');
   const composeSubject = document.getElementById('composeSubject');
   const composeBody = document.getElementById('composeBody');
@@ -443,7 +454,6 @@ document.addEventListener('includesLoaded', () => {
     currentFolder = name;
     const folderNames = {
       'inbox': 'Inbox',
-      'drafts': 'Drafts',
       'sent': 'Sent',
       'trash': 'Trash'
     };
@@ -473,7 +483,9 @@ document.addEventListener('includesLoaded', () => {
         'sd.cmd.mgmt@site89.org': 'Security Command (sd.cmd.mgmt@site89.org)',
         'sd.sis.mgmt@site89.org': 'Security Intelligence Service (sd.sis.mgmt@site89.org)',
         'sd.sdu.mgmt@site89.org': 'Specialized Divisions Unit (sd.sdu.mgmt@site89.org)',
-        'sd.seccont.mgmt@site89.org': 'Security & Containment (sd.seccont.mgmt@site89.org)'
+        'sd.seccont.mgmt@site89.org': 'Security & Containment (sd.seccont.mgmt@site89.org)',
+        'ad.mgmt@site89.org': 'Administrative Department (ad.mgmt@site89.org)',
+        'hr.mgmt@site89.org': 'Human Resources (hr.mgmt@site89.org)'
       };
       sendAsAddresses.forEach(addr => {
         const opt = document.createElement('option');
@@ -613,7 +625,7 @@ document.addEventListener('includesLoaded', () => {
     return charactersCache[normalizedEmail] || null;
   }
 
-  async function sendMessage(status='sent'){
+  async function sendMessage(){
     const toRaw = (composeTo.value||'').split(',').map(s=>s.trim()).filter(Boolean);
     if (!toRaw.length) return alert('Add at least one recipient');
     // Basic validation
@@ -646,7 +658,7 @@ document.addEventListener('includesLoaded', () => {
     }
 
     // disable buttons while sending
-    sendBtn.disabled = true; saveDraftBtn.disabled = true;
+    sendBtn.disabled = true;
     
     // Expand mailing lists
     let recipients = toRaw;
@@ -668,8 +680,8 @@ document.addEventListener('includesLoaded', () => {
       body: emailBody,
       isHTML: false,
       format: 'markdown',
-      status: status, // 'sent' or 'draft'
-      folder: status === 'draft' ? 'drafts' : '',
+      status: 'sent',
+      folder: '',
       deletedBy: [],
       ts: serverTimestamp()
     };
@@ -679,7 +691,7 @@ document.addEventListener('includesLoaded', () => {
     } catch(e){
       console.error('send failed', e); alert('Failed to send message');
     } finally {
-      sendBtn.disabled = false; saveDraftBtn.disabled = false;
+      sendBtn.disabled = false;
       composeArea.classList.remove('active');
       mailContentWrapper.style.display = '';
       clearCompose();
@@ -693,8 +705,7 @@ document.addEventListener('includesLoaded', () => {
     }
   }
 
-  sendBtn.addEventListener('click', ()=> sendMessage('sent'));
-  saveDraftBtn.addEventListener('click', ()=> sendMessage('draft'));
+  sendBtn.addEventListener('click', ()=> sendMessage());
 
   if(globalMailSearch){
     globalMailSearch.addEventListener('input', ()=> renderList());
@@ -766,9 +777,8 @@ document.addEventListener('includesLoaded', () => {
       const isSender = ownedAddresses.has(senderLower);
       const userInDeletedBy = (m.deletedBy || []).some(e => e.toLowerCase() === myAddressLower);
       
-      if (currentFolder === 'inbox') return isRecipient && m.folder !== 'trash' && m.status !== 'draft' && !userInDeletedBy;
-      if (currentFolder === 'drafts') return m.status === 'draft' && isSender;
-      if (currentFolder === 'sent') return isSender && m.folder !== 'trash' && m.status !== 'draft';
+      if (currentFolder === 'inbox') return isRecipient && m.folder !== 'trash' && !userInDeletedBy;
+      if (currentFolder === 'sent') return isSender && m.folder !== 'trash';
       if (currentFolder === 'trash') return (m.folder === 'trash' && isSender) || (isRecipient && userInDeletedBy);
       return false;
     }).filter(m => (m.subject||'').toLowerCase().includes(q) || (m.body||'').toLowerCase().includes(q) || (m.sender||'').toLowerCase().includes(q));
@@ -777,7 +787,7 @@ document.addEventListener('includesLoaded', () => {
     const inboxMsgs = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());
       const userInDeletedBy = (m.deletedBy || []).some(e => e.toLowerCase() === myAddressLower);
-      return recipientsLower.some(r => ownedAddresses.has(r)) && m.folder !== 'trash' && m.status !== 'draft' && !userInDeletedBy;
+      return recipientsLower.some(r => ownedAddresses.has(r)) && m.folder !== 'trash' && !userInDeletedBy;
     });
     // Count unread: neither m.read nor in locallyMarkedRead
     const unreadCount = inboxMsgs.filter(m => !m.read && !locallyMarkedRead.has(m.id)).length;
@@ -792,7 +802,6 @@ document.addEventListener('includesLoaded', () => {
         navMailBadge.style.display = 'none';
       }
     }
-    document.getElementById('countDrafts').textContent = allMessages.filter(m => m.status === 'draft' && ownedAddresses.has((m.sender || '').toLowerCase())).length;
     document.getElementById('countSent').textContent = allMessages.filter(m => ownedAddresses.has((m.sender || '').toLowerCase()) && m.folder !== 'trash').length;
     document.getElementById('countTrash').textContent = allMessages.filter(m => {
       const recipientsLower = (m.recipients || []).map(r => r.toLowerCase());

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Roles Manager — Site-89</title>
+
+  <meta name="description" content="Manage Site-89 account privilege levels.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Roles Manager — Site-89">
+  <meta property="og:description" content="Manage account roles for Site-89 staff.">
+  <meta property="og:url" content="https://site89.org/admin/roles/">
+  <meta property="og:image" content="https://site89.org/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Roles Manager — Site-89">
+  <meta name="twitter:description" content="Manage account roles for Site-89 staff.">
+  <meta name="twitter:image" content="https://site89.org/assets/img/og-image.png">
+  <link rel="canonical" href="https://site89.org/admin/roles/">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="content">
+    <div class="about-box">
+      <h1>Roles Manager</h1>
+      <p>Set account privilege levels in the <strong>users</strong> collection.</p>
+      <p style="opacity:.8;">Access: Primary administrator only.</p>
+      <a href="/admin/" class="btn-secondary" style="display:inline-block;margin-top:.5rem;">Back to Admin Panel</a>
+    </div>
+
+    <div id="rolesLoading" class="about-box">Checking access…</div>
+
+    <div id="rolesDenied" class="about-box" style="display:none;">
+      <h2>Access Denied</h2>
+      <p>This page is restricted to the primary administrator account.</p>
+      <a href="/403/" class="btn-primary" style="display:inline-block;">Go to Access Page</a>
+    </div>
+
+    <div id="rolesApp" class="about-box" style="display:none;">
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+        <input id="rolesSearch" placeholder="Search by email or UID" style="max-width:320px;flex:1;min-width:220px;">
+        <select id="rolesFilter" style="max-width:180px;">
+          <option value="">All Roles</option>
+          <option value="member">Member</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button id="rolesRefresh" class="btn-secondary" type="button">Refresh</button>
+      </div>
+
+      <div id="rolesFeedback" class="feedback" style="margin-bottom:.75rem;"></div>
+      <div id="rolesTableWrap" style="overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:760px;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.12);text-align:left;">
+              <th style="padding:.65rem;">Email</th>
+              <th style="padding:.65rem;">UID</th>
+              <th style="padding:.65rem;">Current Role</th>
+              <th style="padding:.65rem;">Set Role</th>
+              <th style="padding:.65rem;">Updated</th>
+              <th style="padding:.65rem;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="rolesTableBody">
+            <tr><td colspan="6" style="padding:1rem;opacity:.8;">Loading users…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/admin-roles.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+</body>
+</html>

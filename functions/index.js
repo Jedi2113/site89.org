@@ -26,10 +26,103 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
 }
 
-function addDays(date, days) {
-  const next = new Date(date.getTime());
-  next.setDate(next.getDate() + days);
-  return next;
+function getTimePartsInZone(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  const parts = formatter.formatToParts(date);
+  const map = new Map(parts.map(part => [part.type, part.value]));
+  return {
+    year: Number(map.get('year') || 0),
+    month: Number(map.get('month') || 1),
+    day: Number(map.get('day') || 1),
+    hour: Number(map.get('hour') || 0),
+    minute: Number(map.get('minute') || 0)
+  };
+}
+
+function parseIsoDateParts(value) {
+  const match = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { year, month, day };
+}
+
+function toUtcDateMs(parts) {
+  return Date.UTC(parts.year, parts.month - 1, parts.day);
+}
+
+function getDaysInMonth(year, month) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function getMonthKey(parts) {
+  const month = String(parts.month).padStart(2, '0');
+  return `${parts.year}-${month}`;
+}
+
+function isNowAtOrAfterTime(nowParts, hour, minute) {
+  if (nowParts.hour > hour) return true;
+  if (nowParts.hour < hour) return false;
+  return nowParts.minute >= minute;
+}
+
+function getPayrollRunDateKey(nowParts, payrollConfig) {
+  if (!payrollConfig || payrollConfig.enabled === false) return null;
+
+  const cfgHour = Number(payrollConfig.hour || 0);
+  const cfgMinute = Number(payrollConfig.minute || 0);
+  if (!isNowAtOrAfterTime(nowParts, cfgHour, cfgMinute)) return null;
+
+  const anchorParts = parseIsoDateParts(payrollConfig.anchorDate);
+  if (!anchorParts) return null;
+
+  const anchorMs = toUtcDateMs(anchorParts);
+  const nowDateMs = toUtcDateMs(nowParts);
+  if (nowDateMs < anchorMs) return null;
+
+  const diffDays = Math.floor((nowDateMs - anchorMs) / (24 * 60 * 60 * 1000));
+  const cycleIndex = Math.floor(diffDays / 14);
+  const cycleStartMs = anchorMs + (cycleIndex * 14 * 24 * 60 * 60 * 1000);
+  const cycleStartDate = new Date(cycleStartMs);
+  const month = String(cycleStartDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(cycleStartDate.getUTCDate()).padStart(2, '0');
+  return `${cycleStartDate.getUTCFullYear()}-${month}-${day}`;
+}
+
+function shouldRunMonthlyNow(nowParts, monthlyConfig) {
+  if (!monthlyConfig || monthlyConfig.enabled === false) return false;
+
+  const cfgHour = Number(monthlyConfig.hour || 0);
+  const cfgMinute = Number(monthlyConfig.minute || 0);
+  if (!isNowAtOrAfterTime(nowParts, cfgHour, cfgMinute)) return false;
+
+  const anchorParts = parseIsoDateParts(monthlyConfig.anchorDate);
+  if (anchorParts) {
+    const anchorMs = toUtcDateMs(anchorParts);
+    const nowDateMs = toUtcDateMs(nowParts);
+    if (nowDateMs < anchorMs) return false;
+
+    const safeAnchorDay = Math.max(1, Math.min(31, Math.trunc(anchorParts.day)));
+    const dueAnchorDay = Math.min(safeAnchorDay, getDaysInMonth(nowParts.year, nowParts.month));
+    return nowParts.day >= dueAnchorDay;
+  }
+
+  // Backward compatibility for old configs that only saved a numeric day.
+  const configuredDay = Number(monthlyConfig.dayOfMonth || 1);
+  const safeDay = Math.max(1, Math.min(31, Math.trunc(configuredDay)));
+  const dueDay = Math.min(safeDay, getDaysInMonth(nowParts.year, nowParts.month));
+  return nowParts.day >= dueDay;
 }
 
 function baseLocalFromName(name) {
@@ -251,60 +344,229 @@ async function resolveCharacterEmail(account) {
   return `${localPart}@site89.org`.toLowerCase();
 }
 
-exports.processPayroll = onSchedule('every day 06:00', async () => {
-  const now = admin.firestore.Timestamp.now();
-  const snap = await db
-    .collection('bank_accounts')
-    .where('recurring.enabled', '==', true)
-    .where('recurring.nextPayAt', '<=', now)
-    .get();
+exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'America/New_York' }, async () => {
+  console.log('⏱️ processPayroll tick started');
+  const scheduleSnap = await db.collection('bank_config').doc('schedule').get();
+  const scheduleConfig = scheduleSnap.exists ? (scheduleSnap.data() || {}) : {};
 
-  const tasks = [];
+  const timezone = scheduleConfig.timezone || 'America/New_York';
+  const nowDate = new Date();
+  const nowParts = getTimePartsInZone(nowDate, timezone);
+  const monthKey = getMonthKey(nowParts);
 
-  snap.forEach(docSnap => {
-    const data = docSnap.data() || {};
-    const amount = Number(data.recurring?.amount || 0);
-    if (!amount || amount <= 0) return;
+  const payrollConfig = scheduleConfig.payroll || {
+    enabled: true,
+    anchorDate: '2026-01-01',
+    hour: 9,
+    minute: 0
+  };
+  const monthlyConfig = scheduleConfig.monthly || {
+    enabled: true,
+    anchorDate: '2026-01-01',
+    hour: 9,
+    minute: 0
+  };
 
-    const intervalDays = Number(data.recurring?.intervalDays || 14);
-    const nextPayAt = data.recurring?.nextPayAt?.toDate ? data.recurring.nextPayAt.toDate() : new Date();
+  const payrollRunKey = getPayrollRunDateKey(nowParts, payrollConfig);
+  const payrollDueNow = payrollRunKey !== null;
+  const monthlyDueNow = shouldRunMonthlyNow(nowParts, monthlyConfig);
 
-    tasks.push(db.runTransaction(async tx => {
-      const accountRef = docSnap.ref;
-      const accountSnap = await tx.get(accountRef);
-      if (!accountSnap.exists) return;
-
-      const account = accountSnap.data() || {};
-      const balance = Number(account.balance || 0) + amount;
-      const newNextPay = addDays(nextPayAt, intervalDays);
-      const txRef = accountRef.collection('transactions').doc();
-
-      tx.set(accountRef, {
-        balance,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedByUid: 'system',
-        recurring: {
-          enabled: true,
-          amount,
-          intervalDays,
-          nextPayAt: admin.firestore.Timestamp.fromDate(newNextPay),
-          lastPayAt: admin.firestore.FieldValue.serverTimestamp()
-        }
-      }, { merge: true });
-
-      tx.set(txRef, {
-        type: 'payroll',
-        amount,
-        note: 'Automated bi-weekly payroll',
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        createdByUid: 'system',
-        createdByName: 'Payroll Scheduler',
-        balanceAfter: balance
-      });
-    }));
+  console.log('📋 Scheduler state', {
+    timezone,
+    nowParts,
+    payrollConfig,
+    monthlyConfig,
+    payrollRunKey,
+    payrollDueNow,
+    monthlyDueNow,
+    monthKey
   });
 
-  await Promise.all(tasks);
+  if (!payrollDueNow && !monthlyDueNow) {
+    console.log('⏭️ Nothing due this tick');
+    return;
+  }
+
+  if (payrollDueNow) {
+    console.log('💼 Payroll is due now; loading eligible accounts');
+    const payrollAccounts = await db
+      .collection('bank_accounts')
+      .where('recurring.enabled', '==', true)
+      .get();
+
+    console.log('💼 Payroll accounts found', { count: payrollAccounts.size, payrollRunKey });
+
+    const payrollTasks = [];
+    payrollAccounts.forEach(docSnap => {
+      payrollTasks.push(db.runTransaction(async tx => {
+        const accountRef = docSnap.ref;
+        const accountSnap = await tx.get(accountRef);
+        if (!accountSnap.exists) return;
+
+        const account = accountSnap.data() || {};
+        const recurring = account.recurring || {};
+        const amount = Number(recurring.amount || 0);
+        if (!amount || amount <= 0) {
+          console.log('💼 Payroll skip: invalid amount', { pid: account.pid || docSnap.id, amount: recurring.amount });
+          return;
+        }
+
+        if (String(recurring.lastPayrollKey || '') === payrollRunKey) {
+          console.log('💼 Payroll skip: already paid this cycle', { pid: account.pid || docSnap.id, payrollRunKey });
+          return;
+        }
+
+        const balance = Number(account.balance || 0) + amount;
+        const txRef = accountRef.collection('transactions').doc();
+
+        tx.set(accountRef, {
+          balance,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedByUid: 'system',
+          recurring: {
+            ...recurring,
+            enabled: true,
+            amount,
+            lastPayrollKey: payrollRunKey,
+            lastPayAt: admin.firestore.FieldValue.serverTimestamp()
+          }
+        }, { merge: true });
+
+        tx.set(txRef, {
+          type: 'payroll',
+          amount,
+          note: `Automated bi-weekly payroll (${timezone})`,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdByUid: 'system',
+          createdByName: 'Payroll Scheduler',
+          balanceAfter: balance
+        });
+
+        console.log('✅ Payroll applied', {
+          pid: account.pid || docSnap.id,
+          amount,
+          newBalance: balance,
+          payrollRunKey
+        });
+      }));
+    });
+
+    const payrollResults = await Promise.allSettled(payrollTasks);
+    const payrollFailures = payrollResults.filter(result => result.status === 'rejected');
+    if (payrollFailures.length) {
+      console.error('❌ Payroll task failures', {
+        failed: payrollFailures.length,
+        total: payrollResults.length,
+        errors: payrollFailures.map(result => String(result.reason?.message || result.reason)).slice(0, 20)
+      });
+    } else {
+      console.log('✅ Payroll tasks completed', { total: payrollResults.length });
+    }
+  }
+
+  if (monthlyDueNow) {
+    console.log('🏠 Monthly deductions are due now; loading accounts');
+    const monthlyAccounts = await db.collection('bank_accounts').get();
+    console.log('🏠 Monthly accounts found', { count: monthlyAccounts.size, monthKey });
+
+    const monthlyTasks = [];
+
+    monthlyAccounts.forEach(docSnap => {
+      monthlyTasks.push(db.runTransaction(async tx => {
+        const accountRef = docSnap.ref;
+        const accountSnap = await tx.get(accountRef);
+        if (!accountSnap.exists) return;
+
+        const account = accountSnap.data() || {};
+        const existingDeductions = Array.isArray(account.monthlyDeductions) ? account.monthlyDeductions : [];
+        if (!existingDeductions.length) {
+          console.log('🏠 Monthly skip: no deductions configured', { pid: account.pid || docSnap.id });
+          return;
+        }
+
+        let totalDeduction = 0;
+        const chargeRows = [];
+        const chargedAt = admin.firestore.Timestamp.now();
+
+        const updatedDeductions = existingDeductions.map((item) => {
+          const amount = Number(item?.amount || 0);
+          const enabled = item?.enabled !== false;
+          const lastProcessedMonthKey = String(item?.lastProcessedMonthKey || '');
+          if (!enabled || !amount || amount <= 0 || lastProcessedMonthKey === monthKey) {
+            return item;
+          }
+
+          totalDeduction += amount;
+          chargeRows.push({
+            type: String(item?.type || 'other'),
+            label: String(item?.label || ''),
+            amount
+          });
+
+          return {
+            ...item,
+            lastProcessedMonthKey: monthKey,
+            // Important: FieldValue sentinels cannot be nested inside array objects.
+            lastChargedAt: chargedAt
+          };
+        });
+
+        if (!chargeRows.length) {
+          console.log('🏠 Monthly skip: nothing chargeable this month', {
+            pid: account.pid || docSnap.id,
+            monthKey
+          });
+          return;
+        }
+
+        const newBalance = Number(account.balance || 0) - totalDeduction;
+
+        tx.set(accountRef, {
+          balance: newBalance,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedByUid: 'system',
+          monthlyDeductions: updatedDeductions
+        }, { merge: true });
+
+        chargeRows.forEach((charge) => {
+          const txRef = accountRef.collection('transactions').doc();
+          const typeLabel = charge.type.replace(/_/g, ' ');
+          const namePart = charge.label ? ` - ${charge.label}` : '';
+          tx.set(txRef, {
+            type: 'monthly_deduction',
+            amount: charge.amount,
+            note: `Monthly deduction (${typeLabel}${namePart})`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdByUid: 'system',
+            createdByName: 'Monthly Deduction Scheduler',
+            balanceAfter: newBalance
+          });
+        });
+
+        console.log('✅ Monthly deductions applied', {
+          pid: account.pid || docSnap.id,
+          chargeCount: chargeRows.length,
+          totalDeduction,
+          newBalance,
+          monthKey
+        });
+      }));
+    });
+
+    const monthlyResults = await Promise.allSettled(monthlyTasks);
+    const monthlyFailures = monthlyResults.filter(result => result.status === 'rejected');
+    if (monthlyFailures.length) {
+      console.error('❌ Monthly deduction task failures', {
+        failed: monthlyFailures.length,
+        total: monthlyResults.length,
+        errors: monthlyFailures.map(result => String(result.reason?.message || result.reason)).slice(0, 20)
+      });
+    } else {
+      console.log('✅ Monthly deduction tasks completed', { total: monthlyResults.length });
+    }
+  }
+
+  console.log('🏁 processPayroll tick finished');
 });
 
 exports.backfillCharacterEmails = onSchedule('every 15 minutes', async () => {
@@ -343,18 +605,58 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
   }
   console.log('📧 Recipient resolved:', recipient);
 
-  const typeLabel = (txData.type || 'transaction').toString().replace(/_/g, ' ');
-  const subject = `Site-89 Bank: ${typeLabel}`;
+  const txType = (txData.type || 'transaction').toString();
+  const typeLabel = txType.replace(/_/g, ' ').toUpperCase();
+  const subject = `Transaction Alert: ${typeLabel}`;
   const amountText = formatCurrency(txData.amount || 0);
   const balanceText = formatCurrency(txData.balanceAfter || account.balance || 0);
+  const accountName = account.name || `Personnel ${pid}`;
 
-  const bodyLines = [
-    `Account: ${account.name || pid}`,
-    `Transaction: ${typeLabel}`,
-    `Amount: ${amountText}`,
-    `Balance: ${balanceText}`,
-    txData.note ? `Note: ${txData.note}` : ''
-  ].filter(Boolean).join('\n');
+  let dateObj = new Date();
+  if (txData.createdAt?.toDate) {
+    dateObj = txData.createdAt.toDate();
+  }
+  const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const body = `---
+
+## SITE-89 FINANCIAL DEPARTMENT
+
+**Transaction Notification**
+
+---
+
+### Account Activity Summary
+
+**Account Holder:** ${accountName}  
+**Personnel ID:** \`${pid || 'N/A'}\`  
+**Date & Time:** ${dateStr} at ${timeStr}
+
+---
+
+### Transaction Details
+
+| Field | Value |
+|-------|-------|
+| **Transaction Type** | ${typeLabel} |
+| **Amount** | **${amountText}** |
+| **New Balance** | **${balanceText}** |
+${txData.note ? `| **Notes** | ${txData.note} |` : ''}
+
+---
+
+${txType === 'payroll' ? '### Payroll Information\n\nYour bi-weekly salary has been automatically deposited into your account. Thank you for your continued service to the Foundation.\n\n---\n\n' : ''}
+${txType === 'deposit' ? '### Deposit Confirmation\n\nA deposit has been credited to your account. Your updated balance is reflected above.\n\n---\n\n' : ''}
+${txType === 'withdraw' ? '### Withdrawal Notice\n\nA withdrawal has been processed on your account. Please verify this transaction was authorized.\n\n---\n\n' : ''}
+> **Security Notice:** If you did not authorize this transaction, please contact the Financial Department immediately at \`fd.mgmt@site89.org\` or visit your nearest Site-89 Financial Office.
+
+---
+
+*This is an automated notification from the Site-89 Financial Department. Please do not reply to this email.*
+
+**Foundation Banking Services** | Site-89 Financial Operations  
+*Secure • Contain • Protect • Pay*`;
 
   console.log('✉️ Creating email:', { sender: 'fd.mgmt@site89.org', recipient, subject });
   
@@ -364,7 +666,7 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
       senderEmail: 'fd.mgmt@site89.org',
       recipients: [recipient],
       subject,
-      body: bodyLines,
+      body,
       isHTML: false,
       format: 'markdown',
       status: 'sent',
@@ -1662,5 +1964,132 @@ exports.triggerEventNotifications = onRequest({ cors: true }, async (req, res) =
   } catch (error) {
     console.error('Error in manual trigger:', error);
     res.status(500).json({ success: false, message: 'Error: ' + error.message });
+  }
+});
+
+async function fetchPrintifyJson(pathname, apiKey) {
+  const url = `https://api.printify.com/v1${pathname}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Printify request failed (${response.status}): ${body.substring(0, 280)}`);
+  }
+
+  return response.json();
+}
+
+function resolvePrintifyPriceCents(product) {
+  const variants = Array.isArray(product?.variants) ? product.variants : [];
+  if (!variants.length) return null;
+
+  const preferred = variants.find(v => v.is_enabled && typeof v.price === 'number') ||
+    variants.find(v => typeof v.price === 'number');
+
+  return preferred ? preferred.price : null;
+}
+
+function resolvePrintifyImageUrl(product) {
+  if (typeof product?.image === 'string' && product.image.trim()) return product.image;
+  if (typeof product?.image_url === 'string' && product.image_url.trim()) return product.image_url;
+
+  const images = Array.isArray(product?.images) ? product.images : [];
+  const candidate = images.find(img => typeof img?.src === 'string' && img.src.trim());
+  return candidate ? candidate.src : '';
+}
+
+exports.getMerchProducts = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== 'GET') {
+    res.status(405).json({ success: false, message: 'Method not allowed' });
+    return;
+  }
+
+  const envApiKey = String(process.env.PRINTIFY_API_KEY || '').trim();
+  let configApiKey = '';
+  try {
+    const cfg = functions.config();
+    configApiKey = String((cfg && cfg.printify && cfg.printify.api_key) || '').trim();
+  } catch (_error) {
+    configApiKey = '';
+  }
+
+  const apiKey = envApiKey || configApiKey;
+  if (!apiKey) {
+    res.status(500).json({
+      success: false,
+      message: 'Printify API key is not configured. Set PRINTIFY_API_KEY or functions config printify.api_key.'
+    });
+    return;
+  }
+
+  const limitRaw = Number.parseInt(String(req.query.limit || '12'), 10);
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 24) : 12;
+
+  const envShopId = String(process.env.PRINTIFY_SHOP_ID || '').trim();
+  let configShopId = '';
+  let storefrontUrl = String(process.env.PRINTIFY_STOREFRONT_URL || '').trim();
+  try {
+    const cfg = functions.config();
+    configShopId = String((cfg && cfg.printify && cfg.printify.shop_id) || '').trim();
+    if (!storefrontUrl) {
+      storefrontUrl = String((cfg && cfg.printify && cfg.printify.storefront_url) || '').trim();
+    }
+  } catch (_error) {
+    configShopId = '';
+  }
+
+  try {
+    let shopId = envShopId || configShopId;
+    if (!shopId) {
+      const shopsPayload = await fetchPrintifyJson('/shops.json', apiKey);
+      const shops = Array.isArray(shopsPayload) ? shopsPayload : [];
+      if (!shops.length || !shops[0]?.id) {
+        res.status(500).json({ success: false, message: 'No Printify shops found for this API key.' });
+        return;
+      }
+      shopId = String(shops[0].id);
+    }
+
+    const productsPayload = await fetchPrintifyJson(`/shops/${shopId}/products.json?limit=${limit}`, apiKey);
+    const productsRaw = Array.isArray(productsPayload?.data) ? productsPayload.data : [];
+
+    const products = productsRaw
+      .filter(product => product && product.visible !== false)
+      .map(product => {
+        const cents = resolvePrintifyPriceCents(product);
+        const externalCandidate = product?.external;
+        const externalUrl = (typeof externalCandidate?.url === 'string' && externalCandidate.url.trim())
+          ? externalCandidate.url.trim()
+          : storefrontUrl;
+
+        return {
+          id: String(product.id || ''),
+          title: String(product.title || 'Untitled Product'),
+          description: String(product.description || ''),
+          imageUrl: resolvePrintifyImageUrl(product),
+          priceCents: Number.isFinite(cents) ? cents : null,
+          price: Number.isFinite(cents) ? Number((cents / 100).toFixed(2)) : null,
+          externalUrl
+        };
+      })
+      .filter(product => product.id && product.title);
+
+    res.set('Cache-Control', 'public, max-age=300, s-maxage=900');
+    res.status(200).json({
+      success: true,
+      shopId,
+      storefrontUrl: storefrontUrl || 'https://site89.org/merch/',
+      count: products.length,
+      products
+    });
+  } catch (error) {
+    console.error('Printify merch fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load merch products.' });
   }
 });

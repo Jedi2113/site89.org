@@ -216,6 +216,27 @@
       transform: scale(1.05);
     }
 
+    .create-char-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin: 2rem 0 1rem 0;
+    }
+
+    .create-char-row .btn-create {
+      margin: 0;
+    }
+
+    .slots-remaining {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
     .char-creation-form, .char-editor {
       background: var(--bg-card);
       border: 1px solid var(--card-border);
@@ -407,14 +428,31 @@
       <i class="fa-solid fa-circle-info"></i> Select a character to use it for your activities on Site-89. Your selection is saved and will persist across sessions.
     </div>
 
+    <div class="info-box" style="border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.07); gap: 0.75rem; flex-wrap: wrap;">
+      <div style="line-height: 1.6;">
+        Members receive <strong>2 character slots</strong> by default; staff receive <strong>6</strong>.
+        If you want more, consider
+        <a href="https://www.patreon.com/c/site89" target="_blank" rel="noopener noreferrer" style="color: #f97316; font-weight: 700;">supporting us on Patreon</a>.
+        Additional slots can also be unlocked through <strong>Merit</strong>.
+        <br>
+        <span style="color: var(--muted); font-size: 0.88rem;">
+          If you were a patron but could not continue your support, your additional characters are <strong>not lost</strong> —
+          however you must trade one of your active character slots for a disabled one to manage them.
+        </span>
+      </div>
+    </div>
+
     <div id="characterGrid" class="character-grid">
       <div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading your characters...</div>
     </div>
 
     <!-- Create New Character Button -->
-    <button id="createCharBtn" class="btn-create">
-      <i class="fas fa-plus"></i> Create New Character
-    </button>
+    <div class="create-char-row">
+      <button id="createCharBtn" class="btn-create">
+        <i class="fas fa-plus"></i> Create New Character
+      </button>
+      <span id="characterSlotsRemaining" class="slots-remaining">Loading slots...</span>
+    </div>
 
     <!-- Character Creation Form -->
     <div id="charCreationForm" class="char-creation-form">
@@ -485,9 +523,61 @@
     import { app, auth } from "/assets/js/auth.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, query, where, addDoc, updateDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { calculateMerit, meritSlotBonus, nextMeritThreshold } from "/assets/js/merit.js";
 
     const db = getFirestore(app);
     let currentUser = null;  // Store current user for use in event listeners
+    let userMerit = 0;
+    let userIsStaff = false;
+    let userPatreonSlots = 0;
+
+    function getCharacterSlotLimit() {
+      const base = userIsStaff ? 6 : 2;
+      return base + meritSlotBonus(userMerit) + userPatreonSlots;
+    }
+
+    function updateCharacterSlotUi(activeCount = 0) {
+      const createCharBtn = document.getElementById("createCharBtn");
+      const remainingLabel = document.getElementById("characterSlotsRemaining");
+      const slotLimit = getCharacterSlotLimit();
+      const remaining = Math.max(0, slotLimit - activeCount);
+
+      if (remainingLabel) {
+        remainingLabel.textContent = `${remaining} remaining.`;
+      }
+
+      if (!createCharBtn) return;
+
+      if (activeCount >= slotLimit) {
+        createCharBtn.disabled = true;
+        createCharBtn.style.opacity = "0.5";
+        createCharBtn.style.cursor = "not-allowed";
+        createCharBtn.title = `Character limit reached (${slotLimit} slot${slotLimit === 1 ? '' : 's'} available)`;
+      } else {
+        createCharBtn.disabled = false;
+        createCharBtn.style.opacity = "1";
+        createCharBtn.style.cursor = "pointer";
+        createCharBtn.title = "";
+      }
+    }
+
+    function renderMeritNote() {
+      const note = document.getElementById('meritNote');
+      if (!note) return;
+
+      const limit = getCharacterSlotLimit();
+      const base = userIsStaff ? 6 : 2;
+      const bonus = meritSlotBonus(userMerit);
+      const next = nextMeritThreshold(userMerit);
+
+      note.style.display = 'block';
+      note.innerHTML = `
+        <strong style="color:#f3b95b;">Your Merit:</strong> ${userMerit.toLocaleString()}.
+        You currently have <strong>${limit} slot${limit === 1 ? '' : 's'}</strong>
+        available (${base} base${bonus ? ` + ${bonus} from Merit` : ''}${userPatreonSlots ? ` + ${userPatreonSlots} from Patreon` : ''}).
+        ${next ? `<span style="color: var(--muted);">Next slot unlock at <strong>${next.toLocaleString()}</strong> Merit.</span>` : '<span style="color:#f3b95b;">You have unlocked all Merit slot bonuses.</span>'}
+      `;
+    }
 
     // Email generation functions
     function baseLocalFromName(name) {
@@ -585,6 +675,7 @@
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
+          updateCharacterSlotUi(0);
           characterGrid.innerHTML = `
             <div class="empty-state" style="grid-column: 1 / -1;">
               <i class="fas fa-masks-theater"></i>
@@ -607,6 +698,7 @@
         });
 
         if (activeCharacters.length === 0) {
+          updateCharacterSlotUi(0);
           // Check for reason from sessionStorage (set by requireCharacterSelection)
           const reason = sessionStorage.getItem("characterRequirementReason");
           sessionStorage.removeItem("characterRequirementReason");
@@ -632,19 +724,8 @@
           return;
         }
 
-        // Check if user has reached character limit (4 max)
-        const createCharBtn = document.getElementById("createCharBtn");
-        if (activeCharacters.length >= 4) {
-          createCharBtn.disabled = true;
-          createCharBtn.style.opacity = "0.5";
-          createCharBtn.style.cursor = "not-allowed";
-          createCharBtn.title = "Character limit reached (4 maximum)";
-        } else {
-          createCharBtn.disabled = false;
-          createCharBtn.style.opacity = "1";
-          createCharBtn.style.cursor = "pointer";
-          createCharBtn.title = "";
-        }
+        // Check if user has reached character limit (dynamic: base + merit bonus + patreon slots)
+        updateCharacterSlotUi(activeCharacters.length);
 
         // Sort by name
         activeCharacters.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -807,10 +888,12 @@
     }
 
     // Check auth state and load characters
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       const characterGrid = document.getElementById("characterGrid");
       if (!user) {
         currentUser = null;
+        userMerit = 0; userIsStaff = false; userPatreonSlots = 0;
+        updateCharacterSlotUi(0);
         characterGrid.innerHTML = `
           <div class="empty-state auth-required" style="grid-column: 1 / -1;">
             <i class="fas fa-lock"></i>
@@ -820,7 +903,23 @@
         `;
         return;
       }
-      currentUser = user;  // Store user in module-level variable
+      currentUser = user;
+
+      // Load user profile for slot modifiers
+      try {
+        const userSnap = await getDoc(doc(db, 'users', user.uid));
+        if (userSnap.exists()) {
+          const ud = userSnap.data();
+          userIsStaff    = !!(ud.isAdmin || ud.isStaff);
+          userPatreonSlots = ud.patreonSlots || 0;
+          userMerit      = ud.merit || 0;
+        }
+      } catch {}
+
+      // Recalculate fresh merit and persist
+      userMerit = await calculateMerit(user.uid);
+      renderMeritNote();
+
       loadCharactersWithEdit(user.uid);
     });
 

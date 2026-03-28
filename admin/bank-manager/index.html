@@ -97,6 +97,58 @@
       margin-bottom: 1.5rem;
     }
 
+    .scheduler-panel {
+      border: 2px solid rgba(78, 250, 170, 0.35);
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin-bottom: 1.4rem;
+      background: linear-gradient(135deg, rgba(0, 217, 255, 0.08), rgba(78, 250, 170, 0.06));
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+    }
+
+    .scheduler-panel h3 {
+      margin: 0 0 0.4rem 0;
+      color: var(--accent-mint);
+    }
+
+    .scheduler-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.9rem;
+      margin-top: 0.8rem;
+    }
+
+    .scheduler-row {
+      background: rgba(0, 0, 0, 0.18);
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      border-radius: 8px;
+      padding: 0.9rem;
+    }
+
+    .scheduler-row h4 {
+      margin: 0 0 0.6rem 0;
+      color: var(--accent-mint);
+      font-size: 1rem;
+    }
+
+    .scheduler-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-top: 0.8rem;
+      align-items: center;
+    }
+
+    .scheduler-feedback {
+      margin-top: 0.7rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      min-height: 1.2rem;
+    }
+
+    .scheduler-feedback.success { color: var(--accent-mint); }
+    .scheduler-feedback.error { color: #ff6b6b; }
+
     .bank-input {
       flex: 1;
       min-width: 200px;
@@ -189,9 +241,46 @@
     .feedback.success { color: var(--accent-mint); }
     .feedback.error { color: #ff6b6b; }
 
+    .deduction-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .deduction-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.5rem;
+      align-items: center;
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      border-radius: 8px;
+      padding: 0.55rem 0.7rem;
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    .deduction-meta {
+      color: var(--text-light);
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .btn-danger {
+      background: rgba(255, 107, 107, 0.12);
+      color: #ffb4b4;
+      border: 1px solid rgba(255, 107, 107, 0.4);
+      border-radius: 6px;
+      padding: 0.42rem 0.7rem;
+      cursor: pointer;
+    }
+
     @media (max-width: 960px) {
       .bank-grid {
         grid-template-columns: repeat(2, 1fr);
+      }
+
+      .scheduler-grid {
+        grid-template-columns: 1fr;
       }
 
       .modal-grid {
@@ -223,6 +312,45 @@
     </div>
 
     <div id="managementContainer" style="display:none;">
+      <div class="scheduler-panel">
+        <h3>Main Transaction Schedule (EST)</h3>
+        <p class="bank-muted" style="margin:0;">Set the exact minute that all personnel payroll and monthly charges run across the system.</p>
+
+        <div class="scheduler-grid">
+          <div class="scheduler-row">
+            <h4>Bi-Weekly Payroll</h4>
+            <label style="display:flex;align-items:center;gap:0.45rem;margin-bottom:0.65rem;">
+              <input id="globalPayrollEnabled" type="checkbox" checked>
+              Enable for all personnel with recurring payroll active
+            </label>
+            <label>Anchor Date (EST)</label>
+            <input id="globalPayrollAnchorDate" class="modal-input" type="date">
+            <label>Run Time (EST, HH:MM)</label>
+            <input id="globalPayrollTime" class="modal-input" type="time" step="60">
+            <p id="globalPayrollNextRun" class="bank-muted" style="margin:0.4rem 0 0 0;">Next payroll run (EST): --</p>
+          </div>
+
+          <div class="scheduler-row">
+            <h4>Monthly Deductions</h4>
+            <label style="display:flex;align-items:center;gap:0.45rem;margin-bottom:0.65rem;">
+              <input id="globalMonthlyEnabled" type="checkbox" checked>
+              Enable monthly deductions for all enabled deduction items
+            </label>
+            <label>Anchor Date (EST)</label>
+            <input id="globalMonthlyAnchorDate" class="modal-input" type="date">
+            <label>Run Time (EST, HH:MM)</label>
+            <input id="globalMonthlyTime" class="modal-input" type="time" step="60">
+            <p id="globalMonthlyNextRun" class="bank-muted" style="margin:0.4rem 0 0 0;">Next monthly deduction run (EST): --</p>
+          </div>
+        </div>
+
+        <div class="scheduler-actions">
+          <button id="saveGlobalScheduleBtn" class="btn-primary" type="button">Save Main Schedule</button>
+          <span class="bank-muted">Timezone locked to America/New_York (EST/EDT).</span>
+        </div>
+        <div id="globalScheduleFeedback" class="scheduler-feedback"></div>
+      </div>
+
       <div class="bank-toolbar">
         <input id="searchInput" class="bank-input" type="text" placeholder="Search by name, PID, or department...">
         <select id="sortSelect" class="bank-select">
@@ -268,8 +396,7 @@
           <label>Bi-Weekly Pay Amount</label>
           <input id="payAmountInput" class="modal-input" type="text" inputmode="decimal" placeholder="e.g., $11,538">
 
-          <label>Next Pay Date</label>
-          <input id="nextPayInput" class="modal-input" type="date">
+          <p class="bank-muted" style="margin:0.4rem 0 0.7rem 0;">Payroll timing is controlled globally in the Main Transaction Schedule panel above.</p>
 
           <label style="display:flex;align-items:center;gap:0.5rem;">
             <input id="payEnabledInput" type="checkbox">
@@ -280,6 +407,33 @@
             <button id="savePayBtn" class="btn-primary" type="button">Save Payroll</button>
             <button id="forcePayBtn" class="btn-secondary" type="button">Force Pay Now</button>
           </div>
+        </div>
+
+        <div class="modal-card">
+          <h4>Monthly Deductions</h4>
+          <label>Type</label>
+          <select id="deductionTypeInput" class="modal-input">
+            <option value="rent">Rent</option>
+            <option value="mortgage">Mortgage</option>
+            <option value="car_payment">Car Payment</option>
+            <option value="loan">Loan</option>
+            <option value="insurance">Insurance</option>
+            <option value="utilities">Utilities</option>
+            <option value="other">Other</option>
+          </select>
+
+          <label>Label (optional)</label>
+          <input id="deductionLabelInput" class="modal-input" type="text" placeholder="e.g., Apartment 4B Rent">
+
+          <label>Monthly Amount</label>
+          <input id="deductionAmountInput" class="modal-input" type="text" inputmode="decimal" placeholder="e.g., $1,250">
+
+          <div class="modal-actions" style="margin-top:0.6rem;">
+            <button id="addDeductionBtn" class="btn-secondary" type="button">Add Item</button>
+            <button id="saveDeductionsBtn" class="btn-primary" type="button">Save Deductions</button>
+          </div>
+
+          <div id="deductionList" class="deduction-list"></div>
         </div>
       </div>
 

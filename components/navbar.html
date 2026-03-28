@@ -15,6 +15,7 @@
         <a href="/departments/IA/">Internal Affairs</a>
         <a href="/departments/ScD/">Scientific Department</a>
         <a href="/departments/SD/">Security Department</a>
+        <a href="/departments/MTF/">Red-Four Squadron</a>
       </div>
     </div>
 
@@ -35,6 +36,7 @@
       <a href="/forum/">Community <i class="fa-solid fa-caret-down"></i></a>
       <div class="nav-dropdown-content">
         <a href="/forum/">Forum</a>
+        <a href="/articles/">Articles</a>
         <a href="/events/">Events</a>
         <a href="/gallery/">Gallery</a>
         <a href="/newsletter/">Newsletter</a>
@@ -44,13 +46,22 @@
 
     <!-- Resources Dropdown -->
     <div class="nav-dropdown-parent">
-      <a href="/guides/">Resources <i class="fa-solid fa-caret-down"></i></a>
+      <a href="/guides/">Resources & Guides <i class="fa-solid fa-caret-down"></i></a>
       <div class="nav-dropdown-content">
         <a href="/uploads/">Image Uploads</a>
-        <a href="/status/">Status</a>
         <a href="/roadmap/">Roadmap</a>
         <a href="/guides/codes-alarms/">Codes & Alarms</a>
         <a href="/about/">About</a>
+      </div>
+    </div>
+
+    <div id="adminNavDropdown" class="nav-dropdown-parent" style="display:none;">
+      <a href="/admin/analytics/">Admin <i class="fa-solid fa-caret-down"></i></a>
+      <div class="nav-dropdown-content">
+        <a href="/admin/analytics/">Analytics Dashboard</a>
+        <a href="/admin/bank-manager/">Bank Manager</a>
+        <a href="/admin/io-personnel-manager/">IA Personnel Manager</a>
+        <a id="adminRolesNavLink" href="/admin/roles/" style="display:none;">Roles Manager</a>
       </div>
     </div>
   </div>
@@ -142,6 +153,7 @@
       <a href="/departments/IA/">Internal Affairs</a>
       <a href="/departments/ScD/">Scientific Department</a>
       <a href="/departments/SD/">Security Department</a>
+      <a href="/departments/MTF/">Red-Four Squadron</a>
     </div>
     <div data-category="archives">
       <a href="/personnel-files/">Personnel Files</a>
@@ -152,6 +164,7 @@
     </div>
     <div data-category="community">
       <a href="/forum/">Forum</a>
+      <a href="/articles/">Articles</a>
       <a href="/events/">Events</a>
       <a href="/gallery/">Gallery</a>
       <a href="/newsletter/">Newsletter</a>
@@ -159,15 +172,40 @@
     </div>
     <div data-category="resources">
       <a href="/guides/">All Guides</a>
-      <a href="/status/">Status</a>
       <a href="/roadmap/">Roadmap</a>
       <a href="/guides/codes-alarms/">Codes & Alarms</a>
+      <div id="mobileAdminResources" style="display:none;">
+        <a href="/admin/analytics/">Admin: Analytics Dashboard</a>
+        <a href="/admin/bank-manager/">Admin: Bank Manager</a>
+        <a href="/admin/io-personnel-manager/">Admin: IA Personnel Manager</a>
+        <a id="mobileAdminRolesNavLink" href="/admin/roles/" style="display:none;">Admin: Roles Manager</a>
+      </div>
+      <a href="https://www.patreon.com/c/site89" target="_blank" rel="noopener noreferrer">Support Site-89 (Patreon)</a>
+      <a href="https://that-one-merch-store.printify.me/" target="_blank" rel="noopener noreferrer">Site-89 Merch Store</a>
       <a href="/about/">About</a>
     </div>
   </div>
 
   <!-- Right side: socials + login -->
   <div class="nav-right">
+    <div class="nav-dropdown-parent nav-support-dropdown-parent">
+      <button class="nav-support-btn" type="button" aria-label="Support Site-89 links">
+        <i class="fa-solid fa-heart"></i>
+        <span>Support Site-89</span>
+        <i class="fa-solid fa-caret-down"></i>
+      </button>
+      <div class="nav-dropdown-content nav-dropdown-support">
+        <a href="https://www.patreon.com/c/site89" target="_blank" rel="noopener noreferrer">
+          <i class="fa-brands fa-patreon"></i>
+          <span>Patreon</span>
+        </a>
+        <a href="https://that-one-merch-store.printify.me/" target="_blank" rel="noopener noreferrer">
+          <i class="fa-solid fa-shirt"></i>
+          <span>Merch Store</span>
+        </a>
+      </div>
+    </div>
+
     <div class="nav-search" id="navSearch">
       <input id="siteSearchInput" placeholder="Search site…" aria-label="Search site" autocomplete="off">
       <div id="siteSearchResults" class="search-results" role="listbox" aria-hidden="true"></div>
@@ -199,6 +237,12 @@
         <a href="/accounts/">Manage Account</a>
         <a href="/orientation/" id="orientationLink" style="display:none;">Orientation</a>
         <a href="/login/" id="logoutBtn" class="logout-item" style="display:none;">Logout</a>
+        <div id="navMeritDisplay" class="nav-merit-display" style="display:none;">
+          <i class="fas fa-star nav-merit-icon"></i>
+          <span class="nav-merit-badge" id="navMeritTier">Newcomer</span>
+          <span class="nav-merit-separator">-</span>
+          <span id="navMeritScore" class="nav-merit-score">0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -376,6 +420,104 @@
 
   .nav-left a:hover, .nav-right a:hover {
     color: var(--accent-mint);
+  }
+
+  .nav-support-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid rgba(78, 250, 170, 0.4);
+    background: linear-gradient(135deg, rgba(18, 193, 166, 0.97), rgba(78, 250, 170, 0.95));
+    color: #fff !important;
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    box-shadow: 0 0 0 rgba(78, 250, 170, 0.45), 0 0 22px rgba(78, 250, 170, 0.28);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    animation: patreonPulse 2.4s ease-in-out infinite;
+  }
+
+  .nav-support-btn::after {
+    content: '';
+    position: absolute;
+    top: -130%;
+    left: -40%;
+    width: 34%;
+    height: 360%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+    transform: rotate(20deg);
+    animation: patreonShine 2.8s linear infinite;
+    pointer-events: none;
+  }
+
+  .nav-support-btn i {
+    font-size: 0.95rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .nav-support-btn i:last-child {
+    font-size: 0.8rem;
+    opacity: 0.9;
+  }
+
+  .nav-support-btn span {
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+  }
+
+  .nav-support-btn:hover {
+    color: #fff !important;
+    transform: translateY(-1px);
+    filter: saturate(1.08);
+    box-shadow: 0 0 0 1px rgba(120, 255, 200, 0.35), 0 0 28px rgba(78, 250, 170, 0.52);
+  }
+
+  .nav-support-btn:active {
+    transform: translateY(0);
+  }
+
+  .nav-dropdown-support {
+    right: 0;
+    left: auto;
+    min-width: 220px;
+  }
+
+  .nav-dropdown-support a {
+    display: flex !important;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .nav-dropdown-support a i {
+    width: 16px;
+    text-align: center;
+  }
+
+  @keyframes patreonPulse {
+    0%, 100% {
+      box-shadow: 0 0 0 rgba(78, 250, 170, 0.4), 0 0 20px rgba(78, 250, 170, 0.24);
+    }
+    50% {
+      box-shadow: 0 0 0 4px rgba(78, 250, 170, 0.2), 0 0 26px rgba(78, 250, 170, 0.42);
+    }
+  }
+
+  @keyframes patreonShine {
+    0% {
+      left: -45%;
+    }
+    100% {
+      left: 130%;
+    }
   }
 
   /* Dropdown animations */
@@ -584,6 +726,40 @@
   .logout-item:hover {
     background-color: rgba(176, 0, 0, 0.1) !important;
     color: #ff6b6b !important;
+  }
+
+  /* Merit display in accounts dropdown */
+  .nav-merit-display {
+    padding: 0.6rem 0.85rem 0.65rem;
+    border-top: 1px solid var(--card-border);
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .nav-merit-icon {
+    font-size: 0.72rem;
+    color: #f3b95b;
+  }
+
+  .nav-merit-score {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-mint);
+  }
+
+  .nav-merit-badge {
+    font-size: 0.78rem;
+    color: #f3b95b;
+    font-weight: 700;
+  }
+
+  .nav-merit-separator {
+    color: var(--muted);
+    opacity: 0.7;
   }
 
   /* Show on hover - more specific than hidden class on desktop */
@@ -1054,6 +1230,13 @@
     color: var(--accent-teal);
   }
 
+  html[data-theme="light"] .nav-support-btn {
+    border-color: rgba(30, 155, 138, 0.5);
+    background: linear-gradient(135deg, #129f8b, #4efaaa);
+    color: #fff !important;
+    box-shadow: 0 0 0 rgba(30, 155, 138, 0.35), 0 0 20px rgba(30, 155, 138, 0.3);
+  }
+
   html[data-theme="light"] .mobile-menu {
     background: var(--bg-card);
     border-bottom-color: #D0D0D0;
@@ -1409,6 +1592,8 @@
       if (categoryData) {
         const links = categoryData.querySelectorAll('a');
         links.forEach(link => {
+          const hiddenParent = link.closest('[style*="display:none"]');
+          if (hiddenParent) return;
           const newLink = link.cloneNode(true);
           mobileFullscreenContent.appendChild(newLink);
         });
@@ -1555,22 +1740,99 @@
   import { app, auth } from "/assets/js/auth.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import { calculateMerit, meritTitle } from "/assets/js/merit.js";
 
   const db = getFirestore(app);
+  const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
+
+  function normalizeRole(value) {
+    const role = String(value || '').trim().toLowerCase();
+    if (role === 'admin') return 'admin';
+    if (role === 'manager') return 'manager';
+    if (role === 'raisa') return 'manager';
+    return 'member';
+  }
+
+  function isManagerOrAboveUser(user, userData) {
+    if (!user) return false;
+    if (user.email === PRIMARY_ADMIN_EMAIL) return true;
+    if (userData?.isAdmin === true) return true;
+    const role = normalizeRole(userData?.role);
+    return role === 'manager' || role === 'admin';
+  }
+
+  function setAdminNavVisibility(user, userData) {
+    const adminDropdown = document.getElementById('adminNavDropdown');
+    const rolesLink = document.getElementById('adminRolesNavLink');
+    const mobileAdmin = document.getElementById('mobileAdminResources');
+    const mobileRolesLink = document.getElementById('mobileAdminRolesNavLink');
+
+    const showAdminTools = isManagerOrAboveUser(user, userData);
+    const showRoles = !!user && user.email === PRIMARY_ADMIN_EMAIL;
+
+    if (adminDropdown) adminDropdown.style.display = showAdminTools ? '' : 'none';
+    if (mobileAdmin) mobileAdmin.style.display = showAdminTools ? 'block' : 'none';
+    if (rolesLink) rolesLink.style.display = showRoles ? '' : 'none';
+    if (mobileRolesLink) mobileRolesLink.style.display = showRoles ? '' : 'none';
+  }
+
+  function formatCompactNumber(value) {
+    if (value >= 1000) {
+      const compact = (value / 1000).toFixed(value % 1000 === 0 ? 0 : 1);
+      return `${compact}k`;
+    }
+    return String(value);
+  }
+
+  function renderMeritFooter(merit) {
+    const meritDisplay = document.getElementById("navMeritDisplay");
+    const meritTier = document.getElementById("navMeritTier");
+    const meritScore = document.getElementById("navMeritScore");
+    if (!meritDisplay || !meritTier || !meritScore) return;
+
+    meritTier.textContent = meritTitle(merit);
+    meritScore.textContent = formatCompactNumber(merit);
+    meritDisplay.style.display = "flex";
+  }
 
   onAuthStateChanged(auth, async (user) => {
     const orientationLink = document.getElementById("orientationLink");
     const logoutBtn = document.getElementById("logoutBtn");
+    const meritDisplay = document.getElementById("navMeritDisplay");
+    let userData = null;
     
     if (user) {
       // User is logged in - show logout button
       if (logoutBtn) logoutBtn.style.display = "block";
+
+      window.addEventListener('site89:merit-updated', (event) => {
+        if (event.detail?.uid === user.uid) {
+          renderMeritFooter(event.detail.merit || 0);
+        }
+      });
+
+       try {
+        const merit = await calculateMerit(user.uid);
+        renderMeritFooter(merit);
+      } catch (err) {
+        renderMeritFooter(0);
+        console.error("Error loading merit:", err);
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        userData = userDoc.exists() ? userDoc.data() : null;
+      } catch (err) {
+        console.error("Error loading user profile:", err);
+        userData = null;
+      }
+
+      setAdminNavVisibility(user, userData);
       
       // Check if user needs orientation
       if (orientationLink) {
         try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists() && userDoc.data().needsOrientation === true) {
+          if (userData && userData.needsOrientation === true) {
             orientationLink.style.display = "block";
           }
         } catch (err) {
@@ -1581,6 +1843,8 @@
       // User is not logged in - hide logout button
       if (logoutBtn) logoutBtn.style.display = "none";
       if (orientationLink) orientationLink.style.display = "none";
+      if (meritDisplay) meritDisplay.style.display = "none";
+      setAdminNavVisibility(null, null);
     }
   });
 </script>
@@ -1635,7 +1899,6 @@
       { title: 'Roleplay Guide', href: '/guides/roleplay-guide/', desc: 'RP rules and best practices', category: 'Guides' },
       { title: 'Skins Guide', href: '/guides/skins-guide/', desc: 'Custom skins and HD textures', category: 'Guides' },
       { title: 'Codes & Alarms', href: '/guides/codes-alarms/', desc: 'Emergency codes and procedures', category: 'Guides' },
-      { title: 'Status Page', href: '/status/', desc: 'Server and service status', category: 'Resources' },
       { title: 'Roadmap', href: '/roadmap/', desc: 'Development plans and updates', category: 'Resources' },
       { title: 'Image Uploads', href: '/uploads/', desc: 'Upload and manage images', category: 'Resources' },
       

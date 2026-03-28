@@ -10,8 +10,7 @@ import {
   setDoc,
   addDoc,
   runTransaction,
-  serverTimestamp,
-  Timestamp
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 const db = getFirestore(app);
@@ -19,6 +18,27 @@ const db = getFirestore(app);
 let allCharacters = [];
 let bankAccounts = new Map();
 let activeCharacter = null;
+let modalDeductions = [];
+
+const SCHEDULE_DOC_REF = doc(db, 'bank_config', 'schedule');
+const EST_TIMEZONE = 'America/New_York';
+const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
+
+function normalizeRole(value) {
+  const role = String(value || '').trim().toLowerCase();
+  if (role === 'admin') return 'admin';
+  if (role === 'manager') return 'manager';
+  if (role === 'raisa') return 'manager';
+  return 'member';
+}
+
+function isManagerOrAboveUser(user, userDoc) {
+  if (!user) return false;
+  if (user.email === PRIMARY_ADMIN_EMAIL) return true;
+  if (userDoc?.isAdmin === true) return true;
+  const role = normalizeRole(userDoc?.role);
+  return role === 'manager' || role === 'admin';
+}
 
 function formatCurrency(value) {
   const num = Number(value || 0);
@@ -34,6 +54,312 @@ function parseAmount(rawValue) {
   const cleaned = String(rawValue || '').replace(/[^0-9.-]/g, '');
   const parsed = parseFloat(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getDatePartsInTimeZone(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  const parts = formatter.formatToParts(date);
+  const map = new Map(parts.map(part => [part.type, part.value]));
+  return {
+    year: Number(map.get('year') || 0),
+    month: Number(map.get('month') || 1),
+    day: Number(map.get('day') || 1)
+  };
+}
+
+function getTodayEstIsoDate() {
+  const nowParts = getDatePartsInTimeZone(new Date(), EST_TIMEZONE);
+  const month = String(nowParts.month).padStart(2, '0');
+  const day = String(nowParts.day).padStart(2, '0');
+  return `${nowParts.year}-${month}-${day}`;
+}
+
+function toTimeInputValue(hour, minute) {
+  const h = String(Number(hour || 0)).padStart(2, '0');
+  const m = String(Number(minute || 0)).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function parseTimeInputValue(value, fallbackHour, fallbackMinute) {
+  const cleaned = String(value || '').trim();
+  const match = cleaned.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) {
+    return { hour: fallbackHour, minute: fallbackMinute };
+  }
+
+  let hour = Number(match[1]);
+  let minute = Number(match[2]);
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23) hour = fallbackHour;
+  if (!Number.isFinite(minute) || minute < 0 || minute > 59) minute = fallbackMinute;
+  return { hour, minute };
+}
+
+function parseIsoDateParts(value) {
+  const text = String(value || '').trim();
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { year, month, day };
+}
+
+function getDateTimePartsInTimeZone(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  const parts = formatter.formatToParts(date);
+  const map = new Map(parts.map(part => [part.type, part.value]));
+  return {
+    year: Number(map.get('year') || 0),
+    month: Number(map.get('month') || 1),
+    day: Number(map.get('day') || 1),
+    hour: Number(map.get('hour') || 0),
+    minute: Number(map.get('minute') || 0)
+  };
+}
+
+function utcDateMsFromParts(parts) {
+  return Date.UTC(parts.year, parts.month - 1, parts.day);
+}
+
+function addDaysToYmd(parts, days) {
+  const base = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days));
+  return {
+    year: base.getUTCFullYear(),
+    month: base.getUTCMonth() + 1,
+    day: base.getUTCDate()
+  };
+}
+
+function getDaysInMonth(year, month) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function zonedLocalToUtcDate(timeZone, localYmd, hour, minute) {
+  let guess = new Date(Date.UTC(localYmd.year, localYmd.month - 1, localYmd.day, hour, minute, 0, 0));
+
+  for (let index = 0; index < 3; index += 1) {
+    const actual = getDateTimePartsInTimeZone(guess, timeZone);
+    const desiredUtcAsWallClock = Date.UTC(localYmd.year, localYmd.month - 1, localYmd.day, hour, minute, 0, 0);
+    const actualUtcAsWallClock = Date.UTC(actual.year, actual.month - 1, actual.day, actual.hour, actual.minute, 0, 0);
+    const diffMs = desiredUtcAsWallClock - actualUtcAsWallClock;
+    if (diffMs === 0) break;
+    guess = new Date(guess.getTime() + diffMs);
+  }
+
+  return guess;
+}
+
+function computeNextPayrollRunDate(schedule) {
+  const payroll = schedule?.payroll || {};
+  if (payroll.enabled === false) return null;
+
+  const anchor = parseIsoDateParts(payroll.anchorDate);
+  if (!anchor) return null;
+
+  const hour = Number(payroll.hour);
+  const minute = Number(payroll.minute);
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23) return null;
+  if (!Number.isFinite(minute) || minute < 0 || minute > 59) return null;
+
+  const now = new Date();
+  const nowMs = now.getTime();
+  const todayInEst = getDatePartsInTimeZone(now, EST_TIMEZONE);
+  const anchorDateMs = utcDateMsFromParts(anchor);
+
+  for (let dayOffset = 0; dayOffset <= 60; dayOffset += 1) {
+    const candidateYmd = addDaysToYmd(todayInEst, dayOffset);
+    const candidateDateMs = utcDateMsFromParts(candidateYmd);
+    const diffDays = Math.floor((candidateDateMs - anchorDateMs) / (24 * 60 * 60 * 1000));
+    if (diffDays < 0 || diffDays % 14 !== 0) continue;
+
+    const candidateUtc = zonedLocalToUtcDate(EST_TIMEZONE, candidateYmd, hour, minute);
+    if (candidateUtc.getTime() > nowMs) {
+      return candidateUtc;
+    }
+  }
+
+  return null;
+}
+
+function updateNextPayrollRunDisplay(schedule = null) {
+  const target = document.getElementById('globalPayrollNextRun');
+  if (!target) return;
+
+  const activeSchedule = schedule || collectGlobalScheduleFromForm();
+  if (activeSchedule?.payroll?.enabled === false) {
+    target.textContent = 'Next payroll run (EST): Disabled';
+    return;
+  }
+
+  const nextRun = computeNextPayrollRunDate(activeSchedule);
+  if (!nextRun) {
+    target.textContent = 'Next payroll run (EST): Invalid schedule';
+    return;
+  }
+
+  const datePart = nextRun.toLocaleDateString('en-US', {
+    timeZone: EST_TIMEZONE,
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const timePart = nextRun.toLocaleTimeString('en-US', {
+    timeZone: EST_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short'
+  });
+
+  target.textContent = `Next payroll run (EST): ${datePart} at ${timePart}`;
+}
+
+function computeNextMonthlyRunDate(schedule) {
+  const monthly = schedule?.monthly || {};
+  if (monthly.enabled === false) return null;
+
+  const anchor = parseIsoDateParts(monthly.anchorDate);
+  const hour = Number(monthly.hour);
+  const minute = Number(monthly.minute);
+  if (!anchor) return null;
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23) return null;
+  if (!Number.isFinite(minute) || minute < 0 || minute > 59) return null;
+
+  const targetDay = Math.max(1, Math.min(31, Math.trunc(anchor.day)));
+  const now = new Date();
+  const nowMs = now.getTime();
+  const todayInEst = getDatePartsInTimeZone(now, EST_TIMEZONE);
+  const anchorDateMs = utcDateMsFromParts(anchor);
+  const todayDateMs = utcDateMsFromParts(todayInEst);
+
+  if (todayDateMs < anchorDateMs) {
+    const anchorUtc = zonedLocalToUtcDate(EST_TIMEZONE, anchor, hour, minute);
+    if (anchorUtc.getTime() > nowMs) return anchorUtc;
+  }
+
+  for (let dayOffset = 0; dayOffset <= 62; dayOffset += 1) {
+    const candidateYmd = addDaysToYmd(todayInEst, dayOffset);
+    const candidateDateMs = utcDateMsFromParts(candidateYmd);
+    if (candidateDateMs < anchorDateMs) continue;
+
+    const dueDay = Math.min(targetDay, getDaysInMonth(candidateYmd.year, candidateYmd.month));
+    if (candidateYmd.day !== dueDay) continue;
+
+    const candidateUtc = zonedLocalToUtcDate(EST_TIMEZONE, candidateYmd, hour, minute);
+    if (candidateUtc.getTime() > nowMs) {
+      return candidateUtc;
+    }
+  }
+
+  return null;
+}
+
+function updateNextMonthlyRunDisplay(schedule = null) {
+  const target = document.getElementById('globalMonthlyNextRun');
+  if (!target) return;
+
+  const activeSchedule = schedule || collectGlobalScheduleFromForm();
+  if (activeSchedule?.monthly?.enabled === false) {
+    target.textContent = 'Next monthly deduction run (EST): Disabled';
+    return;
+  }
+
+  const nextRun = computeNextMonthlyRunDate(activeSchedule);
+  if (!nextRun) {
+    target.textContent = 'Next monthly deduction run (EST): Invalid schedule';
+    return;
+  }
+
+  const datePart = nextRun.toLocaleDateString('en-US', {
+    timeZone: EST_TIMEZONE,
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const timePart = nextRun.toLocaleTimeString('en-US', {
+    timeZone: EST_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short'
+  });
+
+  target.textContent = `Next monthly deduction run (EST): ${datePart} at ${timePart}`;
+}
+
+function defaultGlobalSchedule() {
+  return {
+    timezone: EST_TIMEZONE,
+    payroll: {
+      enabled: true,
+      anchorDate: getTodayEstIsoDate(),
+      hour: 9,
+      minute: 0
+    },
+    monthly: {
+      enabled: true,
+      anchorDate: getTodayEstIsoDate(),
+      hour: 9,
+      minute: 0
+    }
+  };
+}
+
+function normalizeDeductionType(type) {
+  const normalized = String(type || '').toLowerCase().replace(/[^a-z_]/g, '_');
+  const allowed = new Set(['rent', 'mortgage', 'car_payment', 'loan', 'insurance', 'utilities', 'other']);
+  return allowed.has(normalized) ? normalized : 'other';
+}
+
+function toDeductionTypeLabel(type) {
+  const labels = {
+    rent: 'Rent',
+    mortgage: 'Mortgage',
+    car_payment: 'Car Payment',
+    loan: 'Loan',
+    insurance: 'Insurance',
+    utilities: 'Utilities',
+    other: 'Other'
+  };
+  return labels[type] || 'Other';
+}
+
+function makeDeductionId() {
+  return `d_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeMonthlyDeductions(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item, index) => {
+      const amount = Number(item?.amount || 0);
+      return {
+        id: String(item?.id || makeDeductionId() || `d_${index}`),
+        type: normalizeDeductionType(item?.type),
+        label: safeText(item?.label, ''),
+        amount: Number.isFinite(amount) && amount > 0 ? amount : 0,
+        enabled: item?.enabled !== false,
+        lastProcessedMonthKey: safeText(item?.lastProcessedMonthKey, ''),
+        lastChargedAt: item?.lastChargedAt || null
+      };
+    })
+    .filter(item => item.amount > 0);
 }
 
 function baseLocalFromName(name) {
@@ -367,9 +693,13 @@ function updateModalFields(char, account) {
   document.getElementById('noteInput').value = '';
 
   document.getElementById('payAmountInput').value = account?.recurring?.amount || '';
-  const nextPay = account?.recurring?.nextPayAt?.toDate ? account.recurring.nextPayAt.toDate() : null;
-  document.getElementById('nextPayInput').value = nextPay ? nextPay.toISOString().slice(0, 10) : '';
   document.getElementById('payEnabledInput').checked = !!account?.recurring?.enabled;
+
+  modalDeductions = normalizeMonthlyDeductions(account?.monthlyDeductions || []);
+  document.getElementById('deductionAmountInput').value = '';
+  document.getElementById('deductionLabelInput').value = '';
+  document.getElementById('deductionTypeInput').value = 'rent';
+  renderDeductionList();
 
   const feedback = document.getElementById('modalFeedback');
   if (feedback) feedback.textContent = '';
@@ -380,6 +710,185 @@ function showModalFeedback(message, type) {
   if (!feedback) return;
   feedback.textContent = message;
   feedback.className = `feedback ${type}`;
+}
+
+function showGlobalScheduleFeedback(message, type = '') {
+  const feedback = document.getElementById('globalScheduleFeedback');
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.className = `scheduler-feedback ${type}`.trim();
+}
+
+function renderDeductionList() {
+  const list = document.getElementById('deductionList');
+  if (!list) return;
+
+  list.innerHTML = '';
+  if (!modalDeductions.length) {
+    const empty = document.createElement('div');
+    empty.className = 'bank-muted';
+    empty.textContent = 'No monthly deductions configured.';
+    list.appendChild(empty);
+    return;
+  }
+
+  modalDeductions.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'deduction-item';
+
+    const meta = document.createElement('div');
+    meta.className = 'deduction-meta';
+    const title = item.label ? `${item.label} (${toDeductionTypeLabel(item.type)})` : toDeductionTypeLabel(item.type);
+    meta.textContent = `${title} - ${formatCurrency(item.amount)} / month`;
+
+    const toggleLabel = document.createElement('label');
+    toggleLabel.style.display = 'flex';
+    toggleLabel.style.alignItems = 'center';
+    toggleLabel.style.gap = '0.35rem';
+
+    const enabledInput = document.createElement('input');
+    enabledInput.type = 'checkbox';
+    enabledInput.checked = !!item.enabled;
+    enabledInput.addEventListener('change', () => {
+      modalDeductions = modalDeductions.map(existing => {
+        if (existing.id !== item.id) return existing;
+        return { ...existing, enabled: enabledInput.checked };
+      });
+    });
+
+    const enabledText = document.createElement('span');
+    enabledText.className = 'bank-muted';
+    enabledText.textContent = 'Enabled';
+    toggleLabel.appendChild(enabledInput);
+    toggleLabel.appendChild(enabledText);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-danger';
+    removeBtn.type = 'button';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => {
+      modalDeductions = modalDeductions.filter(existing => existing.id !== item.id);
+      renderDeductionList();
+    });
+
+    row.appendChild(meta);
+    row.appendChild(toggleLabel);
+    row.appendChild(removeBtn);
+    list.appendChild(row);
+  });
+}
+
+function collectGlobalScheduleFromForm() {
+  const defaults = defaultGlobalSchedule();
+
+  const payrollEnabled = !!document.getElementById('globalPayrollEnabled')?.checked;
+  const payrollAnchorDate = document.getElementById('globalPayrollAnchorDate')?.value || defaults.payroll.anchorDate;
+  const payrollTime = parseTimeInputValue(document.getElementById('globalPayrollTime')?.value, defaults.payroll.hour, defaults.payroll.minute);
+
+  const monthlyEnabled = !!document.getElementById('globalMonthlyEnabled')?.checked;
+  const monthlyAnchorDate = document.getElementById('globalMonthlyAnchorDate')?.value || defaults.monthly.anchorDate;
+  const monthlyTime = parseTimeInputValue(document.getElementById('globalMonthlyTime')?.value, defaults.monthly.hour, defaults.monthly.minute);
+
+  return {
+    timezone: EST_TIMEZONE,
+    payroll: {
+      enabled: payrollEnabled,
+      anchorDate: payrollAnchorDate,
+      hour: payrollTime.hour,
+      minute: payrollTime.minute
+    },
+    monthly: {
+      enabled: monthlyEnabled,
+      anchorDate: monthlyAnchorDate,
+      hour: monthlyTime.hour,
+      minute: monthlyTime.minute
+    }
+  };
+}
+
+function applyGlobalScheduleToForm(config) {
+  const defaults = defaultGlobalSchedule();
+  const payroll = config?.payroll || defaults.payroll;
+  const monthly = config?.monthly || defaults.monthly;
+
+  const payrollDay = safeText(payroll.anchorDate, defaults.payroll.anchorDate);
+  document.getElementById('globalPayrollEnabled').checked = payroll.enabled !== false;
+  document.getElementById('globalPayrollAnchorDate').value = payrollDay;
+  document.getElementById('globalPayrollTime').value = toTimeInputValue(payroll.hour ?? defaults.payroll.hour, payroll.minute ?? defaults.payroll.minute);
+
+  const monthlyAnchorDate = safeText(monthly.anchorDate, defaults.monthly.anchorDate);
+  document.getElementById('globalMonthlyEnabled').checked = monthly.enabled !== false;
+  document.getElementById('globalMonthlyAnchorDate').value = monthlyAnchorDate;
+  document.getElementById('globalMonthlyTime').value = toTimeInputValue(monthly.hour ?? defaults.monthly.hour, monthly.minute ?? defaults.monthly.minute);
+
+  const activeSchedule = {
+    timezone: EST_TIMEZONE,
+    payroll: {
+      enabled: payroll.enabled !== false,
+      anchorDate: payrollDay,
+      hour: Number(payroll.hour ?? defaults.payroll.hour),
+      minute: Number(payroll.minute ?? defaults.payroll.minute)
+    },
+    monthly: {
+      enabled: monthly.enabled !== false,
+      anchorDate: monthlyAnchorDate,
+      hour: Number(monthly.hour ?? defaults.monthly.hour),
+      minute: Number(monthly.minute ?? defaults.monthly.minute)
+    }
+  };
+
+  updateNextPayrollRunDisplay(activeSchedule);
+  updateNextMonthlyRunDisplay(activeSchedule);
+}
+
+async function loadGlobalSchedule() {
+  const snap = await getDoc(SCHEDULE_DOC_REF);
+  if (!snap.exists()) {
+    const defaults = defaultGlobalSchedule();
+    applyGlobalScheduleToForm(defaults);
+    return;
+  }
+
+  const payload = snap.data() || {};
+  applyGlobalScheduleToForm(payload);
+}
+
+async function saveGlobalSchedule() {
+  const payload = collectGlobalScheduleFromForm();
+
+  await setDoc(SCHEDULE_DOC_REF, {
+    timezone: EST_TIMEZONE,
+    payroll: payload.payroll,
+    monthly: payload.monthly,
+    updatedAt: serverTimestamp(),
+    updatedByUid: auth.currentUser?.uid || ''
+  }, { merge: true });
+}
+
+async function saveMonthlyDeductions(char) {
+  const pid = String(char?.pid || '').trim();
+  if (!pid) throw new Error('Character PID is required to save deductions.');
+
+  const sanitized = normalizeMonthlyDeductions(modalDeductions).map(item => ({
+    id: item.id,
+    type: item.type,
+    label: item.label || '',
+    amount: Number(item.amount || 0),
+    enabled: item.enabled !== false,
+    lastProcessedMonthKey: item.lastProcessedMonthKey || '',
+    lastChargedAt: item.lastChargedAt || null
+  }));
+
+  await setDoc(doc(db, 'bank_accounts', pid), {
+    pid,
+    name: char.name || '',
+    department: char.department || '',
+    rank: char.rank || '',
+    linkedUID: char.linkedUID || '',
+    monthlyDeductions: sanitized,
+    updatedAt: serverTimestamp(),
+    updatedByUid: auth.currentUser?.uid || ''
+  }, { merge: true });
 }
 
 async function applyTransaction({ pid, type, amount, note, char }) {
@@ -421,10 +930,10 @@ async function applyTransaction({ pid, type, amount, note, char }) {
       basePayload.recurring = {
         enabled: false,
         amount: 0,
-        intervalDays: 14,
-        nextPayAt: null,
-        lastPayAt: null
+        lastPayAt: null,
+        lastPayrollKey: ''
       };
+      basePayload.monthlyDeductions = [];
     }
 
     tx.set(accountRef, basePayload, { merge: true });
@@ -439,8 +948,7 @@ async function applyTransaction({ pid, type, amount, note, char }) {
     });
   });
 
-  // Send notification email after transaction completes
-  await sendBankNotification(char, type, amount, finalBalance, note);
+  // Notification is sent by Cloud Functions on transaction creation.
 }
 
 async function forcePayrollNow(char) {
@@ -448,9 +956,6 @@ async function forcePayrollNow(char) {
   const accountRef = doc(db, 'bank_accounts', pid);
   const txRef = doc(collection(db, 'bank_accounts', pid, 'transactions'));
   const actorName = auth.currentUser?.email || 'system';
-  let finalBalance = 0;
-  let payAmount = 0;
-
   await runTransaction(db, async (tx) => {
     const accSnap = await tx.get(accountRef);
     const existing = accSnap.exists() ? accSnap.data() : null;
@@ -461,15 +966,8 @@ async function forcePayrollNow(char) {
       throw new Error('Payroll amount must be greater than 0. Set a pay amount first.');
     }
 
-    payAmount = amount;
-
-    const intervalDays = Number(existing?.recurring?.intervalDays || 14);
-    const now = new Date();
-    const nextPayAt = Timestamp.fromDate(new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000));
-
     const previousBalance = Number(existing?.balance || 0);
     const newBalance = previousBalance + amount;
-    finalBalance = newBalance;
 
     const basePayload = {
       pid,
@@ -483,9 +981,8 @@ async function forcePayrollNow(char) {
       recurring: {
         enabled: true,
         amount,
-        intervalDays,
-        nextPayAt,
-        lastPayAt: serverTimestamp()
+        lastPayAt: serverTimestamp(),
+        lastPayrollKey: ''
       }
     };
 
@@ -505,22 +1002,15 @@ async function forcePayrollNow(char) {
     });
   });
 
-  // Send notification email after payroll completes
-  await sendBankNotification(char, 'payroll', payAmount, finalBalance, 'Manual payroll payout');
+  // Notification is sent by Cloud Functions on transaction creation.
 }
 
 async function savePayrollSettings(char) {
   const pid = String(char.pid || '').trim();
   const amountValue = parseAmount(document.getElementById('payAmountInput').value);
   const enabled = document.getElementById('payEnabledInput').checked;
-  const nextPayRaw = document.getElementById('nextPayInput').value;
   if (enabled && (!amountValue || amountValue <= 0)) {
     throw new Error('Payroll amount must be greater than 0.');
-  }
-
-  let nextPayAt = null;
-  if (nextPayRaw) {
-    nextPayAt = Timestamp.fromDate(new Date(`${nextPayRaw}T00:00:00`));
   }
 
   await setDoc(doc(db, 'bank_accounts', pid), {
@@ -532,9 +1022,8 @@ async function savePayrollSettings(char) {
     recurring: {
       enabled,
       amount: amountValue,
-      intervalDays: 14,
-      nextPayAt,
-      lastPayAt: null
+      lastPayAt: null,
+      lastPayrollKey: ''
     },
     updatedAt: serverTimestamp(),
     updatedByUid: auth.currentUser?.uid || ''
@@ -646,9 +1135,86 @@ function wireModalActions() {
     }
   });
 
+  document.getElementById('addDeductionBtn').addEventListener('click', () => {
+    if (!activeCharacter) return;
+    const type = normalizeDeductionType(document.getElementById('deductionTypeInput').value);
+    const amount = parseAmount(document.getElementById('deductionAmountInput').value);
+    const label = safeText(document.getElementById('deductionLabelInput').value, '');
+
+    if (!amount || amount <= 0) {
+      showModalFeedback('Deduction amount must be greater than 0.', 'error');
+      return;
+    }
+
+    modalDeductions.push({
+      id: makeDeductionId(),
+      type,
+      label,
+      amount,
+      enabled: true,
+      lastProcessedMonthKey: '',
+      lastChargedAt: null
+    });
+
+    document.getElementById('deductionAmountInput').value = '';
+    document.getElementById('deductionLabelInput').value = '';
+    renderDeductionList();
+    showModalFeedback('Deduction item added. Click Save Deductions to persist.', 'success');
+  });
+
+  document.getElementById('saveDeductionsBtn').addEventListener('click', async () => {
+    if (!activeCharacter) return;
+
+    try {
+      await saveMonthlyDeductions(activeCharacter);
+      showModalFeedback('Monthly deductions saved.', 'success');
+      await loadCharactersAndAccounts();
+      refreshGrid();
+    } catch (err) {
+      showModalFeedback(`Error: ${err.message}`, 'error');
+    }
+  });
+
   document.getElementById('bankModal').addEventListener('click', (event) => {
     if (event.target.id === 'bankModal') {
       window.closeBankModal();
+    }
+  });
+}
+
+function wireGlobalScheduleActions() {
+  const saveBtn = document.getElementById('saveGlobalScheduleBtn');
+  if (!saveBtn) return;
+
+  const watchedIds = [
+    'globalPayrollEnabled',
+    'globalPayrollAnchorDate',
+    'globalPayrollTime',
+    'globalMonthlyEnabled',
+    'globalMonthlyAnchorDate',
+    'globalMonthlyTime'
+  ];
+  watchedIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      updateNextPayrollRunDisplay();
+      updateNextMonthlyRunDisplay();
+    });
+    el.addEventListener('input', () => {
+      updateNextPayrollRunDisplay();
+      updateNextMonthlyRunDisplay();
+    });
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    try {
+      await saveGlobalSchedule();
+      showGlobalScheduleFeedback('Global EST schedule saved successfully.', 'success');
+      updateNextPayrollRunDisplay();
+      updateNextMonthlyRunDisplay();
+    } catch (err) {
+      showGlobalScheduleFeedback(`Error: ${err.message}`, 'error');
     }
   });
 }
@@ -664,9 +1230,17 @@ async function initBankManager() {
     }
 
     try {
+      let userDoc = null;
+      try {
+        const userSnap = await getDoc(doc(db, 'users', user.uid));
+        userDoc = userSnap.exists() ? userSnap.data() : null;
+      } catch {
+        userDoc = null;
+      }
+
       const charQuery = query(collection(db, 'characters'), where('linkedUID', '==', user.uid));
       const charSnap = await getDocs(charQuery);
-      let allowed = isSiteDirectorEmail(user);
+      let allowed = isSiteDirectorEmail(user) || isManagerOrAboveUser(user, userDoc);
       charSnap.forEach(docSnap => {
         const char = docSnap.data();
         if (hasBankAccess(char)) allowed = true;
@@ -678,9 +1252,11 @@ async function initBankManager() {
       }
 
       management.style.display = 'block';
+      await loadGlobalSchedule();
       await loadCharactersAndAccounts();
       wireFilters();
       wireModalActions();
+      wireGlobalScheduleActions();
       refreshGrid();
     } catch (err) {
       console.error('Access check failed:', err);

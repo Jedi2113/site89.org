@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Articles - Site-89</title>
+
+  <meta name="description" content="Community-written Site-89 articles. Publish in-character or out-of-character posts, browse featured reads, and rate submissions.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Articles - Site-89">
+  <meta property="og:description" content="Read and publish community articles.">
+  <meta property="og:url" content="https://site89.github.io/articles/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Articles - Site-89">
+  <meta name="twitter:description" content="Read and publish community articles.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+  <link rel="canonical" href="https://site89.github.io/articles/">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+  <style>
+    .articles-shell { max-width: 1200px; margin: 1.2rem auto 2.5rem; padding: 0 1rem; }
+    .articles-hero {
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 92% 10%, rgba(62,225,163,0.2), transparent 45%),
+        linear-gradient(125deg, rgba(0,163,137,0.2), rgba(0,0,0,0));
+      padding: 1.3rem;
+      margin-bottom: 1.2rem;
+    }
+    .articles-hero h1 { margin: 0 0 0.45rem; color: var(--accent-mint); }
+    .articles-hero p { margin: 0; color: var(--text-light); }
+    .hero-actions { margin-top: 1rem; display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    .hero-actions button { border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; }
+    .hero-actions .btn-create { background: var(--accent-mint); color: var(--bg-dark); padding: 0.65rem 1rem; }
+    .hero-actions .btn-open { background: transparent; border: 1px solid var(--card-border); color: var(--text-light); padding: 0.65rem 1rem; text-decoration: none; border-radius: 8px; }
+
+    .article-auth-hint {
+      margin-top: 0.7rem;
+      padding: 0.65rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 180, 0, 0.35);
+      background: rgba(255, 180, 0, 0.08);
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    .articles-layout { display: grid; gap: 1rem; grid-template-columns: 340px 1fr; }
+    .feature-panel {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      padding: 1rem;
+      position: sticky;
+      top: 84px;
+      height: fit-content;
+    }
+    .feature-panel h3 { margin: 0 0 0.7rem; color: var(--accent-mint); }
+    .feature-pill {
+      display: inline-flex;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      border-radius: 999px;
+      border: 1px solid rgba(62,225,163,0.35);
+      background: rgba(62,225,163,0.1);
+      color: var(--accent-mint);
+      padding: 0.2rem 0.58rem;
+      margin-bottom: 0.5rem;
+    }
+    .feature-meta { display: flex; flex-wrap: wrap; gap: 0.55rem; font-size: 0.84rem; color: var(--muted); margin-top: 0.8rem; }
+    .feature-read {
+      display: inline-flex;
+      margin-top: 0.85rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 7px;
+      background: rgba(62,225,163,0.15);
+      border: 1px solid rgba(62,225,163,0.3);
+      color: var(--accent-mint);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .articles-feed {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      padding: 1rem;
+    }
+    .feed-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .feed-toolbar input {
+      width: min(460px, 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      padding: 0.62rem 0.72rem;
+      box-sizing: border-box;
+    }
+    .feed-count { color: var(--muted); font-size: 0.88rem; }
+
+    .article-list { display: grid; gap: 0.85rem; }
+    .articles-empty {
+      padding: 1.5rem;
+      text-align: center;
+      border: 1px dashed var(--card-border);
+      border-radius: 10px;
+      color: var(--muted);
+    }
+
+    .article-card { border: 1px solid var(--card-border); border-radius: 10px; background: rgba(255,255,255,0.01); padding: 0.85rem; }
+    .article-card h3 { margin: 0.5rem 0; }
+    .article-card h3 a { color: var(--text-light); text-decoration: none; }
+    .article-card h3 a:hover { color: var(--accent-mint); }
+    .article-excerpt { margin: 0; color: var(--text-light); }
+    .article-type {
+      display: inline-flex;
+      font-size: 0.74rem;
+      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--card-border);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .type-ic { color: #7dc7ff; border-color: rgba(125,199,255,0.35); background: rgba(125,199,255,0.12); }
+    .type-ooc { color: #f3b95b; border-color: rgba(243,185,91,0.35); background: rgba(243,185,91,0.1); }
+
+    .article-tags { margin-top: 0.65rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .article-tags span { font-size: 0.77rem; border-radius: 999px; border: 1px solid var(--card-border); padding: 0.16rem 0.46rem; color: var(--muted); }
+    .article-meta { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.7rem; color: var(--muted); font-size: 0.82rem; }
+
+    .article-actions-row { margin-top: 0.7rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; }
+    .inline-votes { display: inline-flex; align-items: center; gap: 0.45rem; }
+    .vote-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-soft);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .vote-btn:hover { color: var(--accent-mint); border-color: rgba(62,225,163,0.4); }
+    .vote-btn.upvoted { color: var(--accent-mint); border-color: rgba(62,225,163,0.45); background: rgba(62,225,163,0.12); }
+    .vote-btn.downvoted { color: #ff8b8b; border-color: rgba(255,139,139,0.45); background: rgba(255,139,139,0.12); }
+    .vote-count { min-width: 44px; text-align: center; font-weight: 700; color: var(--text-light); }
+
+    .inline-actions { display: inline-flex; gap: 0.6rem; align-items: center; }
+    .read-link { color: var(--accent-mint); text-decoration: none; font-weight: 700; }
+    .edit-link {
+      border: 1px solid var(--card-border);
+      border-radius: 7px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      padding: 0.35rem 0.6rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      z-index: 1200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      width: min(980px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      padding: 1rem;
+    }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+
+    .switch-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 30px;
+      display: inline-block;
+    }
+    .toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-soft);
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #d5dce0;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: rgba(243,185,91,0.2);
+      border-color: rgba(243,185,91,0.42);
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(22px);
+      background: #f3b95b;
+    }
+    .switch-label {
+      font-size: 0.92rem;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+    .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+    .field-group { margin-bottom: 0.75rem; }
+    .field-group label { display: block; font-size: 0.84rem; color: var(--muted); margin-bottom: 0.35rem; }
+    .field-group input, .field-group textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      padding: 0.6rem;
+      font-family: var(--font-body);
+    }
+    .field-group textarea { min-height: 320px; resize: vertical; }
+
+    .md-tools { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+    .md-tools button {
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      cursor: pointer;
+      padding: 0.35rem 0.52rem;
+      font-weight: 700;
+    }
+
+    .preview-box {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.01);
+      padding: 0.7rem;
+      min-height: 360px;
+      overflow-wrap: anywhere;
+    }
+    .editor-footer { margin-top: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+    .editor-error { color: #ff8b8b; min-height: 1.2rem; font-size: 0.88rem; }
+    .editor-actions { display: inline-flex; gap: 0.6rem; }
+    .editor-actions button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 0.58rem 0.9rem;
+    }
+    .btn-cancel { background: transparent; border: 1px solid var(--card-border); color: var(--text-light); }
+    .btn-save { background: var(--accent-mint); color: var(--bg-dark); }
+
+    @media (max-width: 980px) {
+      .articles-layout { grid-template-columns: 1fr; }
+      .feature-panel { position: static; }
+      .editor-grid { grid-template-columns: 1fr; }
+      .field-group textarea { min-height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="articles-shell">
+    <section class="articles-hero">
+      <h1>Articles</h1>
+      <p>Write lore reports, editorials, journals, and community pieces. Publish with your active character (IC) or your own custom nickname (OOC).</p>
+      <div class="hero-actions">
+        <button id="createArticleBtn" class="btn-create" type="button"><i class="fas fa-pen"></i> Create Article</button>
+        <a href="#articleFeed" class="btn-open"><i class="fas fa-list"></i> Browse Feed</a>
+      </div>
+      <div id="articleAuthHint" class="article-auth-hint" style="display:none;">Login to publish or rate articles. Reading is open to everyone.</div>
+    </section>
+
+    <section class="articles-layout" id="articleFeed">
+      <aside class="feature-panel">
+        <h3>Featured</h3>
+        <div id="featuredArticle">
+          <p class="feature-empty">Loading featured article...</p>
+        </div>
+      </aside>
+
+      <div class="articles-feed">
+        <div class="feed-toolbar">
+          <input id="articleSearch" type="search" placeholder="Search by title, tag, author, or body text">
+          <span id="articleCount" class="feed-count">Loading...</span>
+        </div>
+        <div id="articleList" class="article-list">
+          <div class="articles-empty">Loading articles...</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="articleEditorModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="editorTitle">Create Article</h2>
+      </div>
+
+      <div class="switch-row">
+        <label class="toggle-switch" for="articleModeToggle">
+          <input id="articleModeToggle" type="checkbox" role="switch" aria-label="Toggle out-of-character mode">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="switch-label">Out of character</span>
+      </div>
+
+      <div class="field-group" id="oocNicknameWrap" style="display:none;">
+        <label for="oocNickname">Out of character nickname</label>
+        <input id="oocNickname" type="text" maxlength="60" placeholder="Set your display name for this article">
+      </div>
+
+      <div class="field-group">
+        <label for="articleTitle">Title</label>
+        <input id="articleTitle" type="text" maxlength="170" placeholder="Article title">
+      </div>
+
+      <div class="field-group">
+        <label for="articleTags">Tags (comma-separated)</label>
+        <input id="articleTags" type="text" placeholder="news, field-report, technology">
+      </div>
+
+      <div class="editor-grid">
+        <div>
+          <div class="field-group">
+            <label for="articleBody">Body (Markdown)</label>
+            <div class="md-tools">
+              <button type="button" data-md-tool="heading">H</button>
+              <button type="button" data-md-tool="bold"><b>B</b></button>
+              <button type="button" data-md-tool="italic"><i>I</i></button>
+              <button type="button" data-md-tool="link"><i class="fas fa-link"></i></button>
+              <button type="button" data-md-tool="image"><i class="fas fa-image"></i></button>
+              <button type="button" data-md-tool="quote"><i class="fas fa-quote-right"></i></button>
+              <button type="button" data-md-tool="code"><i class="fas fa-code"></i></button>
+            </div>
+            <textarea id="articleBody" placeholder="Write your article in Markdown..."></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label>Preview</label>
+          <div id="articlePreview" class="preview-box"><p class="preview-empty">Markdown preview will appear here.</p></div>
+        </div>
+      </div>
+
+      <div class="editor-footer">
+        <div id="articleEditorError" class="editor-error"></div>
+        <div class="editor-actions">
+          <button id="cancelArticleBtn" type="button" class="btn-cancel">Cancel</button>
+          <button id="saveArticleBtn" type="button" class="btn-save">Publish Article</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/articles.js"></script>
+</body>
+</html>

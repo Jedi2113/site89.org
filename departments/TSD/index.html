@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Services Department - Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Explore the Technical Services Department at Site-89. Maintaining systems, infrastructure, and mission-critical technical support.">
+  <meta name="keywords" content="Site-89 TSD, Technical Services Department, Foundation infrastructure, systems support">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Technical Services Department - Site-89">
+  <meta property="og:description" content="Explore the Technical Services Department at Site-89. Maintaining systems, infrastructure, and mission-critical support.">
+  <meta property="og:url" content="https://site89.github.io/departments/TSD/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Technical Services Department - Site-89">
+  <meta name="twitter:description" content="Explore the Technical Services Department at Site-89.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/departments/TSD/">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .dept-hero { padding: 3rem 1rem; text-align: left; display:flex; gap:1rem; align-items:center; background: linear-gradient(90deg, rgba(78,250,170,0.03) 0%, transparent 100%); border-bottom: 1px solid rgba(78,250,170,0.03); }
+    .dept-hero .logo { width:96px; height:auto; }
+    
+    /* Dark mode logo inversion */
+    html[data-theme="dark"] .dept-hero .logo {
+      filter: invert(1);
+    }
+    
+    .dept-hero .title { font-family:var(--font-head); font-size:2rem; color:var(--accent-mint); margin-bottom:0.25rem; }
+    .dept-hero .subtitle { color:var(--text-light); opacity:0.92; }
+
+    .dept-grid { display:grid; grid-template-columns: 1fr 320px; gap:1.5rem; max-width:1100px; margin:1.25rem auto; }
+    .dept-card { background:var(--bg-card); border:1px solid rgba(78,250,170,0.03); padding:1.25rem; border-radius:8px; margin-bottom:1.25rem; }
+    .dept-card h2 { color:var(--accent-mint); margin-bottom:0.5rem; font-size:1.5rem; }
+    .dept-card h3 { color:var(--accent-teal); margin-top:1.25rem; margin-bottom:0.5rem; font-size:1.2rem; }
+    .dept-card p { color:var(--text-light); line-height:1.6; opacity:0.95; margin-bottom:0.75rem; }
+    .dept-card ul { margin:0.5rem 0; padding-left:1.5rem; color:var(--text-light); opacity:0.9; }
+    .dept-card ul li { margin-bottom:0.4rem; }
+    
+    .leadership-section { background: rgba(78,250,170,0.02); padding:1rem; border-radius:6px; margin:1rem 0; border-left: 3px solid var(--accent-mint); }
+    .leadership-section strong { color:var(--accent-mint); }
+    
+    .division-card { background: rgba(78,250,170,0.02); padding:1.25rem; border-radius:6px; margin-bottom:1.5rem; border-left: 3px solid var(--accent-teal); }
+    .division-card h3 { margin-top:0; color:var(--accent-mint); display:flex; align-items:center; gap:0.5rem; }
+    .division-card .contact { font-family:var(--font-mono); font-size:0.9rem; color:var(--accent-teal); margin:0.5rem 0; }
+    .division-card .quote { font-style:italic; opacity:0.85; margin:0.5rem 0; padding-left:1rem; border-left:2px solid rgba(78,250,170,0.2); }
+    .division-card .status { background:rgba(78,250,170,0.1); padding:0.4rem 0.6rem; border-radius:4px; display:inline-block; font-size:0.85rem; margin-top:0.5rem; }
+    .division-card .wip-badge { background:rgba(255,200,0,0.1); color:#ffc800; padding:0.3rem 0.6rem; border-radius:4px; font-size:0.85rem; font-weight:600; display:inline-block; }
+
+    .side-box h3 { color:var(--accent-teal); margin:0 0 0.6rem 0; }
+    .side-box ul { margin:0; padding-left:1rem; }
+    .side-box .dept-card { margin-bottom:0.8rem; }
+
+    .portal-buttons { display:grid; grid-template-columns:1fr; gap:0.8rem; margin:1rem 0; }
+    .btn-portal { display:block; background:var(--accent-mint); color:var(--bg-dark); padding:0.75rem 1.5rem; border-radius:6px; text-decoration:none; font-weight:600; transition:all 0.2s; text-align:center; }
+    .btn-portal:hover { background:var(--accent-teal); transform:translateY(-2px); box-shadow: 0 4px 12px rgba(78,250,170,0.3); }
+    .btn-portal.secondary { background:rgba(78,250,170,0.15); color:var(--accent-mint); border:1px solid var(--accent-mint); }
+    .btn-portal.secondary:hover { background:rgba(78,250,170,0.25); }
+
+    @media (max-width:880px) { .dept-grid { grid-template-columns:1fr; } .dept-hero { text-align:center; flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="dept-hero">
+    <img src="/assets/img/TSD.png" alt="Site-89 Technical Services Department" class="logo">
+    <div>
+      <div class="title">Technical Services Department</div>
+      <div class="subtitle">Keeping Site-89 operational through infrastructure, systems support, and technical reliability.</div>
+    </div>
+  </section>
+
+  <section class="content" style="padding-top:1.25rem;">
+    <div class="dept-grid">
+      <div>
+        <!-- Hub Information -->
+        <div class="dept-card">
+          <h2>&raquo; Technical Services Hub &laquo;</h2>
+          <p>The Technical Services Department (TSD) provides the backbone support that allows every other department to function. From maintaining secure systems and hardware to handling facility-level technical operations, TSD ensures Site-89 remains stable, responsive, and mission-ready under normal and emergency conditions.</p>
+
+          <div class="leadership-section">
+            <strong>Technical Director:</strong> Vacant<br>
+            <strong>Deputy Director:</strong> Vacant<br>
+            <strong>Infrastructure Lead:</strong> Vacant
+          </div>
+
+          <div class="portal-buttons">
+            <a href="/site-management/" class="btn-portal">ACCESS SERVICE REQUESTS</a>
+            <a href="/admin/analytics/" class="btn-portal secondary">VIEW SYSTEM STATUS</a>
+          </div>
+        </div>
+
+        <!-- Working in TSD -->
+        <div class="dept-card">
+          <h2>Working in TSD - For Technicians &amp; Specialists</h2>
+          <p>TSD is ideal for personnel who enjoy practical problem-solving, systems planning, and rapid incident response. Whether you work with communications, electrical systems, or software support, your role directly affects site safety, uptime, and operational readiness.</p>
+
+          <h3>What You Will Do</h3>
+          <ul>
+            <li>Diagnose and resolve hardware and software faults</li>
+            <li>Maintain secure site infrastructure and internal network systems</li>
+            <li>Support critical facility equipment and automation systems</li>
+            <li>Monitor service uptime and coordinate outage response</li>
+            <li>Document maintenance logs and technical incident reports</li>
+            <li>Assist departments with equipment deployments and upgrades</li>
+            <li>Coordinate with Security and Scientific teams during high-risk events</li>
+          </ul>
+
+          <h3>Skills & Experience</h3>
+          <p>Strong troubleshooting ability, calm decision-making under pressure, and reliable documentation are required. New technical personnel receive onboarding in:</p>
+          <ul>
+            <li>Site-89 infrastructure standards and service procedures</li>
+            <li>Network and endpoint security fundamentals</li>
+            <li>Power, communications, and equipment maintenance workflows</li>
+            <li>Ticketing, escalation, and incident response protocols</li>
+            <li>Cross-department technical coordination practices</li>
+            <li>Emergency continuity and recovery planning</li>
+          </ul>
+
+          <h3>Getting Started</h3>
+          <p>Personnel interested in Technical Services should report to the Infrastructure Wing for orientation and assignment. Initial training covers core systems, safety standards, and on-call response procedures.</p>
+
+          <p style="margin-top:1rem; padding:1rem; background:rgba(78,250,170,0.05); border-left:3px solid var(--accent-mint); border-radius:4px;">
+            <strong style="color:var(--accent-mint);">Interested in joining Technical Services?</strong><br>
+            Contact the department at <a href="/emails/?compose=tsd.mgmt@site89.org" style="color:var(--accent-teal); font-family:var(--font-mono);">tsd.mgmt@site89.org</a>
+          </p>
+        </div>
+
+        <!-- Divisions -->
+        <div class="dept-card">
+          <h2>&raquo; Technical Services Divisions &laquo;</h2>
+
+          <!-- Infrastructure Operations -->
+          <div class="division-card">
+            <h3>
+              <span>Upkeep and Custodian Division</span>
+            </h3>
+            <div class="contact">u&c.mgmt@site89.org</div>
+            <p><strong>Lead Technician:</strong> N/A</p>
+
+            <div class="quote">"If the site runs, we are doing our job."</div>
+
+            <p>Infrastructure Operations maintains core facility systems including power distribution, network backbone reliability, and critical support equipment. IOPS teams are responsible for preventative maintenance, rapid repair, and service continuity planning.</p>
+
+            <div class="status">
+              <strong>Location:</strong> Infrastructure Wing, Service Control Room<br>
+              <strong>Access:</strong> Report via service request or assigned support channel
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="side-box">
+        <div class="dept-card">
+          <h3>Quick Facts</h3>
+          <ul>
+            <li><strong>Typical Duty:</strong> Maintenance, diagnostics, and incident support</li>
+            <li><strong>Training Required:</strong> Technical orientation and systems safety</li>
+            <li><strong>Clearance:</strong> Varies by system and service role</li>
+            <li><strong>Contact:</strong> tsd.mgmt@site89.org</li>
+            <li><strong>Best For:</strong> Practical problem-solvers and system thinkers</li>
+            <li><strong>Career Path:</strong> Technician -> Specialist -> Senior Specialist -> Lead</li>
+          </ul>
+        </div>
+
+        <div class="dept-card">
+          <h3>Service Access</h3>
+          <div style="display:flex; flex-direction:column; gap:0.6rem;">
+            <a href="/site-management/" class="btn-primary" style="text-align:center;">Service Management</a>
+            <a href="/admin/analytics/" class="btn-primary" style="text-align:center;">System Status</a>
+            <a href="/events/" class="btn-primary" style="text-align:center;">Event Calendar</a>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-light); opacity:0.8; margin-top:0.75rem; margin-bottom:0;">
+            Some technical resources and management tools require department-level access.
+          </p>
+        </div>
+
+        <div class="dept-card">
+          <h3>Key Locations</h3>
+          <ul>
+            <li><strong>Infrastructure Wing:</strong> Core systems control</li>
+            <li><strong>Network Operations:</strong> Connectivity monitoring</li>
+            <li><strong>Service Desk:</strong> Personnel technical support</li>
+            <li><strong>Engineering Bay:</strong> Equipment integration and testing</li>
+            <li><strong>Backup Operations:</strong> Recovery and continuity resources</li>
+          </ul>
+        </div>
+
+        <div class="dept-card">
+          <h3>Operational Standards</h3>
+          <ul style="font-size:0.9rem;">
+            <li>Document all maintenance and incident actions</li>
+            <li>Escalate unresolved faults immediately</li>
+            <li>Follow change-control before critical updates</li>
+            <li>Maintain secure configuration baselines</li>
+            <li>Coordinate downtime with affected departments</li>
+            <li>Validate recovery steps after every outage</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script>
+    document.addEventListener("scroll", () => { const nav = document.getElementById("main-nav"); nav.classList.toggle("is-sticky", window.scrollY > 120); });
+  </script>
+</body>
+</html>

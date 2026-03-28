@@ -498,6 +498,7 @@
   <script type="module">
     import { app } from "/assets/js/auth.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js';
 
     const db = getFirestore(app);
 
@@ -505,6 +506,11 @@
     let currentPage = 1;
     const itemsPerPage = 9; // 3x3 grid
     let filteredPersonnel = [];
+
+    function getPersonnelProfileUrl(char) {
+      const id = char.docId || char.id || '';
+      return `/personnel-files/view/?id=${encodeURIComponent(id)}`;
+    }
 
     function baseLocalFromName(name){
       if(!name) return '';
@@ -521,6 +527,10 @@
       counts.set(baseLocal, next);
       const localPart = next === 1 ? baseLocal : `${baseLocal}${next}`;
       return `${localPart}@site89.org`;
+    }
+
+    function renderMarkdown(md) {
+      return marked.parse(md || '', { gfm: true, breaks: true });
     }
 
     // Mask a PID by replacing all but the last 3 characters with █
@@ -564,7 +574,17 @@
           </div>
         `;
 
-        card.addEventListener("click", () => openPersonnelModal(char));
+        card.setAttribute('role', 'link');
+        card.setAttribute('tabindex', '0');
+        card.addEventListener("click", () => {
+          window.location.href = getPersonnelProfileUrl(char);
+        });
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            window.location.href = getPersonnelProfileUrl(char);
+          }
+        });
         personnelGrid.appendChild(card);
       });
 
@@ -781,7 +801,7 @@
       
       // Show bio section if there's a bio
       if (char.bio && char.bio.trim()) {
-        document.getElementById("modalBio").innerHTML = char.bio;
+        document.getElementById("modalBio").innerHTML = renderMarkdown(char.bio);
         bioSection.style.display = "block";
       } else {
         bioSection.style.display = "none";
@@ -802,45 +822,32 @@
       }
     });
 
-    // Load on page load
-    loadPersonnel();
-
-    // Check for direct character link in URL (e.g., ?character=<characterId>)
-    async function openCharacterFromUrl() {
+    // Preserve legacy links by redirecting old query parameters to the new profile route.
+    function redirectLegacyProfileLinks() {
       const params = new URLSearchParams(window.location.search);
-      const characterId = params.get('character');
-      
-      if (characterId) {
-        // Wait a moment for personnel to load, then find and open the character
-        const checkInterval = setInterval(() => {
-          if (allPersonnel.length > 0) {
-            clearInterval(checkInterval);
-            const character = allPersonnel.find(char => char.id === characterId);
-            if (character) {
-              openPersonnelModal(character);
-            }
-          }
-        }, 100);
-        
-        // Timeout after 3 seconds
-        setTimeout(() => clearInterval(checkInterval), 3000);
+      const legacyCharacter = params.get('character');
+      const legacyId = params.get('id');
+
+      if (legacyCharacter || legacyId) {
+        const value = legacyCharacter || legacyId;
+        const target = `/personnel-files/view/?character=${encodeURIComponent(value)}`;
+        window.location.replace(target);
+        return true;
       }
+
+      return false;
     }
 
-    // Call after page loads
-    setTimeout(openCharacterFromUrl, 500);
+    // Load on page load
+    if (!redirectLegacyProfileLinks()) {
+      loadPersonnel();
+    }
 
     // Update close modal function to clear URL parameter
     const originalClose = window.closePersonnelModal;
     window.closePersonnelModal = function() {
       originalClose();
-      // Clear the character parameter from URL
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('character')) {
-        params.delete('character');
-        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-      }
+      // No URL cleanup required on list page.
     };
 
     // Sticky nav

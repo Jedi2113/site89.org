@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Task Force Red-Four Squadron — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Explore MTF Red-Four Squadron at Site-89. A quick reaction force from Mobile Task Force Nu-7 providing external threat response and anomaly containment support.">
+  <meta name="keywords" content="Site-89 MTF, Mobile Task Force Red-Four, MTF Nu-7, tactical operations, anomaly containment">
+
+  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Mobile Task Force Red-Four Squadron — Site-89">
+  <meta property="og:description" content="Explore MTF Red-Four Squadron at Site-89. Quick reaction force and external threat response.">
+  <meta property="og:url" content="https://site89.github.io/departments/MTF/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mobile Task Force Red-Four Squadron — Site-89">
+  <meta name="twitter:description" content="Explore MTF Red-Four Squadron at Site-89.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/departments/MTF/">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .dept-hero { padding: 3rem 1rem; text-align: left; display:flex; gap:1rem; align-items:center; background: linear-gradient(90deg, rgba(78,250,170,0.03) 0%, transparent 100%); border-bottom: 1px solid rgba(78,250,170,0.03); }
+    .dept-hero .logo { width:96px; height:auto; }
+    
+    /* Dark mode logo inversion */
+    html[data-theme="dark"] .dept-hero .logo {
+      filter: invert(1);
+    }
+    
+    .dept-hero .title { font-family:var(--font-head); font-size:2rem; color:var(--accent-mint); margin-bottom:0.25rem; }
+    .dept-hero .subtitle { color:var(--text-light); opacity:0.92; }
+
+    .dept-grid { display:grid; grid-template-columns: 1fr 320px; gap:1.5rem; max-width:1100px; margin:1.25rem auto; }
+    .dept-card { background:var(--bg-card); border:1px solid rgba(78,250,170,0.03); padding:1.25rem; border-radius:8px; margin-bottom:1.25rem; }
+    .dept-card h2 { color:var(--accent-mint); margin-bottom:0.5rem; font-size:1.5rem; }
+    .dept-card h3 { color:var(--accent-teal); margin-top:1.25rem; margin-bottom:0.5rem; font-size:1.2rem; }
+    .dept-card p { color:var(--text-light); line-height:1.6; opacity:0.95; margin-bottom:0.75rem; }
+    .dept-card ul { margin:0.5rem 0; padding-left:1.5rem; color:var(--text-light); opacity:0.9; }
+    .dept-card ul li { margin-bottom:0.4rem; }
+    
+    .leadership-section { background: rgba(78,250,170,0.02); padding:1rem; border-radius:6px; margin:1rem 0; border-left: 3px solid var(--accent-mint); }
+    .leadership-section strong { color:var(--accent-mint); }
+    
+    .division-card { background: rgba(78,250,170,0.02); padding:1.25rem; border-radius:6px; margin-bottom:1.5rem; border-left: 3px solid var(--accent-teal); }
+    .division-card h3 { margin-top:0; color:var(--accent-mint); display:flex; align-items:center; gap:0.5rem; }
+    .division-card .contact { font-family:var(--font-mono); font-size:0.9rem; color:var(--accent-teal); margin:0.5rem 0; }
+    .division-card .quote { font-style:italic; opacity:0.85; margin:0.5rem 0; padding-left:1rem; border-left:2px solid rgba(78,250,170,0.2); }
+    .division-card .status { background:rgba(78,250,170,0.1); padding:0.4rem 0.6rem; border-radius:4px; display:inline-block; font-size:0.85rem; margin-top:0.5rem; }
+    .division-card .wip-badge { background:rgba(255,200,0,0.1); color:#ffc800; padding:0.3rem 0.6rem; border-radius:4px; font-size:0.85rem; font-weight:600; display:inline-block; }
+
+    .side-box h3 { color:var(--accent-teal); margin:0 0 0.6rem 0; }
+    .side-box ul { margin:0; padding-left:1rem; }
+    .side-box .dept-card { margin-bottom:0.8rem; }
+
+    .portal-buttons { display:grid; grid-template-columns:1fr; gap:0.8rem; margin:1rem 0; }
+    .btn-portal { display:block; background:var(--accent-mint); color:var(--bg-dark); padding:0.75rem 1.5rem; border-radius:6px; text-decoration:none; font-weight:600; transition:all 0.2s; text-align:center; }
+    .btn-portal:hover { background:var(--accent-teal); transform:translateY(-2px); box-shadow: 0 4px 12px rgba(78,250,170,0.3); }
+    .btn-portal.secondary { background:rgba(78,250,170,0.15); color:var(--accent-mint); border:1px solid var(--accent-mint); }
+    .btn-portal.secondary:hover { background:rgba(78,250,170,0.25); }
+
+    @media (max-width:880px) { .dept-grid { grid-template-columns:1fr; } .dept-hero { text-align:center; flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="dept-hero">
+    <img src="/assets/img/MTF.png" alt="Mobile Task Force Red-Four Squadron" class="logo">
+    <div>
+      <div class="title">Mobile Task Force Red-Four Squadron</div>
+      <div class="subtitle">Rapid response force from MTF Nu-7 "Hammer Down" providing external threat mitigation.</div>
+    </div>
+  </section>
+
+  <section class="content" style="padding-top:1.25rem;">
+    <div class="dept-grid">
+      <div>
+        <!-- Hub Information -->
+        <div class="dept-card">
+          <h2>&raquo; Red-Four Squadron Overview &laquo;</h2>
+          <p>Mobile Task Force Red-Four is a specialized quick-reaction force composed of elite operatives from Mobile Task Force Unit Nu-7 "Hammer Down." Stationed in close proximity to Site-89, Red-Four serves as an immediate response asset for external threats, anomaly containment breaches, and high-risk tactical operations that exceed the capabilities of standard Site security.</p>
+
+          <div class="leadership-section">
+            <strong>Squadron Commander:</strong> Vacant<br>
+            <strong>Deputy Commander:</strong> Vacant<br>
+            <strong>Operations Officer:</strong> Vacant
+          </div>
+
+          <div class="portal-buttons">
+            <a href="/events/" class="btn-portal">VIEW OPERATIONS CALENDAR</a>
+            <a href="/site-management/" class="btn-portal secondary">REQUEST SUPPORT</a>
+          </div>
+        </div>
+
+        <!-- Working in MTF Red-Four -->
+        <div class="dept-card">
+          <h2>Service in Red-Four - For Tactical Operatives</h2>
+          <p>Red-Four recruitment focuses on experienced personnel with strong tactical backgrounds, disciplined training, and proven capability under pressure. Because Red-Four is only a squadron-sized detachment rather than a full MTF branch, openings are rare and selection standards are intentionally strict.</p>
+
+          <h3>Primary Responsibilities</h3>
+          <ul>
+            <li>Rapid deployment in response to external threats and containment breaches</li>
+            <li>Tactical support for high-risk anomaly interactions</li>
+            <li>Site-89 perimeter security and threat interdiction</li>
+            <li>Joint operations coordination with Site department leadership</li>
+            <li>Advanced anomaly containment and recovery procedures</li>
+            <li>Training and certification in Foundation combat protocols</li>
+            <li>After-action analysis and operational debriefing</li>
+          </ul>
+
+          <h3>Operational Requirements</h3>
+          <p>Red-Four operates under strict military discipline, advanced training certifications, and high-level Foundation clearance. When openings do appear, applicants are generally expected to have some form of military or security background, whether from within the Foundation or outside it. Personnel must demonstrate:</p>
+          <ul>
+            <li>Tactical proficiency and weapons certification</li>
+            <li>Advanced anomaly containment knowledge</li>
+            <li>Rapid decision-making under extreme stress</li>
+            <li>Team coordination and leadership capability</li>
+            <li>Psychological resilience and mental stability</li>
+            <li>Full compliance with MTF Nu-7 command structure</li>
+            <li>Commitment to Foundation security protocols</li>
+            <li>The maturity to meet the high standards expected of MTF personnel</li>
+          </ul>
+
+          <h3>Getting Started</h3>
+          <p>Red-Four operates under joint authority from Site-89 and MTF Nu-7 command. Interested personnel should contact the MTF liaison office to discuss long-term eligibility, prior experience, and whether recruitment is currently open.</p>
+
+          <p style="margin-top:1rem; padding:1rem; background:rgba(78,250,170,0.05); border-left:3px solid var(--accent-mint); border-radius:4px;">
+            <strong style="color:var(--accent-mint);">Interested in joining Red-Four?</strong><br>
+            Openings are uncommon. Applicants should expect a selective process and should already bring military, security, or equivalent tactical experience. Contact the MTF office at <a href="/emails/?compose=mtf.red4@site89.org" style="color:var(--accent-teal); font-family:var(--font-mono);">mtf.red4@site89.org</a>
+          </p>
+        </div>
+
+        <!-- Squadron Structure -->
+        <div class="dept-card">
+          <div class="division-card">
+            <h3>
+              <span>Squadron Structure Note</span>
+            </h3>
+            <div class="contact">mtf.red4@site89.org</div>
+            <p><strong>Formation Size:</strong> Squadron-level detachment</p>
+
+            <div class="quote">"Small unit. Fast response. High standards."</div>
+
+            <p>Red-Four is not large enough to be broken into multiple permanent operational units on-site. It functions as a single squadron-sized MTF presence, with personnel filling mission roles as needed under the direction of squadron leadership and Nu-7 command.</p>
+
+            <div class="status">
+              <strong>Role Coverage:</strong> Response, containment, security support, and tactical deployment<br>
+              <strong>Recruitment:</strong> Rare openings only<br>
+              <strong>Expectation:</strong> Applicants are held to a higher standard than ordinary security personnel
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="side-box">
+
+        <div class="dept-card">
+          <h3>Operational Resources</h3>
+          <div style="display:flex; flex-direction:column; gap:0.6rem;">
+            <a href="/events/" class="btn-primary" style="text-align:center;">Operations Calendar</a>
+            <a href="/site-management/" class="btn-primary" style="text-align:center;">Support Request</a>
+            <a href="/archives/" class="btn-primary" style="text-align:center;">Tactical Archives</a>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-light); opacity:0.8; margin-top:0.75rem; margin-bottom:0;">
+            Access to operational records and sensitive materials requires clearance authorization from Site command.
+          </p>
+        </div>
+
+        <div class="dept-card">
+          <h3>Authority Chain</h3>
+          <ul>
+            <li><strong>Direct Command:</strong> Red-Four Commander</li>
+            <li><strong>Site Authority:</strong> Site Director</li>
+            <li><strong>Parent Authority:</strong> MTF Nu-7 Command</li>
+            <li><strong>Foundation Authority:</strong> MTF NORTHCOM</li>
+          </ul>
+        </div>
+
+        <div class="dept-card">
+          <h3>Operational Standards</h3>
+          <ul style="font-size:0.9rem;">
+            <li>Maintain constant operational readiness</li>
+            <li>Document all tactical actions in detail</li>
+            <li>Report incidents to both Site &amp; MTF command</li>
+            <li>Follow ROE (Rules of Engagement) strictly</li>
+            <li>Execute emergency protocols without hesitation</li>
+            <li>Maintain operational security at all times</li>
+            <li>Support civilian Site operations ethically</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script>
+    document.addEventListener("scroll", () => { const nav = document.getElementById("main-nav"); nav.classList.toggle("is-sticky", window.scrollY > 120); });
+  </script>
+</body>
+</html>

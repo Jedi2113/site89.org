@@ -1,5 +1,6 @@
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, getDocs, getDoc, deleteDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { meritSlotBonus } from "/assets/js/merit.js";
 
 const ADMIN_EMAIL = 'jedi21132@gmail.com';
 
@@ -133,23 +134,101 @@ document.addEventListener('includesLoaded', () => {
     async function loadAccounts(){
       const snaps = await getDocs(collection(db,'users'));
       accountsList.innerHTML = '';
-      snaps.forEach(s => {
-        const data = s.data();
+      const accounts = [];
+      snaps.forEach(s => accounts.push({ id: s.id, ...s.data() }));
+      accounts.sort((a, b) => (a.email || a.id).localeCompare(b.email || b.id));
+
+      accounts.forEach(data => {
         const el = document.createElement('div');
-        el.style.padding = '.5rem';
-        
-        // Use textContent instead of innerHTML
-        const idStrong = document.createElement('strong');
-        idStrong.textContent = s.id;
-        el.appendChild(idStrong);
-        
-        const spacer = document.createTextNode(' \u00a0 ');
-        el.appendChild(spacer);
-        
-        const emailSpan = document.createElement('span');
-        emailSpan.textContent = data.email || '';
-        el.appendChild(emailSpan);
-        
+        el.style.cssText = 'padding:0.85rem;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;gap:0.65rem;';
+
+        const merit = Number(data.merit || 0);
+        const isStaff = !!(data.isStaff || data.isAdmin);
+        const patronSlots = Number(data.patreonSlots || 0);
+        const baseSlots = isStaff ? 6 : 2;
+        const meritSlots = meritSlotBonus(merit);
+        const totalSlots = baseSlots + meritSlots + patronSlots;
+
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;';
+
+        const identity = document.createElement('div');
+        identity.innerHTML = `
+          <strong>${escapeHtml(data.email || data.id)}</strong>
+          <div style="font-size:0.82rem;color:var(--muted);margin-top:0.2rem;">UID: ${escapeHtml(data.id)}</div>
+        `;
+
+        const summary = document.createElement('div');
+        summary.style.cssText = 'font-size:0.82rem;color:var(--muted);text-align:right;';
+        summary.innerHTML = `
+          Merit: <strong style="color:var(--text-light);">${merit.toLocaleString()}</strong><br>
+          Slots: <strong style="color:var(--accent-mint);">${totalSlots}</strong>
+          <span>(${baseSlots} base + ${meritSlots} merit + ${patronSlots} patron)</span>
+        `;
+
+        header.appendChild(identity);
+        header.appendChild(summary);
+
+        const controls = document.createElement('div');
+        controls.style.cssText = 'display:flex;gap:1rem;flex-wrap:wrap;align-items:end;';
+
+        const staffWrap = document.createElement('label');
+        staffWrap.style.cssText = 'display:grid;gap:0.35rem;font-size:0.84rem;';
+        staffWrap.textContent = 'Staff slots';
+        const staffCheckbox = document.createElement('input');
+        staffCheckbox.type = 'checkbox';
+        staffCheckbox.checked = !!data.isStaff;
+        staffCheckbox.disabled = !!data.isAdmin;
+        staffWrap.appendChild(staffCheckbox);
+
+        const patronWrap = document.createElement('label');
+        patronWrap.style.cssText = 'display:grid;gap:0.35rem;font-size:0.84rem;';
+        patronWrap.textContent = 'Patreon bonus slots';
+        const patronInput = document.createElement('input');
+        patronInput.type = 'number';
+        patronInput.min = '0';
+        patronInput.step = '1';
+        patronInput.value = String(patronSlots);
+        patronInput.style.cssText = 'width:120px;padding:0.5rem;background:var(--bg-card);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text-light);';
+        patronWrap.appendChild(patronInput);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn-primary';
+        saveBtn.textContent = 'Save Slots';
+
+        const feedback = document.createElement('span');
+        feedback.style.cssText = 'font-size:0.82rem;color:var(--muted);min-width:120px;';
+
+        saveBtn.addEventListener('click', async () => {
+          const nextPatronSlots = Math.max(0, parseInt(patronInput.value || '0', 10) || 0);
+          saveBtn.disabled = true;
+          feedback.style.color = 'var(--muted)';
+          feedback.textContent = 'Saving...';
+
+          try {
+            await setDoc(doc(db, 'users', data.id), {
+              isStaff: !!staffCheckbox.checked,
+              patreonSlots: nextPatronSlots
+            }, { merge: true });
+            feedback.style.color = 'var(--accent-mint)';
+            feedback.textContent = 'Saved';
+            loadAccounts();
+          } catch (err) {
+            feedback.style.color = 'var(--accent-red)';
+            feedback.textContent = err.message || 'Save failed';
+          } finally {
+            saveBtn.disabled = false;
+          }
+        });
+
+        controls.appendChild(staffWrap);
+        controls.appendChild(patronWrap);
+        controls.appendChild(saveBtn);
+        controls.appendChild(feedback);
+
+        el.appendChild(header);
+        el.appendChild(controls);
         accountsList.appendChild(el);
       });
     }

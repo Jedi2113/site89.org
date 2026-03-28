@@ -303,6 +303,50 @@
       color: var(--muted);
     }
 
+    .gallery-rating {
+      margin-top: 0.25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .gallery-rating .vote-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-soft);
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gallery-rating .vote-btn:hover {
+      color: var(--accent-mint);
+      border-color: rgba(62, 225, 163, 0.42);
+    }
+
+    .gallery-rating .vote-btn.upvoted {
+      color: var(--accent-mint);
+      border-color: rgba(62, 225, 163, 0.5);
+      background: rgba(62, 225, 163, 0.15);
+    }
+
+    .gallery-rating .vote-btn.downvoted {
+      color: #ff8b8b;
+      border-color: rgba(255, 139, 139, 0.45);
+      background: rgba(255, 139, 139, 0.14);
+    }
+
+    .gallery-rating .vote-count {
+      min-width: 40px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
     .gallery-delete {
       position: absolute;
       top: 0.6rem;
@@ -531,7 +575,7 @@
       <div class="hero-title">Foundation Gallery</div>
       <div class="hero-sub">Community submissions for art, photos, and screenshots. Upload directly to Site-89 servers, add context, and keep the archive lore-rich.</div>
       <div class="gallery-actions">
-        <button class="btn btn-primary" onclick="document.getElementById('uploadModal').classList.add('active')">
+        <button id="openUploadBtn" class="btn btn-primary" onclick="document.getElementById('uploadModal').classList.add('active')">
           <i class="fas fa-cloud-upload-alt"></i>Submit
         </button>
         <a class="btn btn-secondary" href="#gallery" style="text-decoration:none;">
@@ -567,7 +611,7 @@
             <li><i class="fas fa-check"></i>Keep captions short and lore-aware.</li>
             <li><i class="fas fa-check"></i>Credit collaborators when relevant.</li>
           </ul>
-          <button class="upload-btn" onclick="document.getElementById('uploadModal').classList.add('active')">
+          <button id="startSubmissionBtn" class="upload-btn" onclick="document.getElementById('uploadModal').classList.add('active')">
             <i class="fas fa-plus"></i>Start a Submission
           </button>
         </div>
@@ -627,7 +671,7 @@
       <label for="imageSource">Source link (optional)</label>
       <input id="imageSource" type="text" placeholder="Credit link or original post" maxlength="500">
       <div class="modal-buttons">
-        <button class="btn-submit" onclick="submitGalleryImage()">Submit</button>
+        <button id="gallerySubmitBtn" class="btn-submit" onclick="submitGalleryImage(this)">Submit</button>
         <button class="btn-cancel" onclick="closeUploadModal()">Cancel</button>
       </div>
     </div>
@@ -655,7 +699,7 @@
 
   <script type="module">
     import { app, auth } from "/assets/js/auth.js";
-    import { getFirestore, collection, query, orderBy, getDocs, addDoc, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFirestore, collection, query, getDocs, addDoc, deleteDoc, doc, where, getDoc, updateDoc, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
     const db = getFirestore(app);
@@ -676,24 +720,17 @@
       currentUserClearance = 0;
       
       const uploadModal = document.getElementById('uploadModal');
-      const uploadBtn = document.querySelector('button[onclick="document.getElementById(\'uploadModal\').classList.add(\'active\')"]');
-      const startSubmissionBtn = document.querySelector('.upload-btn');
+      const uploadBtn = document.getElementById('openUploadBtn');
+      const startSubmissionBtn = document.getElementById('startSubmissionBtn');
       
       if (user) {
-        // User is logged in - hide submission UI and show auth required message
-        // Only unauthenticated users can submit to gallery
+        // Logged in users can browse and submit.
         galleryContent.style.display = 'block';
         authRequired.style.display = 'none';
         
-        // Hide submission buttons
-        if (uploadBtn) uploadBtn.style.display = 'none';
-        if (startSubmissionBtn) startSubmissionBtn.style.display = 'none';
-        
-        // Disable modal access
-        if (uploadModal) {
-          uploadModal.style.display = 'none';
-          uploadModal.classList.remove('active');
-        }
+        if (uploadBtn) uploadBtn.style.display = 'inline-block';
+        if (startSubmissionBtn) startSubmissionBtn.style.display = 'inline-block';
+        if (uploadModal) uploadModal.style.display = '';
         
         // Try to fetch clearance anyway for read-only access
         try {
@@ -708,13 +745,17 @@
         
         loadGallery();
       } else {
-        // User is logged out - show submission UI
-        authRequired.style.display = 'none';
+        // Logged out users can browse but cannot submit.
+        authRequired.style.display = 'block';
         galleryContent.style.display = 'block';
         
-        // Show submission buttons
-        if (uploadBtn) uploadBtn.style.display = 'inline-block';
-        if (startSubmissionBtn) startSubmissionBtn.style.display = 'inline-block';
+        if (uploadBtn) uploadBtn.style.display = 'none';
+        if (startSubmissionBtn) startSubmissionBtn.style.display = 'none';
+
+        if (uploadModal) {
+          uploadModal.style.display = 'none';
+          uploadModal.classList.remove('active');
+        }
         
         loadGallery();
       }
@@ -769,6 +810,9 @@
           ? new Date(data.timestamp.toDate ? data.timestamp.toDate() : data.timestamp).toLocaleDateString()
           : 'Unknown';
         const canDelete = currentUser && (currentUser.uid === data.uploaderId || currentUserClearance >= 5);
+        const hasUpvoted = data.upvoters?.includes(currentUser?.uid);
+        const hasDownvoted = data.downvoters?.includes(currentUser?.uid);
+        const score = (data.upvotes || 0) - (data.downvotes || 0);
 
         const item = document.createElement('article');
         item.className = 'gallery-item';
@@ -804,9 +848,38 @@
         meta.className = 'gallery-meta';
         meta.textContent = `By ${data.uploaderName || 'Anonymous'} • ${uploadDate}`;
 
+        const rating = document.createElement('div');
+        rating.className = 'gallery-rating';
+
+        const upBtn = document.createElement('button');
+        upBtn.className = `vote-btn ${hasUpvoted ? 'upvoted' : ''}`;
+        upBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        upBtn.title = 'Upvote';
+        upBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          handleGalleryVote(data.id, 'up');
+        });
+
+        const voteCount = document.createElement('span');
+        voteCount.className = 'vote-count';
+        voteCount.textContent = String(score);
+
+        const downBtn = document.createElement('button');
+        downBtn.className = `vote-btn ${hasDownvoted ? 'downvoted' : ''}`;
+        downBtn.innerHTML = '<i class="fas fa-arrow-down"></i>';
+        downBtn.title = 'Downvote';
+        downBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          handleGalleryVote(data.id, 'down');
+        });
+
         body.appendChild(badge);
         body.appendChild(caption);
         body.appendChild(meta);
+        rating.appendChild(upBtn);
+        rating.appendChild(voteCount);
+        rating.appendChild(downBtn);
+        body.appendChild(rating);
 
         item.appendChild(img);
         item.appendChild(body);
@@ -890,8 +963,55 @@
       }
     }
 
+    async function handleGalleryVote(galleryId, voteType) {
+      if (!currentUser) {
+        if (confirm('You need to login to rate gallery items. Go to login page?')) {
+          window.location.href = '/login/';
+        }
+        return;
+      }
+
+      const galleryRef = doc(db, 'gallery', galleryId);
+      const gallerySnap = await getDoc(galleryRef);
+      if (!gallerySnap.exists()) return;
+
+      const entry = gallerySnap.data();
+      const hasUpvoted = entry.upvoters?.includes(currentUser.uid);
+      const hasDownvoted = entry.downvoters?.includes(currentUser.uid);
+      const updates = {};
+
+      if (voteType === 'up') {
+        if (hasUpvoted) {
+          updates.upvotes = increment(-1);
+          updates.upvoters = arrayRemove(currentUser.uid);
+        } else {
+          updates.upvotes = increment(1);
+          updates.upvoters = arrayUnion(currentUser.uid);
+          if (hasDownvoted) {
+            updates.downvotes = increment(-1);
+            updates.downvoters = arrayRemove(currentUser.uid);
+          }
+        }
+      } else {
+        if (hasDownvoted) {
+          updates.downvotes = increment(-1);
+          updates.downvoters = arrayRemove(currentUser.uid);
+        } else {
+          updates.downvotes = increment(1);
+          updates.downvoters = arrayUnion(currentUser.uid);
+          if (hasUpvoted) {
+            updates.upvotes = increment(-1);
+            updates.upvoters = arrayRemove(currentUser.uid);
+          }
+        }
+      }
+
+      await updateDoc(galleryRef, updates);
+      await loadGallery();
+    }
+
     // Submit gallery image
-    window.submitGalleryImage = async function() {
+    window.submitGalleryImage = async function(triggerButton) {
       const imageType = document.getElementById('imageType').value.trim();
       const imageFile = document.getElementById('imageFile');
       const selectedFile = imageFile.files && imageFile.files[0];
@@ -918,7 +1038,11 @@
         return;
       }
 
-      const btn = event.target;
+      const btn = triggerButton || document.getElementById('gallerySubmitBtn');
+      if (!btn) {
+        alert('Submit button not found. Please refresh and try again.');
+        return;
+      }
       btn.disabled = true;
       btn.textContent = 'Uploading...';
 

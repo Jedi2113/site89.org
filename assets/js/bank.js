@@ -237,9 +237,8 @@ async function ensureBankAccount(charData, user) {
     recurring: {
       enabled: false,
       amount: 0,
-      intervalDays: 14,
-      nextPayAt: null,
-      lastPayAt: null
+      lastPayAt: null,
+      lastPayrollKey: ''
     },
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -278,7 +277,6 @@ async function loadBankAccount(charData, user) {
   document.getElementById('bankBalanceUpdated').textContent = `Last updated: ${formatDate(accountData.updatedAt)}`;
 
   document.getElementById('bankPayAmount').textContent = `Pay amount: ${formatCurrency(accountData.recurring?.amount || 0)}`;
-  document.getElementById('bankPayNext').textContent = `Next pay date: ${formatDate(accountData.recurring?.nextPayAt)}`;
 
   document.getElementById('bankAccountPid').textContent = `PID: ${safeText(accountData.pid)}`;
   document.getElementById('bankAccountDept').textContent = `Department: ${safeText(accountData.department)}`;

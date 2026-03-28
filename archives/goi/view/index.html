@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GOI File - Site-89</title>
+  <meta name="description" content="View a Foundation group of interest file.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="GOI File - Site-89">
+  <meta property="og:description" content="View a Foundation group of interest file.">
+  <meta property="og:url" content="https://site89.github.io/archives/goi/view/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GOI File - Site-89">
+  <meta name="twitter:description" content="View a Foundation group of interest file.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+  <link rel="canonical" href="https://site89.github.io/archives/goi/view/">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+  <style>
+    .gv-shell{max-width:1100px;margin:1.5rem auto;padding:0 1rem 2rem}.gv-back{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;color:var(--accent-teal);font-weight:700;margin-bottom:1rem}.gv-card{background:var(--bg-card);border:1px solid rgba(78,250,170,.2);border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.24)}.gv-head{padding:1.25rem;border-bottom:1px solid rgba(78,250,170,.12);background:linear-gradient(135deg, rgba(78,250,170,.08), rgba(0,124,107,.05))}.gv-id{font-family:var(--font-mono);color:var(--accent-teal)}.gv-title{margin:.35rem 0 0;color:var(--accent-mint);font-size:1.9rem}.gv-meta{margin:.6rem 0 0;color:var(--text-light)}.gv-body{padding:1.2rem;display:grid;gap:1rem}.gv-section{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:1rem}.gv-section h2{margin:0 0 .6rem;color:var(--accent-mint);font-size:1.1rem}.gv-message{text-align:center;padding:2rem 1rem;color:var(--text-light)}
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+  <main class="gv-shell">
+    <a class="gv-back" href="/archives/goi/">Back to GOI Database</a>
+    <section id="goiView" class="gv-card" style="display:none;">
+      <header class="gv-head"><div id="gvDesignation" class="gv-id">GOI</div><h1 id="gvTitle" class="gv-title">Loading...</h1><p id="gvMeta" class="gv-meta"></p></header>
+      <div class="gv-body">
+        <section class="gv-section"><h2>Description</h2><div id="gvDescription"></div></section>
+        <section id="gvActivitiesSection" class="gv-section" style="display:none;"><h2>Known Activities</h2><div id="gvActivities"></div></section>
+        <section id="gvCapabilitiesSection" class="gv-section" style="display:none;"><h2>Capabilities & Resources</h2><div id="gvCapabilities"></div></section>
+        <section id="gvNotesSection" class="gv-section" style="display:none;"><h2>Intelligence Notes</h2><div id="gvNotes"></div></section>
+      </div>
+    </section>
+    <section id="goiMessage" class="gv-card"><div id="gvMessageText" class="gv-message">Loading GOI file...</div></section>
+  </main>
+  <div data-include="/components/footer.html"></div>
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/goi-view.js"></script>
+</body>
+</html>

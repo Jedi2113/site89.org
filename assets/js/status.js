@@ -19,7 +19,7 @@ class StatusMonitor {
         id: 'minecraft',
         name: 'Minecraft Server',
         icon: 'fas fa-cube',
-        endpoint: 'https://api.mcsrvstat.us/2/play.site89.net',
+        endpoint: 'https://api.mcsrvstat.us/2/play.site89.org',
         lastResponseTime: null,
         isOnline: false,
         uptime: 100,
@@ -88,12 +88,12 @@ class StatusMonitor {
     try {
       if (service.id === 'website') {
         // Check website with a simple fetch to root
-        const response = await this.fetchWithTimeout(service.endpoint, 5000);
+        const response = await this.fetchWithTimeout(service.endpoint, 5000, { method: 'HEAD' });
         service.lastResponseTime = Date.now() - startTime;
         service.isOnline = response.ok;
       } else if (service.id === 'minecraft') {
         // Check Minecraft server via API
-        const response = await this.fetchWithTimeout(service.endpoint, 5000);
+        const response = await this.fetchWithTimeout(service.endpoint, 5000, { method: 'GET' });
         const data = await response.json();
         service.lastResponseTime = Date.now() - startTime;
         service.isOnline = data.online === true;
@@ -106,13 +106,9 @@ class StatusMonitor {
     this.updateServiceUI(service);
   }
 
-  fetchWithTimeout(url, timeout = 5000) {
+  fetchWithTimeout(url, timeout = 5000, options = {}) {
     return Promise.race([
-      fetch(url, { 
-        method: 'GET',
-        mode: 'no-cors',
-        cache: 'no-store'
-      }),
+      fetch(url, { cache: 'no-store', ...options }),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Timeout')), timeout)
       )

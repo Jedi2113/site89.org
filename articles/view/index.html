@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Article - Site-89</title>
+
+  <meta name="description" content="Read Site-89 community articles and related stories.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Site-89 Article">
+  <meta property="og:description" content="Read this article from the Site-89 community archive.">
+  <meta property="og:url" content="https://site89.github.io/articles/view/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Site-89 Article">
+  <meta name="twitter:description" content="Read this article from the Site-89 archive.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .article-shell { max-width: 1200px; margin: 1rem auto 2rem; padding: 0 1rem; }
+    .article-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1rem; }
+
+    .article-main {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      overflow: hidden;
+    }
+
+    .article-head {
+      padding: 1.2rem;
+      border-bottom: 1px solid var(--card-border);
+      background:
+        radial-gradient(circle at 85% 14%, rgba(62,225,163,0.2), transparent 44%),
+        linear-gradient(125deg, rgba(0,163,137,0.15), rgba(0,0,0,0));
+    }
+    .article-head h1 { margin: 0 0 0.6rem; line-height: 1.2; color: var(--accent-mint); }
+    .article-meta { color: var(--muted); font-size: 0.88rem; }
+
+    .article-tags { margin-top: 0.8rem; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag-chip {
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .tag-empty { color: var(--muted); font-size: 0.82rem; }
+
+    .article-content {
+      padding: 1.2rem;
+      font-size: 1.02rem;
+      line-height: 1.75;
+      color: var(--text-light);
+    }
+    .article-content h1,
+    .article-content h2,
+    .article-content h3 { margin-top: 1.3rem; margin-bottom: 0.6rem; }
+    .article-content img { max-width: 100%; border-radius: 8px; }
+    .article-content blockquote {
+      margin: 1rem 0;
+      border-left: 4px solid var(--accent-mint);
+      padding: 0.3rem 0 0.3rem 0.8rem;
+      color: var(--muted);
+    }
+
+    .article-footer {
+      border-top: 1px solid var(--card-border);
+      padding: 1rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .vote-strip { display: inline-flex; align-items: center; gap: 0.5rem; }
+    .vote-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-soft);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .vote-btn:hover { color: var(--accent-mint); border-color: rgba(62,225,163,0.4); }
+    .vote-btn.upvoted { color: var(--accent-mint); border-color: rgba(62,225,163,0.45); background: rgba(62,225,163,0.12); }
+    .vote-btn.downvoted { color: #ff8b8b; border-color: rgba(255,139,139,0.45); background: rgba(255,139,139,0.12); }
+    .vote-score { min-width: 48px; text-align: center; font-weight: 700; }
+
+    .edit-btn {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      padding: 0.45rem 0.7rem;
+      cursor: pointer;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .article-side {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      padding: 0.9rem;
+      height: fit-content;
+      position: sticky;
+      top: 84px;
+    }
+    .article-side h3 { margin: 0 0 0.6rem; color: var(--accent-mint); }
+    .similar-item {
+      display: grid;
+      gap: 0.2rem;
+      padding: 0.55rem 0.1rem;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .similar-item:last-child { border-bottom: 0; }
+    .similar-title { color: var(--text-light); font-weight: 700; }
+    .similar-meta { color: var(--muted); font-size: 0.8rem; }
+    .similar-empty { color: var(--muted); margin: 0.5rem 0 0; }
+
+    .article-error {
+      margin-top: 0.8rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,139,139,0.45);
+      background: rgba(255,139,139,0.1);
+      color: #ff9b9b;
+      display: none;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 1200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      width: min(980px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      padding: 1rem;
+    }
+    .switch-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 30px;
+      display: inline-block;
+    }
+    .toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-soft);
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #d5dce0;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: rgba(243,185,91,0.2);
+      border-color: rgba(243,185,91,0.42);
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(22px);
+      background: #f3b95b;
+    }
+    .switch-label {
+      font-size: 0.92rem;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+    .field-group { margin-bottom: 0.75rem; }
+    .field-group label { display: block; font-size: 0.84rem; color: var(--muted); margin-bottom: 0.35rem; }
+    .field-group input, .field-group textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      padding: 0.6rem;
+      font-family: var(--font-body);
+    }
+    .field-group textarea { min-height: 260px; resize: vertical; }
+    .edit-grid { display: grid; gap: 0.9rem; grid-template-columns: 1fr 1fr; }
+
+    .md-tools { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+    .md-tools button {
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background: var(--bg-soft);
+      color: var(--text-light);
+      cursor: pointer;
+      padding: 0.35rem 0.52rem;
+      font-weight: 700;
+    }
+
+    .preview-box {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.01);
+      padding: 0.7rem;
+      min-height: 290px;
+      overflow-wrap: anywhere;
+    }
+
+    .editor-footer { margin-top: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+    .editor-error { color: #ff8b8b; min-height: 1.2rem; font-size: 0.88rem; }
+    .editor-actions { display: inline-flex; gap: 0.6rem; }
+    .editor-actions button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 0.58rem 0.9rem;
+    }
+    .btn-cancel { background: transparent; border: 1px solid var(--card-border); color: var(--text-light); }
+    .btn-save { background: var(--accent-mint); color: var(--bg-dark); }
+
+    @media (max-width: 980px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .article-side { position: static; }
+      .edit-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="article-shell">
+    <div id="articleLoadError" class="article-error"></div>
+
+    <section class="article-layout">
+      <article class="article-main">
+        <header class="article-head">
+          <h1 id="articleTitle">Loading...</h1>
+          <div id="articleMeta" class="article-meta"></div>
+          <div id="articleTags" class="article-tags"></div>
+        </header>
+
+        <div id="articleBody" class="article-content"></div>
+
+        <footer class="article-footer">
+          <div id="articleVotes" class="vote-strip"></div>
+          <button id="editArticleBtn" type="button" class="edit-btn"><i class="fas fa-pen"></i> Edit Article</button>
+        </footer>
+      </article>
+
+      <aside class="article-side">
+        <h3>Related Files</h3>
+        <div id="similarArticles">
+          <p class="similar-empty">Loading related reads...</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="articleEditModal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>Edit Article</h2>
+
+      <div class="switch-row">
+        <label class="toggle-switch" for="editModeToggle">
+          <input id="editModeToggle" type="checkbox" role="switch" aria-label="Toggle out-of-character mode">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="switch-label">Out of character</span>
+      </div>
+
+      <div class="field-group" id="editOocWrap" style="display:none;">
+        <label for="editOocNickname">Out of character nickname</label>
+        <input id="editOocNickname" type="text" maxlength="60" placeholder="Set your display name for this article">
+      </div>
+
+      <div class="field-group">
+        <label for="editArticleTitle">Title</label>
+        <input id="editArticleTitle" type="text" maxlength="170">
+      </div>
+
+      <div class="field-group">
+        <label for="editArticleTags">Tags (comma-separated)</label>
+        <input id="editArticleTags" type="text">
+      </div>
+
+      <div class="edit-grid">
+        <div>
+          <div class="field-group">
+            <label for="editArticleBody">Body (Markdown)</label>
+            <div class="md-tools">
+              <button type="button" data-edit-md-tool="heading">H</button>
+              <button type="button" data-edit-md-tool="bold"><b>B</b></button>
+              <button type="button" data-edit-md-tool="italic"><i>I</i></button>
+              <button type="button" data-edit-md-tool="link"><i class="fas fa-link"></i></button>
+              <button type="button" data-edit-md-tool="image"><i class="fas fa-image"></i></button>
+              <button type="button" data-edit-md-tool="quote"><i class="fas fa-quote-right"></i></button>
+              <button type="button" data-edit-md-tool="code"><i class="fas fa-code"></i></button>
+            </div>
+            <textarea id="editArticleBody"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label>Preview</label>
+          <div id="editArticlePreview" class="preview-box"></div>
+        </div>
+      </div>
+
+      <div class="editor-footer">
+        <div id="editArticleError" class="editor-error"></div>
+        <div class="editor-actions">
+          <button id="cancelArticleChangesBtn" type="button" class="btn-cancel">Cancel</button>
+          <button id="saveArticleChangesBtn" type="button" class="btn-save">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/article-view.js"></script>
+</body>
+</html>

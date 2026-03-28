@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analytics Editor - Admin Panel</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>Community Analytics — Admin | Site-89</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
   <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="stylesheet" href="/assets/css/analytics.css">
 
   <script type="module">
     import { ThemeManager } from '/assets/js/theme.js';
@@ -16,293 +17,482 @@
   </script>
 
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
-      background: var(--bg-dark);
-      color: var(--text-light);
-      font-family: var(--font-body);
+      background: var(--bg-dark, #0a0a0b);
+      color: var(--text-light, #e8e8e8);
+      font-family: var(--font-body, 'Roboto', sans-serif);
+      min-height: 100vh;
     }
 
-    .editor-container {
-      max-width: 1200px;
+    .dash-wrap {
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 2rem;
-      padding-top: 120px;
+      padding: 2rem 1.5rem 4rem;
+      padding-top: 110px;
     }
 
-    .editor-header {
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
       margin-bottom: 2rem;
       padding-bottom: 1.5rem;
-      border-bottom: 2px solid rgba(78, 250, 170, 0.2);
+      border-bottom: 2px solid rgba(78,250,170,0.2);
     }
-
-    .editor-header h1 {
+    .dash-header h1 {
+      font-family: 'Montserrat', sans-serif;
       font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 0.5rem;
+      font-weight: 900;
       background: linear-gradient(135deg, #4efaaa 0%, #00ff7f 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      margin: 0 0 .25rem;
     }
+    .dash-header p { margin: 0; color: rgba(255,255,255,.5); font-size: .9rem; }
+    .dash-header-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    #lastUpdated { font-size: .8rem; color: rgba(255,255,255,.4); font-family: 'Roboto Mono', monospace; }
 
-    .editor-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2rem;
+    #loadingState, #accessDenied {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 60vh; gap: 1.5rem; text-align: center;
     }
-
-    .editor-section {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(78, 250, 170, 0.2);
-      border-radius: 12px;
-      padding: 1.5rem;
-      backdrop-filter: blur(10px);
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(78,250,170,.15);
+      border-top-color: #4efaaa;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .editor-section h2 {
-      font-size: 1.3rem;
-      margin-bottom: 1.5rem;
-      font-weight: 700;
+    .dash-tabs {
+      display: flex; gap: .4rem; margin-bottom: 2rem; padding: .75rem;
+      background: rgba(0,0,0,.3); border: 1px solid rgba(78,250,170,.1);
+      border-radius: 12px; flex-wrap: wrap;
     }
-
-    .form-group {
-      margin-bottom: 1.5rem;
+    .tab-btn {
+      padding: .6rem 1.2rem; border: none; background: transparent;
+      color: rgba(255,255,255,.55); cursor: pointer; border-radius: 8px;
+      font-weight: 600; font-size: .88rem; transition: all .25s ease;
+      display: flex; align-items: center; gap: .45rem;
+      white-space: nowrap; font-family: inherit;
     }
+    .tab-btn:hover { color: #4efaaa; background: rgba(78,250,170,.08); }
+    .tab-btn.active { background: rgba(78,250,170,.18); color: #4efaaa; border-bottom: 2px solid #4efaaa; }
+    .tab-pane { display: none; animation: fadeUp .3s ease; }
+    .tab-pane.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      font-size: 0.95rem;
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(78,250,170,.15);
+      border-radius: 12px; padding: 1.25rem 1.5rem; position: relative; overflow: hidden; transition: border-color .25s;
     }
-
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 0.75rem;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(78, 250, 170, 0.2);
-      border-radius: 6px;
-      color: #fff;
-      font-family: inherit;
-      font-size: 0.95rem;
-      transition: all 0.3s ease;
-      box-sizing: border-box;
+    .stat-card:hover { border-color: rgba(78,250,170,.4); }
+    .stat-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(78,250,170,.04) 0%, transparent 60%); pointer-events: none;
     }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #4efaaa;
-      background: rgba(78, 250, 170, 0.05);
+    .stat-icon { font-size: 1.3rem; margin-bottom: .6rem; color: #4efaaa; opacity: .8; }
+    .stat-value { font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin-bottom: .3rem; }
+    .stat-label { font-size: .78rem; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .stat-sub { font-size: .75rem; color: rgba(255,255,255,.35); margin-top: .2rem; }
+    .stat-badge-online {
+      display: inline-flex; align-items: center; gap: .35rem;
+      background: rgba(78,250,170,.12); border: 1px solid rgba(78,250,170,.3);
+      border-radius: 20px; padding: .2rem .6rem; font-size: .72rem; font-weight: 700; color: #4efaaa; margin-top: .4rem;
     }
+    .dot-pulse { width: 7px; height: 7px; border-radius: 50%; background: #4efaaa; animation: dpulse 1.5s ease-in-out infinite; }
+    @keyframes dpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.7); } }
 
-    .items-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+    .section-title {
+      font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: #fff;
+      margin: 0; display: flex; align-items: center; gap: .6rem;
     }
+    .section-title i { color: #4efaaa; font-size: .95rem; }
 
-    .item-row {
-      display: flex;
-      gap: 0.75rem;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 1rem;
-      border-radius: 8px;
-      align-items: center;
+    .panel {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(78,250,170,.12);
+      border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
     }
-
-    .item-row input {
-      flex: 1;
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem;
+      padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,.07);
     }
+    .chart-wrap { position: relative; max-height: 320px; }
 
-    .item-row button {
-      padding: 0.5rem 0.75rem;
-      background: rgba(255, 107, 107, 0.2);
-      border: 1px solid rgba(255, 107, 107, 0.4);
-      color: #ff6b6b;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    .data-table-wrap { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .data-table th {
+      text-align: left; padding: .75rem 1rem;
+      background: rgba(78,250,170,.07); color: #4efaaa;
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .05em;
+      font-weight: 700; border-bottom: 1px solid rgba(78,250,170,.2);
     }
+    .data-table td { padding: .7rem 1rem; border-bottom: 1px solid rgba(255,255,255,.05); color: rgba(255,255,255,.8); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(78,250,170,.03); }
 
-    .item-row button:hover {
-      background: rgba(255, 107, 107, 0.3);
+    .badge { display: inline-block; padding: .18rem .6rem; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+    .badge-green  { background: rgba(78,250,170,.15);  color: #4efaaa; border: 1px solid rgba(78,250,170,.3); }
+    .badge-red    { background: rgba(255,107,107,.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,.3); }
+    .badge-blue   { background: rgba(100,149,237,.15); color: #6495ed; border: 1px solid rgba(100,149,237,.3); }
+    .badge-gray   { background: rgba(255,255,255,.08); color: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.15); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .fld label { display: block; font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .35rem; }
+    .fld input, .fld select, .fld textarea {
+      width: 100%; padding: .65rem .9rem;
+      background: rgba(0,0,0,.3); border: 1px solid rgba(78,250,170,.2);
+      border-radius: 8px; color: #fff; font-family: inherit; font-size: .9rem;
+      transition: border-color .2s, background .2s;
     }
+    .fld input:focus, .fld select:focus, .fld textarea:focus { outline: none; border-color: #4efaaa; background: rgba(78,250,170,.04); }
+    .fld select option { background: #1a1a2e; color: #e8e8e8; }
+    .fld textarea { min-height: 80px; resize: vertical; }
+    .full-col { grid-column: 1 / -1; }
 
-    .btn-add-item {
-      width: 100%;
-      padding: 0.75rem;
-      background: rgba(78, 250, 170, 0.1);
-      border: 1px solid rgba(78, 250, 170, 0.3);
-      color: #4efaaa;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
+    .btn {
+      padding: .65rem 1.4rem; border: none; border-radius: 8px; font-family: inherit;
+      font-weight: 700; font-size: .88rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: .5rem; transition: all .2s ease;
     }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, #4efaaa 0%, #00ff7f 100%); color: #06100e; }
+    .btn-primary:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(78,250,170,.3); }
+    .btn-secondary { background: rgba(78,250,170,.1); border: 1px solid rgba(78,250,170,.3); color: #4efaaa; }
+    .btn-secondary:not(:disabled):hover { background: rgba(78,250,170,.18); }
+    .btn-danger { background: rgba(255,107,107,.1); border: 1px solid rgba(255,107,107,.3); color: #ff6b6b; }
+    .btn-danger:not(:disabled):hover { background: rgba(255,107,107,.2); }
+    .btn-sm { padding: .35rem .85rem; font-size: .78rem; }
 
-    .btn-add-item:hover {
-      background: rgba(78, 250, 170, 0.2);
-    }
+    #toastContainer { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: .5rem; z-index: 9999; }
+    .toast { padding: .8rem 1.2rem; border-radius: 10px; font-size: .88rem; font-weight: 600; display: flex; align-items: center; gap: .6rem; animation: slideIn .25s ease; max-width: 340px; }
+    .toast-success { background: rgba(78,250,170,.15); border: 1px solid rgba(78,250,170,.4); color: #4efaaa; }
+    .toast-error   { background: rgba(255,107,107,.15); border: 1px solid rgba(255,107,107,.4); color: #ff6b6b; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
 
-    .button-group {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
+    .mc-info-label { font-size: .75rem; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .05em; }
+    .mc-info-value { font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 900; }
+    .mc-player-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+    .mc-player { background: rgba(78,250,170,.1); border: 1px solid rgba(78,250,170,.25); border-radius: 6px; padding: .2rem .7rem; font-size: .8rem; font-family: 'Roboto Mono', monospace; color: #4efaaa; }
 
-    .btn-save, .btn-cancel {
-      flex: 1;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
+    .discord-live-card { background: rgba(88,101,242,.07); border: 1px solid rgba(88,101,242,.25); border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .discord-icon { font-size: 2.5rem; color: #7289da; flex-shrink: 0; }
 
-    .btn-save {
-      background: linear-gradient(135deg, #4efaaa 0%, #00ff7f 100%);
-      color: #0a0a0b;
-    }
+    .diff-positive { color: #4efaaa; font-weight: 600; }
+    .diff-negative { color: #ff6b6b; font-weight: 600; }
+    .diff-neutral  { color: rgba(255,255,255,.5); }
 
-    .btn-save:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(78, 250, 170, 0.3);
-    }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,.35); }
+    .empty-state i { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
 
-    .btn-cancel {
-      background: rgba(78, 250, 170, 0.1);
-      border: 1px solid rgba(78, 250, 170, 0.3);
-      color: #4efaaa;
-    }
+    .config-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .config-row input { flex: 1; min-width: 180px; padding: .6rem .9rem; background: rgba(0,0,0,.3); border: 1px solid rgba(78,250,170,.2); border-radius: 8px; color: #fff; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
+    .config-row input:focus { outline: none; border-color: #4efaaa; }
+    .config-hint { font-size: .78rem; color: rgba(255,255,255,.4); }
 
-    .btn-cancel:hover {
-      background: rgba(78, 250, 170, 0.2);
-    }
-
-    .success-message {
-      padding: 1rem;
-      background: rgba(78, 250, 170, 0.1);
-      border-left: 4px solid #4efaaa;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      display: none;
-    }
-
-    .success-message.show {
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .editor-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .item-row {
-        flex-direction: column;
-      }
-
-      .item-row input {
-        width: 100%;
-      }
-
-      .item-row button {
-        width: 100%;
-      }
+    @media (max-width: 640px) {
+      .dash-wrap { padding-top: 90px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-value { font-size: 1.5rem; }
     }
   </style>
 </head>
 <body>
-  <div id="navbar-container"></div>
-  <script>
-    document.getElementById('navbar-container').innerHTML = '<div id="includeNavbar"></div>';
-  </script>
-  <div id="includeNavbar" data-include="/components/navbar.html"></div>
+  <div data-include="/components/navbar.html"></div>
   <script src="/assets/js/include.js"></script>
 
-  <main class="editor-container">
-    <div id="accessDenied" class="access-denied-message" style="display: none;">
-      <div class="access-denied-card">
-        <i class="fa-solid fa-lock"></i>
-        <h2>Access Restricted</h2>
-        <p>This page is for authorized administrators only.</p>
-        <a href="/" class="btn-back">Return to Home</a>
-      </div>
+  <div id="toastContainer"></div>
+
+  <main class="dash-wrap">
+
+    <div id="loadingState">
+      <div class="spinner"></div>
+      <p style="color:rgba(255,255,255,.4);">Loading dashboard…</p>
     </div>
 
-    <div id="editorContent" style="display: none;">
-      <div class="editor-header">
-        <h1>Analytics Data Editor</h1>
-        <p class="header-subtitle">Manage finance data and analytics settings</p>
-      </div>
+    <div id="accessDenied" style="display:none;">
+      <div style="font-size:3rem;opacity:.5;"><i class="fa-solid fa-lock"></i></div>
+      <h2>Access Restricted</h2>
+      <p style="color:rgba(255,255,255,.5);">This dashboard is for manager-level staff and administrators.</p>
+      <a href="/admin/" class="btn btn-secondary" style="margin-top:.5rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Admin
+      </a>
+    </div>
 
-      <div class="success-message" id="successMessage">
-        <i class="fa-solid fa-check-circle"></i>
-        <span id="successText">Data saved successfully!</span>
-      </div>
+    <div id="dashContent" style="display:none;">
 
-      <div class="editor-grid">
-        <!-- Finance Section -->
-        <div class="editor-section">
-          <h2>Monthly Site Upkeep Costs</h2>
-          <div class="items-list" id="upkeepList"></div>
-          <button class="btn-add-item" onclick="addUpkeepMonth()">
-            <i class="fa-solid fa-plus"></i> Add Month
+      <header class="dash-header">
+        <div>
+          <h1><i class="fa-solid fa-chart-line" style="font-size:1.6rem;-webkit-text-fill-color:#4efaaa;"></i> Community Analytics</h1>
+          <p>Live data from Firestore, Discord, and Minecraft — admin only</p>
+        </div>
+        <div class="dash-header-actions">
+          <span id="lastUpdated">—</span>
+          <button class="btn btn-secondary" id="refreshBtn">
+            <i class="fa-solid fa-rotate"></i> Refresh
           </button>
+          <a href="/analytics/" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Public View
+          </a>
+        </div>
+      </header>
+
+      <nav class="dash-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="overview"  role="tab"><i class="fa-solid fa-gauge-high"></i>    Overview</button>
+        <button class="tab-btn"        data-tab="community" role="tab"><i class="fa-brands fa-discord"></i>      Community</button>
+        <button class="tab-btn"        data-tab="events"    role="tab"><i class="fa-solid fa-calendar-days"></i> Events</button>
+        <button class="tab-btn"        data-tab="server"    role="tab"><i class="fa-solid fa-server"></i>        Server</button>
+        <button class="tab-btn"        data-tab="reports"   role="tab"><i class="fa-solid fa-clipboard-list"></i>Staff Reports</button>
+      </nav>
+
+      <!-- TAB: OVERVIEW -->
+      <div class="tab-pane active" id="tab-overview">
+        <div class="stats-grid" id="kpiGrid"></div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-calendar-check"></i> Recent Events</h2>
+            </div>
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Event</th><th>Date</th><th>RSVPs</th><th>Report</th></tr></thead>
+                <tbody id="recentEventsBody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:rgba(255,255,255,.4);">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-fire-flame-curved"></i> Trending Insights</h2>
+            </div>
+            <div id="insightsPanel"><p style="color:rgba(255,255,255,.4);font-size:.875rem;">Loading insights…</p></div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-user-group"></i> Discord Members (Last 12 Snapshots)</h2>
+            </div>
+            <div class="chart-wrap"><canvas id="miniMemberChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-calendar-days"></i> Events Per Month (Last 12 Mo.)</h2>
+            </div>
+            <div class="chart-wrap"><canvas id="miniEventsChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: COMMUNITY -->
+      <div class="tab-pane" id="tab-community">
+        <div id="discordLiveBlock" class="discord-live-card" style="margin-bottom:1.5rem;">
+          <div class="discord-icon"><i class="fa-brands fa-discord"></i></div>
+          <div style="flex:1;">
+            <div class="mc-info-label">Discord Server — Live</div>
+            <div id="discordLiveName" class="mc-info-value" style="font-size:1.2rem;">—</div>
+            <div style="display:flex;gap:1.5rem;margin-top:.5rem;flex-wrap:wrap;">
+              <div><div class="mc-info-label">Total Members</div><div id="discordLiveTotal" class="mc-info-value">—</div></div>
+              <div><div class="mc-info-label">Online Now</div><div id="discordLiveOnline" class="mc-info-value">—</div></div>
+            </div>
+          </div>
         </div>
 
-        <!-- Founder Contributions -->
-        <div class="editor-section">
-          <h2>Founder Contributions</h2>
-          <div class="items-list" id="contributionsList"></div>
-          <button class="btn-add-item" onclick="addContributor()">
-            <i class="fa-solid fa-plus"></i> Add Founder
-          </button>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-gear"></i> Discord Configuration</h2>
+          </div>
+          <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:.75rem;">
+            Enter the code from any permanent Discord invite link (e.g. <code style="color:#4efaaa;">https://discord.gg/<strong>abc123</strong></code>). This pulls live member count via Discord's public API — no bot needed.
+          </p>
+          <div class="config-row">
+            <input id="discordInviteInput" placeholder="Invite code (e.g. abc123)" autocomplete="off" spellcheck="false">
+            <button class="btn btn-primary" id="saveDiscordConfigBtn"><i class="fa-solid fa-floppy-disk"></i> Save &amp; Verify</button>
+          </div>
+          <p class="config-hint" style="margin-top:.6rem;" id="discordConfigStatus"></p>
         </div>
-      </div>
 
-      <div class="editor-grid">
-        <!-- Monthly Budget Total -->
-        <div class="editor-section">
-          <h2>Budget Settings</h2>
-          <form id="budgetForm">
-            <div class="form-group">
-              <label for="totalBudget">Total Monthly Budget ($)</label>
-              <input type="number" id="totalBudget" min="0" step="0.01" required>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-chart-line"></i> Member Count Over Time</h2>
+            <span style="font-size:.8rem;color:rgba(255,255,255,.4);">From manual snapshots</span>
+          </div>
+          <div class="chart-wrap" style="max-height:280px;"><canvas id="memberCountChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-right-left"></i> Estimated Joins &amp; Leaves Between Snapshots</h2>
+            <span style="font-size:.8rem;color:rgba(255,255,255,.4);">Delta between consecutive snapshots</span>
+          </div>
+          <div class="chart-wrap" style="max-height:260px;"><canvas id="growthDeltaChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-plus-circle"></i> Log Community Snapshot</h2>
+          </div>
+          <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:1rem;">
+            Record the current Discord member count to build the growth history. The character count is auto-read from Firestore if left empty.
+          </p>
+          <form id="snapshotForm">
+            <div class="form-grid">
+              <div class="fld"><label for="snapDate">Date</label><input type="date" id="snapDate" required></div>
+              <div class="fld"><label for="snapDiscordMembers">Discord Members <span style="color:#ff6b6b">*</span></label><input type="number" id="snapDiscordMembers" min="0" placeholder="e.g. 420" required></div>
+              <div class="fld"><label for="snapDiscordOnline">Discord Online (optional)</label><input type="number" id="snapDiscordOnline" min="0" placeholder="e.g. 38"></div>
+              <div class="fld"><label for="snapCharCount">Character Count (optional)</label><input type="number" id="snapCharCount" min="0" placeholder="Auto-filled if blank"></div>
+              <div class="fld full-col"><label for="snapNotes">Notes (optional)</label><textarea id="snapNotes" placeholder="Server announcement, notable event…"></textarea></div>
+            </div>
+            <div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+              <button type="submit" class="btn btn-primary" id="snapSubmitBtn"><i class="fa-solid fa-floppy-disk"></i> Save Snapshot</button>
+              <span id="snapStatus" style="font-size:.85rem;color:rgba(255,255,255,.45);"></span>
             </div>
           </form>
         </div>
 
-        <!-- Additional Notes -->
-        <div class="editor-section">
-          <h2>Finance Notes</h2>
-          <form id="notesForm">
-            <div class="form-group">
-              <label for="financeNotes">Additional Notes</label>
-              <textarea id="financeNotes" rows="5" placeholder="Add any additional notes about finances..."></textarea>
-            </div>
-          </form>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-table-list"></i> Snapshot History</h2>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Discord Members</th><th>Online</th><th>Characters</th><th>Change</th><th>Notes</th><th></th></tr></thead>
+              <tbody id="snapshotHistoryBody"><tr><td colspan="7" style="text-align:center;padding:2rem;color:rgba(255,255,255,.4);">Loading…</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div class="editor-section" style="grid-column: 1 / -1;">
-        <div class="button-group">
-          <button class="btn-save" onclick="saveFinanceData()">
-            <i class="fa-solid fa-save"></i> Save All Changes
-          </button>
-          <button class="btn-cancel" onclick="window.location.href='/analytics/'">
-            <i class="fa-solid fa-arrow-left"></i> Back to Analytics
-          </button>
+      <!-- TAB: EVENTS -->
+      <div class="tab-pane" id="tab-events">
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-chart-bar"></i> Events Per Month</h2>
+              <span style="font-size:.8rem;color:rgba(255,255,255,.4);">Last 12 months</span>
+            </div>
+            <div class="chart-wrap"><canvas id="eventsPerMonthChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-hand-point-up"></i> RSVP Counts — Last 10 Events</h2>
+            </div>
+            <div class="chart-wrap"><canvas id="rsvpBarChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="eventKpiGrid" style="margin-bottom:1.5rem;"></div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-list-ul"></i> All Events (Past 6 Months)</h2>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Event</th><th>Date</th><th>Zone</th><th>Manager</th><th>RSVPs</th><th>Actual</th><th>Show %</th></tr></thead>
+              <tbody id="eventsDetailBody"><tr><td colspan="7" style="text-align:center;padding:2rem;color:rgba(255,255,255,.4);">Loading…</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- TAB: SERVER -->
+      <div class="tab-pane" id="tab-server">
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-cube"></i> Minecraft Server</h2>
+              <button class="btn btn-secondary btn-sm" id="mcRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+            <div id="mcStatusBlock"><p style="color:rgba(255,255,255,.4);">Fetching status…</p></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-globe"></i> Website</h2>
+            </div>
+            <div id="websiteStatusBlock"><p style="color:rgba(255,255,255,.4);">Checking…</p></div>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="serverKpiGrid" style="margin-bottom:1.5rem;"></div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Character Breakdown</h2>
+          </div>
+          <div id="charStatBlock"><p style="color:rgba(255,255,255,.4);">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- TAB: STAFF REPORTS -->
+      <div class="tab-pane" id="tab-reports">
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-pen-to-square"></i> Submit Attendance Report</h2>
+          </div>
+          <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:1rem;">
+            RP Managers: after an event, record the actual headcount here so we can track RSVP-to-attendance rates over time.
+          </p>
+          <form id="reportForm">
+            <div class="form-grid">
+              <div class="fld full-col">
+                <label for="reportEventSel">Event <span style="color:#ff6b6b">*</span></label>
+                <select id="reportEventSel" required><option value="">— Select a past event —</option></select>
+              </div>
+              <div class="fld">
+                <label for="reportRsvpCount">RSVP Count (auto)</label>
+                <input type="number" id="reportRsvpCount" min="0" readonly placeholder="Auto-filled">
+              </div>
+              <div class="fld">
+                <label for="reportActualCount">Actual Attendees <span style="color:#ff6b6b">*</span></label>
+                <input type="number" id="reportActualCount" min="0" placeholder="How many showed up?" required>
+              </div>
+              <div class="fld full-col">
+                <label for="reportNotes">Notes (optional)</label>
+                <textarea id="reportNotes" placeholder="Late starts, notable moments, character deaths…"></textarea>
+              </div>
+            </div>
+            <div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+              <button type="submit" class="btn btn-primary" id="reportSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Submit Report</button>
+              <span id="reportStatus" style="font-size:.85rem;color:rgba(255,255,255,.45);"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-people-group"></i> RSVP vs Actual Attendance</h2>
+          </div>
+          <div class="chart-wrap"><canvas id="attendanceComparisonChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-table-list"></i> All Attendance Reports</h2>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Event</th><th>Date</th><th>RSVPs</th><th>Actual</th><th>Show Rate</th><th>Reported By</th><th>Notes</th><th></th></tr></thead>
+              <tbody id="reportsTableBody"><tr><td colspan="8" style="text-align:center;padding:2rem;color:rgba(255,255,255,.4);">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dashContent -->
   </main>
 
-  <script type="module" src="/assets/js/auth.js"></script>
-  <script type="module" src="/assets/js/analytics-editor.js"></script>
+  <script type="module" src="/assets/js/admin-analytics-dashboard.js"></script>
 </body>
 </html>

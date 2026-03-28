@@ -321,7 +321,7 @@
               <h4>Related Research Logs</h4>
               ${visibleLogs.map(log => `
                 <div style="padding:.5rem;background:rgba(78,250,170,0.06);border:1px solid rgba(78,250,170,0.12);border-radius:6px;margin-bottom:.5rem">
-                  <a href="/research-logs/?view=${log.id}" style="color:var(--accent-mint);font-weight:600;text-decoration:none">${log.title || '(untitled)'}</a>
+                  <a href="/research-logs/view/?id=${encodeURIComponent(log.id)}" style="color:var(--accent-mint);font-weight:600;text-decoration:none">${log.title || '(untitled)'}</a>
                   <div style="font-size:.85rem;color:var(--text-light);margin-top:.3rem">${log.author || 'Unknown'} • Level ${log.clearanceLevel || '?'}</div>
                 </div>
               `).join('')}
@@ -332,8 +332,8 @@
             <div class="poi-card ${priorityClass}">
               <div class="poi-header">
                 <div>
-                  <h3 class="poi-title">${poi.name || 'Unknown Individual'}</h3>
-                  ${poi.designation ? `<div class="poi-designation">${poi.designation}</div>` : ''}
+                  <h3 class="poi-title"><a href="/archives/poi/view/?id=${encodeURIComponent(poiId)}" style="color:inherit;text-decoration:none">${poi.name || 'Unknown Individual'}</a></h3>
+                  ${poi.designation ? `<div class="poi-designation"><a href="/archives/poi/view/?id=${encodeURIComponent(poi.designation)}" style="color:inherit;text-decoration:none">${poi.designation}</a></div>` : ''}
                 </div>
               </div>
               <div class="poi-meta">

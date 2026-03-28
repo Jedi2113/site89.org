@@ -25,6 +25,22 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
+    // Manager or above can access role management tools
+    function isManagerOrAbove() {
+      return request.auth != null && (
+        isPrimaryAdminEmail() ||
+        isAdmin() ||
+        (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'admin', 'raisa']
+        )
+      );
+    }
+
+    function isPrimaryAdminEmail() {
+      return request.auth != null && request.auth.token.email == 'jedi21132@gmail.com';
+    }
+
     // Helper function to check if user has AD/IO permissions
     function isADIOPersonnel() {
       // Add emails of AD/IO department personnel here
@@ -60,6 +76,32 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Community config (Discord invite code, etc.) — admin read/write only
+    match /settings/community_config {
+      allow read: if isManagerOrAbove();
+      allow write: if isPrimaryAdminEmail();
+    }
+
+    // Community snapshots — admin write, admin read
+    match /community_snapshots/{snapId} {
+      allow read:   if isManagerOrAbove();
+      allow create: if isPrimaryAdminEmail()
+        && request.resource.data.discordMembers is int
+        && request.resource.data.date is timestamp;
+      allow delete: if isPrimaryAdminEmail();
+      allow update: if false;
+    }
+
+    // Event attendance reports — any AD/IO can create, admin can delete
+    match /event_attendance_reports/{reportId} {
+      allow read:   if request.auth != null && (isADIOPersonnel() || isManagerOrAbove());
+      allow create: if request.auth != null && isADIOPersonnel()
+        && request.resource.data.eventId is string
+        && request.resource.data.actualAttendance is int;
+      allow delete: if isPrimaryAdminEmail();
+      allow update: if false;
+    }
+
     // Characters collection - allow anyone to read (for personnel files page)
     match /characters/{characterId} {
       allow read: if true;
@@ -67,20 +109,43 @@ service cloud.firestore {
       // Character owner, IA/RAISA personnel, or admin can edit/delete
       allow update, delete: if request.auth != null && (
         request.auth.uid == resource.data.linkedUID || 
-        isIARAISAPersonnel()
+        isIARAISAPersonnel() ||
+        isManagerOrAbove()
       );
     }
 
     // Archived characters collection - IA/RAISA personnel only
     match /arch-char/{characterId} {
-      allow read: if request.auth != null && isIARAISAPersonnel();
-      allow create, update, delete: if request.auth != null && isIARAISAPersonnel();
+      allow read: if request.auth != null && (isIARAISAPersonnel() || isManagerOrAbove());
+      allow create, update, delete: if request.auth != null && (isIARAISAPersonnel() || isManagerOrAbove());
     }
 
     // Users collection - allow reads for authenticated users
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && (
+        isPrimaryAdminEmail() ||
+        isAdmin() ||
+        (
+          request.auth.uid == userId
+          && !(request.resource.data.role in ['manager', 'admin', 'raisa'])
+          && request.resource.data.isAdmin != true
+        )
+      );
+      allow update: if request.auth != null && (
+        isPrimaryAdminEmail() ||
+        isAdmin() ||
+        (
+          request.auth.uid == userId
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.isAdmin == resource.data.isAdmin
+        )
+      );
+      allow delete: if request.auth != null && (
+        request.auth.uid == userId ||
+        isPrimaryAdminEmail() ||
+        isAdmin()
+      );
     }
 
     // Personnel collection - allow authenticated users to read PIDs for character creation
@@ -91,25 +156,33 @@ service cloud.firestore {
 
     // ===== BANKING =====
     match /bank_accounts/{pid} {
-      allow read: if request.auth != null && (
-        request.auth.uid == resource.data.linkedUID || isBankAdmin()
+      // Allow authenticated users to check existence for their own account bootstrap flow.
+      // Full collection listing remains restricted to bank admins.
+      allow get: if request.auth != null && (
+        resource == null || request.auth.uid == resource.data.linkedUID || isBankAdmin() || isManagerOrAbove()
       );
+      allow list: if request.auth != null && (isBankAdmin() || isManagerOrAbove());
       allow create: if request.auth != null && (
-        request.resource.data.linkedUID == request.auth.uid || isBankAdmin()
+        request.resource.data.linkedUID == request.auth.uid || isBankAdmin() || isManagerOrAbove()
       );
       allow update: if request.auth != null && (
-        request.auth.uid == resource.data.linkedUID || isBankAdmin()
+        request.auth.uid == resource.data.linkedUID || isBankAdmin() || isManagerOrAbove()
       );
-      allow delete: if request.auth != null && isBankAdmin();
+      allow delete: if request.auth != null && (isBankAdmin() || isManagerOrAbove());
     }
 
     match /bank_accounts/{pid}/transactions/{txId} {
       allow read: if request.auth != null && (
         request.auth.uid == get(/databases/$(database)/documents/bank_accounts/$(pid)).data.linkedUID ||
-        isBankAdmin()
+        isBankAdmin() ||
+        isManagerOrAbove()
       );
-      allow create: if request.auth != null && isBankAdmin();
+      allow create: if request.auth != null && (isBankAdmin() || isManagerOrAbove());
       allow update, delete: if false;
+    }
+
+    match /bank_config/{configId} {
+      allow read, write: if request.auth != null && (isBankAdmin() || isManagerOrAbove());
     }
 
     // ===== MODERATION =====
@@ -164,13 +237,60 @@ service cloud.firestore {
 
     // Gallery collection
     match /gallery/{galleryId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow create: if request.auth != null
         && request.resource.data.uploaderId == request.auth.uid
         && request.resource.data.imageUrl is string
         && request.resource.data.caption is string;
+
+      // Any authenticated user can update only voting fields.
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes', 'downvotes', 'upvoters', 'downvoters']);
+
       allow delete: if request.auth != null && (
         resource.data.uploaderId == request.auth.uid ||
+        request.auth.token.email == 'jedi21132@gmail.com'
+      );
+    }
+
+    // Articles collection - community news/posts
+    match /articles/{articleId} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.bodyMd is string
+        && request.resource.data.tags is list
+        && request.resource.data.mode in ['ic', 'ooc'];
+
+      allow update: if request.auth != null && (
+        // OOC owner edits their own article
+        (resource.data.mode == 'ooc' && resource.data.authorUid == request.auth.uid)
+        ||
+        // IC owner edits if they own the character attached to the article
+        (
+          resource.data.mode == 'ic'
+          && resource.data.authorCharacterId is string
+          && get(/databases/$(database)/documents/characters/$(resource.data.authorCharacterId)).data.linkedUID == request.auth.uid
+        )
+        ||
+        // Site admin
+        request.auth.token.email == 'jedi21132@gmail.com'
+        ||
+        // Any authenticated user can update voting fields only
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes', 'downvotes', 'upvoters', 'downvoters'])
+      );
+
+      allow delete: if request.auth != null && (
+        (resource.data.mode == 'ooc' && resource.data.authorUid == request.auth.uid)
+        ||
+        (
+          resource.data.mode == 'ic'
+          && resource.data.authorCharacterId is string
+          && get(/databases/$(database)/documents/characters/$(resource.data.authorCharacterId)).data.linkedUID == request.auth.uid
+        )
+        ||
         request.auth.token.email == 'jedi21132@gmail.com'
       );
     }
@@ -202,7 +322,7 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.createdByUid == request.auth.uid
         && request.resource.data.reportId is string
-        && request.resource.data.content is string;
+        && request.resource.data.contentMd is string;
       
       // Allow update/delete by creator or admin
       allow update, delete: if request.auth != null && (

@@ -147,6 +147,11 @@
 
           <form id="rlForm" class="rl-form">
             <label>
+              Research Log ID *
+              <input id="rlResearchId" type="text" placeholder="RL-MM.DD.YY-###" required>
+            </label>
+
+            <label>
               Title *
               <input id="rlTitle" type="text" placeholder="Log Title" required>
             </label>
@@ -171,8 +176,8 @@
 
             <label>
               Link to Anomalies, POIs, or GOIs
-              <div style="font-size:.9rem;color:var(--text-light);margin-top:.2rem">Enter item numbers (e.g., AN-049, POI-003, GOI-012) separated by commas</div>
-              <input id="rlLinkedItems" type="text" placeholder="AN-049, POI-003, GOI-012">
+              <div style="font-size:.9rem;color:var(--text-light);margin-top:.2rem">Enter item numbers or report IDs (e.g., AN-049, POI-003, GOI-012, RL-03.26.26-001) separated by commas</div>
+              <input id="rlLinkedItems" type="text" placeholder="AN-049, POI-003, GOI-012, RL-03.26.26-001">
             </label>
 
             <div id="rlLinkedPreview" class="rl-linked-select"></div>

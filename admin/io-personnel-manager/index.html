@@ -248,7 +248,7 @@
     <div id="accessDenied" class="access-denied" style="display:none;">
       <i class="fas fa-lock" style="font-size:3rem;margin-bottom:1rem;opacity:0.6;display:block;"></i>
       <h2>Access Denied</h2>
-      <p>Only characters from the Internal Affairs (IA) or Research Analysis Intelligence Agency (RAISA) departments can access this control center.</p>
+      <p>Only manager-level staff (or IA/RAISA personnel) can access this control center.</p>
     </div>
 
     <!-- Management Interface -->
@@ -660,6 +660,23 @@
     let selectedCharNames = new Map(); // Track names for bulk actions
     let deptChart = null;
     let statusChart = null;
+    const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
+
+    function normalizeRole(value) {
+      const role = String(value || '').trim().toLowerCase();
+      if (role === 'admin') return 'admin';
+      if (role === 'manager') return 'manager';
+      if (role === 'raisa') return 'manager';
+      return 'member';
+    }
+
+    function isManagerOrAboveUser(user, userDoc) {
+      if (!user) return false;
+      if (user.email === PRIMARY_ADMIN_EMAIL) return true;
+      if (userDoc?.isAdmin === true) return true;
+      const role = normalizeRole(userDoc?.role);
+      return role === 'manager' || role === 'admin';
+    }
 
     // Status change modal state
     let pendingStatusChange = {
@@ -1631,6 +1648,16 @@
               legend: {
                 labels: { color: 'rgba(255, 255, 255, 0.8)', font: { size: 11 } },
                 position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const value = context.parsed;
+                    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return ` ${context.label}: ${value} (${pct}%)`;
+                  }
+                }
               }
             }
           }
@@ -1981,10 +2008,19 @@
 
         try {
           console.log('[IA Manager] Checking user access for UID:', user.uid.substring(0, 8) + '...');
+          let userDoc = null;
+          try {
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            userDoc = userSnap.exists() ? userSnap.data() : null;
+          } catch {
+            userDoc = null;
+          }
+
+          let hasAccess = isManagerOrAboveUser(user, userDoc);
+
           const q = query(collection(db, 'characters'), where('linkedUID', '==', user.uid));
           const charSnap = await getDocs(q);
-          
-          let hasAccess = false;
+
           charSnap.forEach(doc => {
             const char = doc.data();
             if ((char.department || '').includes('IA') || (char.department || '').includes('RAISA')) {

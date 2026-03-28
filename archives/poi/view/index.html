@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>POI File - Site-89</title>
+  <meta name="description" content="View a Foundation person of interest file.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="POI File - Site-89">
+  <meta property="og:description" content="View a Foundation person of interest file.">
+  <meta property="og:url" content="https://site89.github.io/archives/poi/view/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="POI File - Site-89">
+  <meta name="twitter:description" content="View a Foundation person of interest file.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+  <link rel="canonical" href="https://site89.github.io/archives/poi/view/">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+  <style>
+    .pv-shell{max-width:1100px;margin:1.5rem auto;padding:0 1rem 2rem}.pv-back{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;color:var(--accent-teal);font-weight:700;margin-bottom:1rem}.pv-card{background:var(--bg-card);border:1px solid rgba(78,250,170,.2);border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.24)}.pv-head{padding:1.25rem;border-bottom:1px solid rgba(78,250,170,.12);background:linear-gradient(135deg, rgba(78,250,170,.08), rgba(0,124,107,.05))}.pv-id{font-family:var(--font-mono);color:var(--accent-teal)}.pv-title{margin:.35rem 0 0;color:var(--accent-mint);font-size:1.9rem}.pv-meta{margin:.6rem 0 0;color:var(--text-light)}.pv-body{padding:1.2rem;display:grid;gap:1rem}.pv-section{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:1rem}.pv-section h2{margin:0 0 .6rem;color:var(--accent-mint);font-size:1.1rem}.pv-message{text-align:center;padding:2rem 1rem;color:var(--text-light)}
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+  <main class="pv-shell">
+    <a class="pv-back" href="/archives/poi/">Back to POI Database</a>
+    <section id="poiView" class="pv-card" style="display:none;">
+      <header class="pv-head"><div id="pvDesignation" class="pv-id">POI</div><h1 id="pvTitle" class="pv-title">Loading...</h1><p id="pvMeta" class="pv-meta"></p></header>
+      <div class="pv-body">
+        <section class="pv-section"><h2>Description</h2><div id="pvDescription"></div></section>
+        <section id="pvAbilitiesSection" class="pv-section" style="display:none;"><h2>Known Abilities / Capabilities</h2><div id="pvAbilities"></div></section>
+        <section id="pvActivitiesSection" class="pv-section" style="display:none;"><h2>Known Activities & Sightings</h2><div id="pvActivities"></div></section>
+        <section id="pvNotesSection" class="pv-section" style="display:none;"><h2>Intelligence Notes</h2><div id="pvNotes"></div></section>
+      </div>
+    </section>
+    <section id="poiMessage" class="pv-card"><div id="pvMessageText" class="pv-message">Loading POI file...</div></section>
+  </main>
+  <div data-include="/components/footer.html"></div>
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/poi-view.js"></script>
+</body>
+</html>

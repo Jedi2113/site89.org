@@ -1,5 +1,5 @@
 import { app } from "./auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const db = getFirestore(app);
@@ -35,6 +35,7 @@ const loadBtn = document.getElementById('rlLoadBtn');
 const addVersionBtn = document.getElementById('rlAddVersion');
 const versionsContainer = document.getElementById('rlVersionsContainer');
 const form = document.getElementById('rlForm');
+const researchIdInput = document.getElementById('rlResearchId');
 const titleInput = document.getElementById('rlTitle');
 const clearanceInput = document.getElementById('rlClearance');
 const tagsInput = document.getElementById('rlTags');
@@ -54,6 +55,23 @@ const editBtn = document.getElementById('rlEditBtn');
 function setStatus(msg, isError = false){
   statusDiv.textContent = msg;
   statusDiv.style.color = isError ? 'var(--accent-red)' : 'var(--accent-mint)';
+}
+
+function normalizeResearchId(value){
+  return String(value || '').trim().toUpperCase();
+}
+
+function isValidResearchId(value){
+  return /^RL-\d{2}\.\d{2}\.\d{2}-\d{3}$/.test(normalizeResearchId(value));
+}
+
+async function findLogByResearchId(researchId){
+  const normalized = normalizeResearchId(researchId);
+  if(!normalized) return null;
+
+  const matches = await getDocs(query(collection(db, 'researchLogs'), where('researchId', '==', normalized)));
+  if(matches.empty) return null;
+  return matches.docs[0];
 }
 
 function resetForm(){
@@ -210,13 +228,16 @@ function closeModal(){
 // Load existing log for editing
 async function loadExisting(){
   if(!canEdit()){ alert('Only ScD/R&D personnel or Level 5+ can edit logs.'); return; }
-  const logId = prompt('Enter the log ID to edit (check URL or document ID):');
-  if(!logId) return;
+  const requestedId = prompt('Enter the research log document ID or visible log ID (for example RL-03.26.26-001):');
+  if(!requestedId) return;
   
   setStatus('Loading...');
   try{
-    const docRef = doc(db, 'researchLogs', logId);
-    const snap = await getDoc(docRef);
+    let snap = await getDoc(doc(db, 'researchLogs', requestedId));
+    if(!snap.exists()){
+      const byResearchId = await findLogByResearchId(requestedId);
+      if(byResearchId) snap = byResearchId;
+    }
     if(!snap.exists()){ setStatus('Log not found.', true); return; }
     
     const data = snap.data();
@@ -230,8 +251,9 @@ async function loadExisting(){
       return;
     }
     
-    currentLogId = logId;
+    currentLogId = snap.id;
     modalTitle.textContent = 'Edit Research Log';
+    researchIdInput.value = data.researchId || '';
     titleInput.value = data.title || '';
     clearanceInput.value = data.clearanceLevel || '1';
     tagsInput.value = (data.tags || []).join(', ');
@@ -264,7 +286,7 @@ function updateLinkedPreview(){
   
   const items = value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
   linkedPreview.innerHTML = items.map(item => {
-    const type = item.startsWith('AN-') ? 'Anomaly' : item.startsWith('POI-') ? 'POI' : item.startsWith('GOI-') ? 'GOI' : 'Item';
+    const type = item.startsWith('AN-') ? 'Anomaly' : item.startsWith('POI-') ? 'POI' : item.startsWith('GOI-') ? 'GOI' : item.startsWith('RL-') ? 'Research Log' : 'Item';
     return `<div class="rl-linked-item">${type}: ${item}</div>`;
   }).join('');
 }
@@ -276,6 +298,12 @@ async function handleSubmit(e){
   
   if(!auth.currentUser){ setStatus('Login required.', true); return; }
   if(!canEdit()){ setStatus('Only ScD/R&D or Level 5+ may edit.', true); return; }
+
+  const researchId = normalizeResearchId(researchIdInput.value);
+  if(!isValidResearchId(researchId)){
+    setStatus('Research Log ID must use format RL-MM.DD.YY-###.', true);
+    return;
+  }
   
   const title = titleInput.value.trim();
   if(!title){ setStatus('Title required.', true); return; }
@@ -301,9 +329,18 @@ async function handleSubmit(e){
   const logId = currentLogId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + Date.now().toString(36);
   const docRef = doc(db, 'researchLogs', logId);
   const snap = await getDoc(docRef);
+
+  if(!snap.exists()){
+    const duplicateResearchId = await findLogByResearchId(researchId);
+    if(duplicateResearchId && duplicateResearchId.id !== logId){
+      setStatus('That Research Log ID is already in use.', true);
+      return;
+    }
+  }
   
   const ch = getSelectedCharacter();
   const payload = {
+    researchId,
     title,
     author: ch ? ch.name : null,
     department: ch ? (ch.department || '') : '',
@@ -346,7 +383,7 @@ function renderList(){
     }
     
     if(q){
-      const hay = `${log.title||''} ${(log.tags||[]).join(' ')} ${(log.linkedItems||[]).join(' ')}`.toLowerCase();
+      const hay = `${log.researchId||''} ${log.title||''} ${(log.tags||[]).join(' ')} ${(log.linkedItems||[]).join(' ')}`.toLowerCase();
       if(!hay.includes(q)) return false;
     }
     
@@ -361,10 +398,12 @@ function renderList(){
   tableBody.innerHTML = '';
   filtered.forEach(log => {
     const row = document.createElement('tr');
-    row.addEventListener('click', () => openViewModal(log));
+    row.addEventListener('click', () => {
+      window.location.href = `/research-logs/view/?id=${encodeURIComponent(log.id)}`;
+    });
     
     const titleCell = document.createElement('td');
-    titleCell.innerHTML = `<span class="rl-link">${log.title || '(untitled)'}</span>`;
+    titleCell.innerHTML = `<a class="rl-link" href="/research-logs/view/?id=${encodeURIComponent(log.id)}">${log.researchId ? `${log.researchId}: ` : ''}${log.title || '(untitled)'}</a>`;
     
     const authorCell = document.createElement('td');
     authorCell.textContent = log.author || 'Unknown';
@@ -387,13 +426,13 @@ function renderList(){
 
 // View modal
 function openViewModal(log){
-  viewTitle.textContent = log.title || '(untitled)';
+  viewTitle.textContent = `${log.researchId ? `${log.researchId}: ` : ''}${log.title || '(untitled)'}`;
   
   // Get appropriate version for user
   const version = getVersionForUser(log);
   const versionInfo = log.versions && log.versions.length > 1 ? ` • Viewing Level ${version.clearance} version` : '';
   
-  viewMeta.textContent = `${log.author || 'Unknown'} • ${log.department || ''} • ${formatDate(log.createdAt)} • Clearance ${log.clearanceLevel || '?'}${versionInfo}`;
+  viewMeta.textContent = `${log.author || 'Unknown'} • ${log.department || ''} • ${formatDate(log.createdAt)} • Clearance ${log.clearanceLevel || '?'}${versionInfo}${log.researchId ? ` • ${log.researchId}` : ''}`;
   
   if(log.linkedItems && log.linkedItems.length){
     viewLinked.innerHTML = '<strong>Linked to:</strong> ' + log.linkedItems.map(i => `<span class="rl-linked">${i}</span>`).join('');
@@ -431,6 +470,7 @@ function openViewModal(log){
         }
         
         modalTitle.textContent = 'Edit Research Log';
+        researchIdInput.value = data.researchId || '';
         titleInput.value = data.title || '';
         clearanceInput.value = data.clearanceLevel || '1';
         tagsInput.value = (data.tags || []).join(', ');
@@ -517,7 +557,8 @@ function initializeResearchLogs(){
     const params = new URLSearchParams(window.location.search);
     const viewId = params.get('view');
     if(viewId){
-      const log = logs.find(l => l.id === viewId);
+      const normalizedViewId = normalizeResearchId(viewId);
+      const log = logs.find(l => l.id === viewId || normalizeResearchId(l.researchId) === normalizedViewId);
       if(log) openViewModal(log);
     }
   }, (err) => {

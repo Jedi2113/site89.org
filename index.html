@@ -2087,18 +2087,18 @@
       <h2 class="activity-title">Community Activity</h2>
       
       <div class="activity-grid">
-        <!-- Recent Anomalies -->
+        <!-- Recent Articles -->
         <div class="activity-card">
           <div class="activity-card-header">
             <div class="activity-card-icon">
-              <i class="fas fa-flask"></i>
+              <i class="fas fa-pen-nib"></i>
             </div>
-            <h3 class="activity-card-title">Recent Anomalies</h3>
+            <h3 class="activity-card-title">Recent Articles</h3>
           </div>
-          <div id="anomalies-list" class="activity-items">
-            <div class="activity-empty">Loading anomalies...</div>
+          <div id="articles-list" class="activity-items">
+            <div class="activity-empty">Loading articles...</div>
           </div>
-          <a href="/anomalies/" class="activity-view-all">View All Anomalies →</a>
+          <a href="/articles/" class="activity-view-all">View All Articles →</a>
         </div>
 
         <!-- Latest Research -->
@@ -2552,35 +2552,40 @@
 
     // Load Community Activity Dashboard with real-time updates
     function loadActivityDashboard() {
-      const anomaliesList = document.getElementById('anomalies-list');
+      const articlesList = document.getElementById('articles-list');
       const researchList = document.getElementById('research-list');
       const galleryList = document.getElementById('gallery-list');
 
-      // Subscribe to anomalies collection
-      const anomaliesQuery = query(collection(db, 'anomalies'), orderBy('createdAt', 'desc'));
-      onSnapshot(anomaliesQuery, (snap) => {
+      // Subscribe to articles collection
+      const articlesQuery = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
+      onSnapshot(articlesQuery, (snap) => {
         if (snap.size === 0) {
-          anomaliesList.innerHTML = '<div class="activity-empty">No anomalies yet</div>';
+          articlesList.innerHTML = '<div class="activity-empty">No articles yet</div>';
         } else {
-          let anomaliesHTML = '';
+          let articlesHTML = '';
           let count = 0;
           snap.forEach(doc => {
             if (count >= 3) return;
-            const anomaly = doc.data();
-            const id = anomaly.idNumber || anomaly.scp_id || doc.id;
-            anomaliesHTML += `
-              <div class="activity-item">
-                <span class="activity-item-title">SCP-${id}</span>
-                <span class="activity-item-meta">${anomaly.alterationClass || anomaly.class || 'Unclassified'}</span>
-              </div>
+            const article = doc.data();
+            const title = article.title || 'Untitled Article';
+            const author = article.authorDisplay || 'Unknown';
+            const dateVal = article.createdAt
+              ? (article.createdAt.seconds ? new Date(article.createdAt.seconds * 1000) : new Date(article.createdAt))
+              : new Date();
+            const date = dateVal.toLocaleDateString();
+            articlesHTML += `
+              <a class="activity-item" href="/articles/view/?id=${doc.id}" style="text-decoration:none;display:block;">
+                <span class="activity-item-title">${title}</span>
+                <span class="activity-item-meta">${author} • ${date}</span>
+              </a>
             `;
             count++;
           });
-          anomaliesList.innerHTML = anomaliesHTML;
+          articlesList.innerHTML = articlesHTML;
         }
       }, (err) => {
-        console.warn('Could not load anomalies:', err);
-        anomaliesList.innerHTML = '<div class="activity-empty">—</div>';
+        console.warn('Could not load articles:', err);
+        articlesList.innerHTML = '<div class="activity-empty">—</div>';
       });
 
       // Subscribe to research logs collection

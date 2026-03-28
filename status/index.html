@@ -3,77 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Service Tracker — Site-89</title>
-
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="Check the Site-89 service status. Monitor server uptime, maintenance schedules, and technical operations.">
-  <meta name="keywords" content="Site-89 status, server status, uptime tracker, service monitor">
-
-  <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Site-89">
-  <meta property="og:title" content="Service Tracker — Site-89">
-  <meta property="og:description" content="Check the Site-89 service status. Monitor server uptime and maintenance schedules.">
-  <meta property="og:url" content="https://site89.github.io/status/">
-  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-
-  <!-- Twitter Card Meta Tags -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Service Tracker — Site-89">
-  <meta name="twitter:description" content="Check the Site-89 service status.">
-  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
-
-  <link rel="canonical" href="https://site89.github.io/status/">
-
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&family=Roboto+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="stylesheet" href="/assets/css/status-tracker.css">
-  <script type="module">
-    import { ThemeManager } from '/assets/js/theme.js';
-    ThemeManager.init();
-  </script>
+  <title>Status Moved — Site-89</title>
+  <meta http-equiv="refresh" content="0; url=/admin/analytics/">
+  <link rel="canonical" href="https://site89.org/admin/analytics/">
 </head>
 <body>
-  <div data-include="/components/header.html"></div>
-  <div data-include="/components/navbar.html"></div>
-
-  <section class="status-hero">
-    <div class="content">
-      <p class="eyebrow">Operational overview</p>
-      <h1>Service Tracker</h1>
-      <p class="lead">Live heartbeat for critical Site-89 services.</p>
-      <div class="hero-meta">
-        <span class="pill" id="last-checked">Last checked: —</span>
-        <span class="pill pill-ghost">Auto-refresh: 60s</span>
-      </div>
-    </div>
-  </section>
-
-  <main class="content status-shell">
-    <div class="alert" id="major-alert">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <div>
-        <div class="alert-title">Some services are unreachable</div>
-        <div class="alert-text" id="alert-text"></div>
-      </div>
-    </div>
-
-    <div class="services-grid" id="services-grid"></div>
-  </main>
-
-  <div data-include="/components/footer.html"></div>
-
-  <script src="/assets/js/include.js"></script>
-  <script type="module" src="/assets/js/auth.js"></script>
-  <script src="/assets/js/service-tracker.js"></script>
-  <script>
-    document.addEventListener('scroll', () => {
-      const nav = document.getElementById('main-nav');
-      if (nav) nav.classList.toggle('is-sticky', window.scrollY > 120);
-    });
-  </script>
+  <p>System status is now available in the admin analytics dashboard.</p>
+  <p><a href="/admin/analytics/">Go to Admin Analytics</a></p>
 </body>
 </html>

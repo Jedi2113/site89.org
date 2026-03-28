@@ -19,6 +19,7 @@
       { "source": "/upload", "function": "imageApi" },
       { "source": "/image/**", "function": "imageApi" },
       { "source": "/api/trigger-event-notifications", "function": "triggerEventNotifications" },
+      { "source": "/api/merch-products", "function": "getMerchProducts" },
       { "source": "/anomalies/view", "destination": "/anomalies/view/index.html" },
       { "source": "/anomalies/view/**", "destination": "/anomalies/view/index.html" },
       { "source": "/anomalies/new", "destination": "/anomalies/new/index.html" },

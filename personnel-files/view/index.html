@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personnel File - Site-89</title>
+
+  <meta name="description" content="View official Site-89 personnel files, including department, clearance, awards, and biography.">
+  <meta name="keywords" content="Site-89 personnel, SCP roleplay character profile, Foundation staff file">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Personnel File - Site-89">
+  <meta property="og:description" content="View detailed personnel records for Site-89 staff.">
+  <meta property="og:url" content="https://site89.github.io/personnel-files/view/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Personnel File - Site-89">
+  <meta name="twitter:description" content="View detailed personnel records for Site-89 staff.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/personnel-files/view/">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+
+  <script type="module">
+    import { ThemeManager } from '/assets/js/theme.js';
+    ThemeManager.init();
+  </script>
+
+  <style>
+    .pf-shell {
+      max-width: 1100px;
+      margin: 1.5rem auto;
+      padding: 0 1rem 2rem;
+    }
+
+    .pf-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--accent-teal);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .pf-card {
+      background: var(--bg-card);
+      border: 2px solid rgba(78, 250, 170, 0.35);
+      border-radius: 12px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+
+    .pf-head {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(78, 250, 170, 0.2);
+      background: linear-gradient(135deg, rgba(78, 250, 170, 0.08), rgba(0, 124, 107, 0.05));
+    }
+
+    .pf-photo {
+      width: 100%;
+      max-width: 220px;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      border: 2px solid rgba(78, 250, 170, 0.35);
+      object-fit: cover;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .pf-name {
+      margin: 0;
+      color: var(--accent-mint);
+      font-size: 2rem;
+      line-height: 1.1;
+    }
+
+    .pf-subtitle {
+      margin: 0.35rem 0 1rem 0;
+      color: var(--text-light);
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    .pf-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem 1rem;
+    }
+
+    .pf-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: baseline;
+    }
+
+    .pf-label {
+      color: var(--accent-teal);
+      font-weight: 700;
+      min-width: 90px;
+    }
+
+    .pf-value {
+      color: var(--text-light);
+      word-break: break-word;
+    }
+
+    .pf-body {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .pf-section h2 {
+      margin: 0 0 0.75rem 0;
+      font-size: 1.2rem;
+      color: var(--accent-mint);
+    }
+
+    .pf-bio {
+      margin: 0;
+      line-height: 1.7;
+      color: var(--text-light);
+      background: rgba(78, 250, 170, 0.08);
+      border-left: 3px solid var(--accent-mint);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .awards-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .award-ribbon {
+      position: relative;
+      width: 54px;
+      height: 86px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .award-ribbon:hover {
+      transform: scale(1.08);
+    }
+
+    .award-ribbon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .award-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.95);
+      color: var(--accent-mint);
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      font-size: 0.8rem;
+      margin-bottom: 0.6rem;
+      z-index: 5;
+    }
+
+    .award-ribbon:hover .award-tooltip {
+      opacity: 1;
+    }
+
+    .pf-message {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-light);
+    }
+
+    @media (max-width: 900px) {
+      .pf-head {
+        grid-template-columns: 1fr;
+      }
+
+      .pf-photo {
+        max-width: 180px;
+      }
+
+      .pf-name {
+        font-size: 1.7rem;
+      }
+
+      .pf-meta {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <main class="pf-shell">
+    <a class="pf-back" href="/personnel-files/">
+      <i class="fas fa-arrow-left"></i>
+      Back to Personnel Files
+    </a>
+
+    <section id="personnelFile" class="pf-card" style="display:none;">
+      <div class="pf-head">
+        <img id="pfPhoto" class="pf-photo" src="/assets/img/dataunavailable.png" alt="Personnel photo">
+        <div>
+          <h1 id="pfName" class="pf-name">Loading...</h1>
+          <p id="pfSubtitle" class="pf-subtitle"></p>
+
+          <div class="pf-meta">
+            <div class="pf-row"><span class="pf-label">Department</span><span id="pfDept" class="pf-value">-</span></div>
+            <div class="pf-row"><span class="pf-label">Clearance</span><span id="pfClearance" class="pf-value">-</span></div>
+            <div class="pf-row"><span class="pf-label">Email</span><span id="pfEmail" class="pf-value">-</span></div>
+            <div class="pf-row"><span class="pf-label">PID</span><span id="pfPid" class="pf-value">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pf-body">
+        <section id="pfAwardsSection" class="pf-section" style="display:none;">
+          <h2>Awards and Commendations</h2>
+          <div id="pfAwards" class="awards-display"></div>
+        </section>
+
+        <section id="pfBioSection" class="pf-section" style="display:none;">
+          <h2>Biography</h2>
+          <div id="pfBio" class="pf-bio"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="pfMessage" class="pf-card">
+      <div class="pf-message"><i class="fas fa-spinner fa-spin"></i> Loading personnel file...</div>
+    </section>
+  </main>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/personnel-view.js"></script>
+</body>
+</html>
