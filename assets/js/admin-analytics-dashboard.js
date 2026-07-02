@@ -28,13 +28,19 @@ import {
   serverTimestamp,
   Timestamp
 } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
 const MC_API        = 'https://api.mcsrvstat.us/2/play.site89.org';
 const DISCORD_INVITE_API = 'https://discord.com/api/v9/invites/';
+const EMAIL_FETCH_LIMIT = 1500;
+const EXCLUDED_ANALYTICS_SENDERS = new Set(['fd.mgmt@site89.org']);
+const EMAIL_SNOOP_PAGE_SIZE = 50;
 
 const db = getFirestore(app);
+const functionsClient = getFunctions(app);
+const purgeMailboxEmailsCallable = httpsCallable(functionsClient, 'purgeMailboxEmails');
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let currentUser   = null;
@@ -42,10 +48,70 @@ let eventsCache   = [];        // all events
 let rsvpCache     = new Map(); // eventId → count
 let snapshotsCache = [];       // sorted community_snapshots
 let reportsCache  = [];        // event_attendance_reports
+let emailsCache   = [];        // recent emails
 let charCount     = 0;
+let emailSnoopPage = 1;
+let emailSnoopSelectedId = null;
 
 // Chart instances — destroyed & re-created on refresh
 const charts = {};
+
+const EMAIL_CATEGORIES = [
+  {
+    key: 'operations',
+    label: 'Operations',
+    icon: 'fa-screwdriver-wrench',
+    keywords: {
+      ops: 3, operation: 3, incident: 3, anomaly: 2, containment: 3, breach: 3,
+      clearance: 2, assignment: 2, requisition: 2, logistics: 2, maintenance: 2
+    }
+  },
+  {
+    key: 'events',
+    label: 'Events',
+    icon: 'fa-calendar-days',
+    keywords: {
+      event: 3, briefing: 2, debrief: 2, attendance: 2, schedule: 2, rsvp: 4,
+      meetup: 2, exercise: 2, training: 2
+    }
+  },
+  {
+    key: 'personnel',
+    label: 'Personnel',
+    icon: 'fa-user-group',
+    keywords: {
+      personnel: 3, recruitment: 2, onboarding: 2, promotion: 2, transfer: 2,
+      hr: 2, disciplinary: 2, leave: 1, resignation: 3
+    }
+  },
+  {
+    key: 'finance',
+    label: 'Finance',
+    icon: 'fa-building-columns',
+    keywords: {
+      bank: 4, payroll: 4, budget: 3, invoice: 3, payment: 4, transaction: 4,
+      funds: 3, reimbursement: 3, stipend: 2
+    }
+  },
+  {
+    key: 'intel',
+    label: 'Intel & Reports',
+    icon: 'fa-magnifying-glass-chart',
+    keywords: {
+      intel: 4, report: 3, dossier: 3, observation: 2, surveillance: 3,
+      investigation: 3, findings: 2, evidence: 3
+    }
+  },
+  {
+    key: 'social',
+    label: 'Social',
+    icon: 'fa-comments',
+    keywords: {
+      thanks: 2, congratulations: 2, welcome: 2, party: 2, celebration: 2,
+      social: 2, appreciation: 2, checkin: 1, 'check-in': 1
+    }
+  }
+];
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 function esc(str) {
@@ -114,6 +180,104 @@ function showToast(msg, type = 'success') {
 
 function fmtCount(value) {
   return typeof value === 'number' ? value.toLocaleString() : '—';
+}
+
+function normalizeEmailAddress(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function prettyMailboxName(value) {
+  const normalized = normalizeEmailAddress(value);
+  if (!normalized) return 'Unknown';
+  if (!normalized.includes('@')) return normalized;
+  const [local, domain] = normalized.split('@');
+  if (domain === 'site89.org') return local;
+  return normalized;
+}
+
+function resolveSenderMailbox(email) {
+  const senderMailbox = normalizeEmailAddress(email?.sender || '');
+  const senderAccount = normalizeEmailAddress(email?.senderEmail || '');
+
+  // Prefer in-universe mailbox identity for analytics display/ranking.
+  if (senderMailbox.endsWith('@site89.org')) return senderMailbox;
+  if (senderAccount.endsWith('@site89.org')) return senderAccount;
+
+  return senderMailbox || senderAccount || 'unknown';
+}
+
+function toDateSafe(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value.toDate === 'function') return value.toDate();
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function startOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day + 6) % 7;
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function weekKey(date) {
+  const d = startOfWeek(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function weekLabel(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function buildEmailCategory(text, senderEmail, recipientCount) {
+  const scores = EMAIL_CATEGORIES.map(cat => {
+    let score = 0;
+    for (const [keyword, weight] of Object.entries(cat.keywords)) {
+      if (text.includes(keyword)) score += weight;
+    }
+    return { key: cat.key, score };
+  });
+
+  if (senderEmail.includes('bank@')) {
+    const fin = scores.find(s => s.key === 'finance');
+    if (fin) fin.score += 4;
+  }
+
+  if (recipientCount >= 8) {
+    const ops = scores.find(s => s.key === 'operations');
+    if (ops) ops.score += 2;
+  }
+
+  scores.sort((a, b) => b.score - a.score);
+  const winner = scores[0];
+  if (!winner || winner.score <= 0) return 'uncategorized';
+  return winner.key;
+}
+
+function emptyRankHtml(message) {
+  return `<div class="empty-state" style="padding:1.25rem .75rem;"><i class="fa-solid fa-inbox"></i>${esc(message)}</div>`;
+}
+
+function renderRankRows(containerId, rows, valueSuffix = '') {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = emptyRankHtml('No records in the selected period.');
+    return;
+  }
+
+  el.innerHTML = rows.map((row, idx) => `
+    <div class="rank-row">
+      <span class="rank-idx">${idx + 1}</span>
+      <span class="rank-name" title="${esc(row.name)}">${esc(row.name)}</span>
+      <span class="rank-val">${row.value}${esc(valueSuffix)}</span>
+    </div>
+  `).join('');
 }
 
 const noteMarkersPlugin = {
@@ -222,12 +386,13 @@ function initTabs() {
 // ─── Load all data ─────────────────────────────────────────────────────────────
 async function loadAllData() {
   // Parallel fetches
-  const [eventsSnap, charsSnap, snapsSnap, reportsSnap, configDoc] = await Promise.all([
+  const [eventsSnap, charsSnap, snapsSnap, reportsSnap, configDoc, emailsSnap] = await Promise.all([
     getDocs(query(collection(db, 'events'), orderBy('start', 'desc'))),
     getDocs(collection(db, 'characters')),
     getDocs(query(collection(db, 'community_snapshots'), orderBy('date', 'asc'))),
     getDocs(query(collection(db, 'event_attendance_reports'), orderBy('eventDate', 'desc'))),
-    getDoc(doc(db, 'settings/community_config'))
+    getDoc(doc(db, 'settings/community_config')),
+    getDocs(query(collection(db, 'emails'), orderBy('ts', 'desc'), limit(EMAIL_FETCH_LIMIT)))
   ]);
 
   // Events
@@ -243,6 +408,9 @@ async function loadAllData() {
 
   // Attendance reports
   reportsCache = reportsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Emails
+  emailsCache = emailsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   // RSVP counts — fetch for events in the last 6 months to keep reads manageable
   const sixMonthsAgo = new Date();
@@ -297,7 +465,431 @@ function renderDashboard() {
   renderCommunity();
   renderEvents();
   renderServer();
+  renderEmail();
   renderReports();
+}
+
+// ══ Email ═════════════════════════════════════════════════════════════════════
+
+function buildEmailAnalytics(days = 90) {
+  const now = new Date();
+  const windowStart = new Date(now);
+  windowStart.setDate(windowStart.getDate() - days);
+
+  const recent = emailsCache
+    .filter(email => {
+      const date = toDateSafe(email.ts ?? email.createdAt ?? email.sentAt);
+      return date && date >= windowStart && date <= now;
+    })
+    .filter(email => {
+      const senderMailbox = resolveSenderMailbox(email);
+      const senderAccount = normalizeEmailAddress(email.senderEmail || '');
+      return !EXCLUDED_ANALYTICS_SENDERS.has(senderMailbox) && !EXCLUDED_ANALYTICS_SENDERS.has(senderAccount);
+    });
+
+  const categoryCounts = new Map();
+  const recipientCounts = new Map();
+  const senderCounts = new Map();
+  const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+  const hourCounts = Array.from({ length: 24 }, () => 0);
+  let totalRecipients = 0;
+  let broadcastEmails = 0;
+  let externalRecipientTouches = 0;
+
+  const allWeekKeys = [];
+  const currentWeek = startOfWeek(now);
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(currentWeek);
+    d.setDate(d.getDate() - (i * 7));
+    allWeekKeys.push(weekKey(d));
+  }
+  const weekMap = Object.fromEntries(allWeekKeys.map(key => [key, 0]));
+
+  recent.forEach(email => {
+    const subject = String(email.subject || '');
+    const body = String(email.body || '');
+    const senderMailbox = resolveSenderMailbox(email);
+    const senderAccount = normalizeEmailAddress(email.senderEmail || '');
+    const categorySenderContext = `${senderMailbox} ${senderAccount}`.trim();
+    const recipientsRaw = Array.isArray(email.recipients) ? email.recipients : [];
+    const recipients = recipientsRaw
+      .map(normalizeEmailAddress)
+      .filter(Boolean)
+      .filter((value, idx, arr) => arr.indexOf(value) === idx);
+
+    totalRecipients += recipients.length;
+    if (recipients.length >= 8) broadcastEmails += 1;
+
+    recipients.forEach(recipient => {
+      recipientCounts.set(recipient, (recipientCounts.get(recipient) ?? 0) + 1);
+      if (!recipient.endsWith('@site89.org')) externalRecipientTouches += 1;
+    });
+    senderCounts.set(senderMailbox, (senderCounts.get(senderMailbox) ?? 0) + 1);
+
+    const date = toDateSafe(email.ts ?? email.createdAt ?? email.sentAt);
+    if (date) {
+      dayCounts[date.getDay()] += 1;
+      hourCounts[date.getHours()] += 1;
+      const wk = weekKey(date);
+      if (wk in weekMap) weekMap[wk] += 1;
+    }
+
+    const text = `${subject} ${body}`.toLowerCase();
+    const cat = buildEmailCategory(text, categorySenderContext, recipients.length);
+    categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + 1);
+  });
+
+  const sortedCategories = [...categoryCounts.entries()]
+    .map(([key, count]) => {
+      const info = EMAIL_CATEGORIES.find(c => c.key === key);
+      return {
+        key,
+        label: info?.label ?? 'Uncategorized',
+        icon: info?.icon ?? 'fa-circle-question',
+        count
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  const topRecipients = [...recipientCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([email, count]) => ({ name: prettyMailboxName(email), value: count, raw: email }));
+
+  const topSenders = [...senderCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([email, count]) => ({ name: prettyMailboxName(email), value: count, raw: email }));
+
+  const maxDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const peakDay = maxDayIndex >= 0 ? dayNames[maxDayIndex] : '—';
+
+  const maxHourIndex = hourCounts.indexOf(Math.max(...hourCounts));
+  const peakHour = maxHourIndex >= 0
+    ? new Date(2000, 0, 1, maxHourIndex, 0).toLocaleTimeString('en-US', { hour: 'numeric' })
+    : '—';
+
+  const avgRecipients = recent.length ? (totalRecipients / recent.length) : 0;
+
+  const weeklyLabels = allWeekKeys.map(weekLabel);
+  const weeklyCounts = allWeekKeys.map(key => weekMap[key] ?? 0);
+
+  return {
+    days,
+    windowStart,
+    totalEmails: recent.length,
+    uniqueRecipients: recipientCounts.size,
+    uniqueSenders: senderCounts.size,
+    avgRecipients,
+    broadcastEmails,
+    externalRecipientTouches,
+    peakDay,
+    peakHour,
+    categories: sortedCategories,
+    topRecipients,
+    topSenders,
+    weeklyLabels,
+    weeklyCounts
+  };
+}
+
+function renderEmail() {
+  const analytics = buildEmailAnalytics(90);
+  const kpi = document.getElementById('emailKpiGrid');
+  if (kpi) {
+    kpi.innerHTML = `
+      ${statCard('fa-envelope', analytics.totalEmails, 'Emails (90 Days)', `${fmtDate(analytics.windowStart)} to now`) }
+      ${statCard('fa-inbox', analytics.uniqueRecipients, 'Unique Recipients', 'Distinct inboxes touched')}
+      ${statCard('fa-paper-plane', analytics.uniqueSenders, 'Unique Senders', 'Distinct character/account sender mailboxes')}
+      ${statCard('fa-users', analytics.avgRecipients.toFixed(1), 'Avg Recipients / Email', 'Distribution breadth')}
+      ${statCard('fa-bullhorn', analytics.broadcastEmails, 'Broadcast Emails', '8+ recipients in one send')}
+      ${statCard('fa-clock', analytics.peakDay, 'Peak Email Day', `${analytics.peakHour} most active hour`, '', '', 'stat-value-text')}
+    `;
+  }
+
+  renderEmailTypeChart(analytics);
+  renderEmailCategoryTable(analytics);
+  renderRankRows('topRecipientsList', analytics.topRecipients, ' msgs');
+  renderRankRows('topSendersList', analytics.topSenders, ' sent');
+  renderEmailInsights(analytics);
+  renderEmailTrendChart(analytics);
+  renderEmailSnoop();
+}
+
+function getEmailRecipientsText(recipients) {
+  return Array.isArray(recipients) ? recipients.join(', ') : '';
+}
+
+function getEmailPlainBody(email) {
+  const raw = String(email?.body || '');
+  if (!email?.isHTML) return raw;
+  const temp = document.createElement('div');
+  temp.innerHTML = raw;
+  return (temp.textContent || temp.innerText || '').trim();
+}
+
+function startOfDay(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(`${dateStr}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function endOfDay(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(`${dateStr}T23:59:59.999`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatEmailDateTime(value) {
+  const date = toDateSafe(value);
+  return date ? date.toLocaleString() : '—';
+}
+
+function getEmailSnoopFilteredRows() {
+  const searchInput = document.getElementById('emailSnoopSearchInput');
+  const folderFilter = document.getElementById('emailSnoopFolderFilter');
+  const statusFilter = document.getElementById('emailSnoopStatusFilter');
+  const fromDate = document.getElementById('emailSnoopFromDate');
+  const toDate = document.getElementById('emailSnoopToDate');
+
+  const search = String(searchInput?.value || '').trim().toLowerCase();
+  const folder = String(folderFilter?.value || '').trim().toLowerCase();
+  const status = String(statusFilter?.value || '').trim().toLowerCase();
+  const from = startOfDay(fromDate?.value || '');
+  const to = endOfDay(toDate?.value || '');
+
+  return emailsCache.filter((email) => {
+    const emailFolder = String(email.folder || '').toLowerCase();
+    const emailStatus = String(email.status || '').toLowerCase();
+    const emailDate = toDateSafe(email.ts ?? email.createdAt ?? email.sentAt);
+
+    if (folder && emailFolder !== folder) return false;
+    if (status && emailStatus !== status) return false;
+
+    if (from || to) {
+      if (!emailDate) return false;
+      if (from && emailDate < from) return false;
+      if (to && emailDate > to) return false;
+    }
+
+    if (search) {
+      const haystack = [
+        email.sender || '',
+        email.senderEmail || '',
+        getEmailRecipientsText(email.recipients),
+        email.subject || '',
+        getEmailPlainBody(email),
+        email.status || '',
+        email.folder || ''
+      ].join(' ').toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+
+    return true;
+  });
+}
+
+function renderEmailSnoop() {
+  const body = document.getElementById('emailSnoopBody');
+  const totalEl = document.getElementById('emailSnoopTotalCount');
+  const filteredEl = document.getElementById('emailSnoopFilteredCount');
+  const pageInfo = document.getElementById('emailSnoopPageInfo');
+  const prevBtn = document.getElementById('emailSnoopPrevBtn');
+  const nextBtn = document.getElementById('emailSnoopNextBtn');
+  const detailEl = document.getElementById('emailSnoopDetail');
+  const bodyPreviewEl = document.getElementById('emailSnoopBodyPreview');
+
+  if (!body || !totalEl || !filteredEl || !pageInfo || !prevBtn || !nextBtn || !detailEl || !bodyPreviewEl) return;
+
+  const filtered = getEmailSnoopFilteredRows();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / EMAIL_SNOOP_PAGE_SIZE));
+  if (emailSnoopPage > totalPages) emailSnoopPage = totalPages;
+  if (emailSnoopPage < 1) emailSnoopPage = 1;
+
+  totalEl.textContent = `Total: ${emailsCache.length}`;
+  filteredEl.textContent = `Filtered: ${filtered.length}`;
+  pageInfo.textContent = `Page ${emailSnoopPage} of ${totalPages}`;
+  prevBtn.disabled = emailSnoopPage <= 1;
+  nextBtn.disabled = emailSnoopPage >= totalPages;
+
+  const start = (emailSnoopPage - 1) * EMAIL_SNOOP_PAGE_SIZE;
+  const pageRows = filtered.slice(start, start + EMAIL_SNOOP_PAGE_SIZE);
+
+  if (!pageRows.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.2rem;color:rgba(255,255,255,.4);">No emails match current filters.</td></tr>';
+    if (!filtered.find((email) => email.id === emailSnoopSelectedId)) {
+      emailSnoopSelectedId = null;
+      detailEl.textContent = 'Click a row to preview details.';
+      bodyPreviewEl.textContent = 'Select an email to read its contents.';
+    }
+    return;
+  }
+
+  body.innerHTML = pageRows.map((email) => {
+    const recipientsText = getEmailRecipientsText(email.recipients) || '—';
+    const subject = String(email.subject || '(no subject)');
+    const from = String(email.sender || '—');
+    const selectedClass = email.id === emailSnoopSelectedId ? ' style="background:rgba(78,250,170,.08);"' : '';
+    return `<tr data-snoop-email-id="${esc(email.id)}"${selectedClass}>
+      <td>${esc(formatEmailDateTime(email.ts ?? email.createdAt ?? email.sentAt))}</td>
+      <td title="${esc(from)}">${esc(from)}</td>
+      <td title="${esc(recipientsText)}">${esc(recipientsText)}</td>
+      <td title="${esc(subject)}">${esc(subject)}</td>
+      <td>${esc(email.status || '—')}</td>
+      <td>${esc(email.folder || '—')}</td>
+    </tr>`;
+  }).join('');
+
+  body.querySelectorAll('[data-snoop-email-id]').forEach((row) => {
+    row.addEventListener('click', () => {
+      const rowId = row.getAttribute('data-snoop-email-id');
+      const email = filtered.find((item) => item.id === rowId) || emailsCache.find((item) => item.id === rowId);
+      if (!email) return;
+
+      emailSnoopSelectedId = email.id;
+      const recipientsText = getEmailRecipientsText(email.recipients) || '—';
+      detailEl.textContent = `${formatEmailDateTime(email.ts ?? email.createdAt ?? email.sentAt)} • ${email.sender || '—'} -> ${recipientsText} • ${email.subject || '(no subject)'}`;
+      bodyPreviewEl.textContent = getEmailPlainBody(email) || '—';
+      renderEmailSnoop();
+    });
+  });
+
+  const selectedEmail = filtered.find((email) => email.id === emailSnoopSelectedId)
+    || emailsCache.find((email) => email.id === emailSnoopSelectedId);
+  if (selectedEmail) {
+    const recipientsText = getEmailRecipientsText(selectedEmail.recipients) || '—';
+    detailEl.textContent = `${formatEmailDateTime(selectedEmail.ts ?? selectedEmail.createdAt ?? selectedEmail.sentAt)} • ${selectedEmail.sender || '—'} -> ${recipientsText} • ${selectedEmail.subject || '(no subject)'}`;
+    bodyPreviewEl.textContent = getEmailPlainBody(selectedEmail) || '—';
+  } else {
+    emailSnoopSelectedId = null;
+    detailEl.textContent = 'Click a row to preview details.';
+    bodyPreviewEl.textContent = 'Select an email to read its contents.';
+  }
+}
+
+function renderEmailTypeChart(analytics) {
+  destroyChart('emailType');
+  const canvas = document.getElementById('emailTypeChart');
+  if (!canvas || !analytics.categories.length) return;
+
+  const topCats = analytics.categories.slice(0, 6);
+  charts.emailType = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: topCats.map(c => c.label),
+      datasets: [{
+        data: topCats.map(c => c.count),
+        backgroundColor: ['#4efaaa', '#6495ed', '#ffd166', '#ff8c69', '#72d6c9', '#b8c0ff'],
+        borderColor: 'rgba(10,10,11,0.9)',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: 'rgba(255,255,255,.68)', font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+function renderEmailCategoryTable(analytics) {
+  const table = document.getElementById('emailCategoryTable');
+  if (!table) return;
+  if (!analytics.categories.length) {
+    table.innerHTML = '<p style="color:rgba(255,255,255,.45);font-size:.82rem;margin:0;">No classified emails in the selected period.</p>';
+    return;
+  }
+
+  const total = analytics.totalEmails || 1;
+  table.innerHTML = `<div class="rank-list">${analytics.categories.slice(0, 6).map((cat, idx) => {
+    const pct = Math.round((cat.count / total) * 100);
+    return `<div class="rank-row">
+      <span class="rank-idx">${idx + 1}</span>
+      <span class="rank-name"><i class="fa-solid ${cat.icon}" style="color:#4efaaa;margin-right:.45rem;"></i>${esc(cat.label)}</span>
+      <span class="rank-val">${cat.count} (${pct}%)</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderEmailInsights(analytics) {
+  const block = document.getElementById('emailInsightList');
+  if (!block) return;
+
+  if (!analytics.totalEmails) {
+    block.innerHTML = '<p style="color:rgba(255,255,255,.45);font-size:.84rem;">No email activity in the last 90 days.</p>';
+    return;
+  }
+
+  const topCategory = analytics.categories[0];
+  const externalPct = analytics.totalEmails
+    ? Math.round((analytics.externalRecipientTouches / Math.max(1, analytics.totalEmails)) * 100)
+    : 0;
+
+  const items = [
+    {
+      icon: 'fa-layer-group',
+      text: topCategory
+        ? `Top email type is <strong>${esc(topCategory.label)}</strong> with <strong>${topCategory.count}</strong> messages.`
+        : 'No dominant category yet.'
+    },
+    {
+      icon: 'fa-arrows-turn-to-dots',
+      text: `<strong>${analytics.broadcastEmails}</strong> messages were broad sends (8+ recipients), indicating wider announcements or directives.`
+    },
+    {
+      icon: 'fa-user-clock',
+      text: `Most active day is <strong>${esc(analytics.peakDay)}</strong>, with peak send hour around <strong>${esc(analytics.peakHour)}</strong>.`
+    },
+    {
+      icon: 'fa-earth-americas',
+      text: `External inbox touches are approximately <strong>${externalPct}%</strong> of email volume.`
+    }
+  ];
+
+  block.innerHTML = `<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.75rem;">
+    ${items.map(item => `<li style="display:flex;align-items:flex-start;gap:.7rem;font-size:.86rem;color:rgba(255,255,255,.78);">
+      <i class="fa-solid ${item.icon}" style="color:#4efaaa;margin-top:.1rem;"></i>
+      <span>${item.text}</span>
+    </li>`).join('')}
+  </ul>`;
+}
+
+function renderEmailTrendChart(analytics) {
+  destroyChart('emailTrend');
+  const canvas = document.getElementById('emailTrendChart');
+  if (!canvas || !analytics.weeklyLabels.length) return;
+
+  charts.emailTrend = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: analytics.weeklyLabels,
+      datasets: [{
+        label: 'Emails per week',
+        data: analytics.weeklyCounts,
+        borderColor: '#ffd166',
+        backgroundColor: 'rgba(255, 209, 102, 0.14)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 3,
+        pointBackgroundColor: '#ffd166'
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: 'rgba(255,255,255,.6)', font: { size: 11 } }
+        }
+      }
+    }
+  });
 }
 
 // ══ Overview ══════════════════════════════════════════════════════════════════
@@ -364,10 +956,10 @@ function growthSummary() {
   return delta >= 0 ? `+${delta}` : `${delta}`;
 }
 
-function statCard(icon, value, label, sub, valueId = '', subId = '') {
+function statCard(icon, value, label, sub, valueId = '', subId = '', valueClass = '') {
   return `<div class="stat-card">
     <div class="stat-icon"><i class="fa-solid ${icon}"></i></div>
-    <div class="stat-value" ${valueId ? `id="${valueId}"` : ''}>${esc(value)}</div>
+    <div class="stat-value ${valueClass}" ${valueId ? `id="${valueId}"` : ''}>${esc(value)}</div>
     <div class="stat-label">${esc(label)}</div>
     <div class="stat-sub"  ${subId   ? `id="${subId}"`   : ''}>${esc(sub)}</div>
   </div>`;
@@ -1093,9 +1685,88 @@ function setupForms() {
   setupSnapshotForm();
   setupDiscordConfigForm();
   setupReportForm();
+  setupEmailSnoop();
 
   const mcRefreshBtn = document.getElementById('mcRefreshBtn');
   if (mcRefreshBtn) mcRefreshBtn.addEventListener('click', fetchMcStatus);
+}
+
+function setupEmailSnoop() {
+  const searchInput = document.getElementById('emailSnoopSearchInput');
+  const folderFilter = document.getElementById('emailSnoopFolderFilter');
+  const statusFilter = document.getElementById('emailSnoopStatusFilter');
+  const fromDate = document.getElementById('emailSnoopFromDate');
+  const toDate = document.getElementById('emailSnoopToDate');
+  const prevBtn = document.getElementById('emailSnoopPrevBtn');
+  const nextBtn = document.getElementById('emailSnoopNextBtn');
+  const purgeBtn = document.getElementById('purgeMailboxBtnAnalytics');
+  const purgeInput = document.getElementById('purgeMailboxInputAnalytics');
+  const purgeStatus = document.getElementById('purgeMailboxStatusAnalytics');
+
+  const resetToFirstPageAndRender = () => {
+    emailSnoopPage = 1;
+    renderEmailSnoop();
+  };
+
+  [searchInput, folderFilter, statusFilter, fromDate, toDate].forEach((el) => {
+    if (!el) return;
+    const eventName = el.tagName === 'SELECT' || el.type === 'date' ? 'change' : 'input';
+    el.addEventListener(eventName, resetToFirstPageAndRender);
+  });
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (emailSnoopPage <= 1) return;
+      emailSnoopPage -= 1;
+      renderEmailSnoop();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const filteredCount = getEmailSnoopFilteredRows().length;
+      const totalPages = Math.max(1, Math.ceil(filteredCount / EMAIL_SNOOP_PAGE_SIZE));
+      if (emailSnoopPage >= totalPages) return;
+      emailSnoopPage += 1;
+      renderEmailSnoop();
+    });
+  }
+
+  if (purgeBtn && purgeInput && purgeStatus) {
+    purgeBtn.addEventListener('click', async () => {
+      const mailbox = normalizeEmailAddress(purgeInput.value);
+      if (!mailbox || !mailbox.includes('@')) {
+        purgeStatus.textContent = 'Enter a valid mailbox email first.';
+        purgeStatus.style.color = '#ff6b6b';
+        return;
+      }
+
+      const confirmed = confirm(`Delete all emails where ${mailbox} is recipient or sender? This cannot be undone.`);
+      if (!confirmed) return;
+
+      purgeBtn.disabled = true;
+      purgeStatus.textContent = 'Purging mailbox emails...';
+      purgeStatus.style.color = 'rgba(255,255,255,.65)';
+
+      try {
+        const result = await purgeMailboxEmailsCallable({ mailbox, includeSent: true });
+        const deleted = Number(result?.data?.deletedCount || 0);
+        purgeStatus.textContent = `Deleted ${deleted.toLocaleString()} email(s) for ${mailbox}.`;
+        purgeStatus.style.color = '#4efaaa';
+        showToast(`Mailbox purge complete: ${deleted.toLocaleString()} email(s) deleted.`);
+
+        await loadAllData();
+        renderDashboard();
+      } catch (error) {
+        const message = String(error?.message || 'Mailbox purge failed.');
+        purgeStatus.textContent = message;
+        purgeStatus.style.color = '#ff6b6b';
+        showToast(message, 'error');
+      } finally {
+        purgeBtn.disabled = false;
+      }
+    });
+  }
 }
 
 function setupSnapshotForm() {

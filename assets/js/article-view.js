@@ -22,6 +22,12 @@ import { refreshMerit } from '/assets/js/merit.js';
 const db = getFirestore(app);
 marked.setOptions({ gfm: true, breaks: true });
 
+const ARTICLE_SANITIZE_OPTIONS = {
+  USE_PROFILES: { html: true },
+  ADD_TAGS: ['iframe'],
+  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'loading', 'referrerpolicy', 'target', 'rel']
+};
+
 const articleTitle = document.getElementById('articleTitle');
 const articleMeta = document.getElementById('articleMeta');
 const articleBody = document.getElementById('articleBody');
@@ -125,7 +131,7 @@ function renderArticle(article) {
   const modeText = article.mode === 'ooc' ? 'Out of Character' : 'In Character';
   articleMeta.textContent = `${formatAuthor(article)} • ${modeText} • Published ${createdDate} • Updated ${updatedDate}`;
 
-  articleBody.innerHTML = DOMPurify.sanitize(marked.parse(article.bodyMd || ''));
+  articleBody.innerHTML = renderArticleBody(article.bodyMd || '');
   renderTags(article.tags || []);
   renderVotes(article);
 
@@ -479,7 +485,17 @@ function parseTags(input) {
 }
 
 function renderEditorPreview() {
-  editorPreview.innerHTML = DOMPurify.sanitize(marked.parse(editorBody.value || ''));
+  editorPreview.innerHTML = renderArticleBody(editorBody.value || '');
+}
+
+function looksLikeHtml(content) {
+  return /<\/?[a-z][\s\S]*>/i.test(content || '');
+}
+
+function renderArticleBody(content) {
+  const source = String(content || '');
+  const parsed = looksLikeHtml(source) ? source : marked.parse(source);
+  return DOMPurify.sanitize(parsed, ARTICLE_SANITIZE_OPTIONS);
 }
 
 async function saveChanges() {

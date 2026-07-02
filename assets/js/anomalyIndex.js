@@ -15,8 +15,49 @@ function canEdit(){ const c = userClearance(); if(!isNaN(c) && c >= 5) return tr
 function displayName(){ const ch = getSelectedCharacter(); if(ch && ch.name) return ch.name; return null; }
 function characterId(){ const ch = getSelectedCharacter(); return ch && ch.id ? ch.id : null; }
 
-function docIdFromItemNumber(itemNumber){ const m = (itemNumber || '').match(/\d+/); if(m) return m[0]; return (itemNumber || 'scp-000').replace(/[^A-Za-z0-9]/g,'-'); }
-function formatItemNumber(raw){ const s = (raw || '').toUpperCase().replace(/\s+/g,''); const digits = s.match(/\d+/); if(!digits) return s || 'SCP-000'; const padded = digits[0].padStart(3,'0'); return `SCP-${padded}`; }
+function formatItemNumber(raw){
+  let s = String(raw || '').toUpperCase().trim();
+  if(!s) return 'SCP-000';
+  s = s.replace(/\s+/g, '-').replace(/_+/g, '-').replace(/[^A-Z0-9-]/g, '');
+  s = s.replace(/-+/g, '-').replace(/^-|-$/g, '');
+  if(!s.startsWith('SCP')) s = `SCP-${s}`;
+  s = s.replace(/^SCP(?=\d)/, 'SCP-').replace(/^SCP-+/, 'SCP-');
+  const m = s.match(/^SCP-(\d+)(.*)$/);
+  if(!m) return s || 'SCP-000';
+  const numberPart = m[1].padStart(3, '0');
+  const suffix = (m[2] || '').replace(/^-+/, '').replace(/[^A-Z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return suffix ? `SCP-${numberPart}-${suffix}` : `SCP-${numberPart}`;
+}
+
+function docIdFromItemNumber(itemNumber){
+  const formatted = formatItemNumber(itemNumber);
+  const m = formatted.match(/^SCP-(\d+)(?:-(.+))?$/);
+  if(m){
+    const base = String(parseInt(m[1], 10));
+    const suffix = String(m[2] || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return suffix ? `${base}-${suffix}` : base;
+  }
+  return formatted.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'scp-000';
+}
+
+function itemNumberSortKey(raw){
+  const formatted = formatItemNumber(raw || '');
+  const m = formatted.match(/^SCP-(\d+)(?:-(.+))?$/);
+  if(!m){
+    return { number: Number.MAX_SAFE_INTEGER, suffix: formatted };
+  }
+  return {
+    number: parseInt(m[1], 10),
+    suffix: String(m[2] || '').toLowerCase()
+  };
+}
+
+function compareItemNumbers(aRaw, bRaw){
+  const a = itemNumberSortKey(aRaw);
+  const b = itemNumberSortKey(bRaw);
+  if(a.number !== b.number) return a.number - b.number;
+  return a.suffix.localeCompare(b.suffix);
+}
 function renderMarkdown(md){ return marked.parse(md || ''); }
 function summarize(md){ const plain = (md || '').replace(/[\n\r]+/g,' ').replace(/[#*_`>\[\]]/g,' ').trim(); return plain.length > 140 ? plain.slice(0,140) + '…' : (plain || 'No description yet.'); }
 
@@ -38,9 +79,6 @@ const draftsModal = document.getElementById('draftsModal');
 const closeDraftsModal = document.getElementById('closeDraftsModal');
 const draftList = document.getElementById('draftList');
 const searchInput = document.getElementById('anomalySearch');
-const classFilter = document.getElementById('classFilter');
-const riskFilter = document.getElementById('riskFilter');
-const disruptionFilter = document.getElementById('disruptionFilter');
 const tableBody = document.getElementById('anomalyTableBody');
 
 let anomalies = [];
@@ -306,9 +344,6 @@ async function handleSubmit(e){ e.preventDefault(); setStatus(''); if(!auth.curr
 
 function renderList(){
   const q = (searchInput?.value || '').toLowerCase().trim();
-  const cls = classFilter?.value || 'all';
-  const risk = riskFilter?.value || 'all';
-  const dis = disruptionFilter?.value || 'all';
   const userC = userClearance();
   const deptOk = isDeptAllowed(userDepartment());
   
@@ -341,9 +376,6 @@ function renderList(){
       console.log(`  ✅ ALLOWED: User clearance ${userC} >= required ${req}`);
     }
     
-    if(cls !== 'all' && a.containmentClass !== cls) return false;
-    if(risk !== 'all' && a.riskClass !== risk) return false;
-    if(dis !== 'all' && a.disruptionClass !== dis) return false;
     if(q){
       const hay = `${a.itemNumber||''} ${a.descriptionMd||''} ${a.containmentClass||''}`.toLowerCase();
       if(!hay.includes(q)) return false;
@@ -354,7 +386,7 @@ function renderList(){
   if(!filtered.length){ tableBody.innerHTML = '<tr><td colspan="5" class="empty">No anomalies visible for your clearance.</td></tr>'; return; }
   tableBody.innerHTML = '';
   filtered.forEach(a => {
-    const docId = docIdFromItemNumber(a.itemNumber || a.docId || '');
+    const docId = a.docId || docIdFromItemNumber(a.itemNumber || '');
     const url = `/anomalies/view/?id=${encodeURIComponent(docId)}`;
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -396,7 +428,7 @@ function subscribe(){
   onSnapshot(q, (snap)=>{
     anomalies = [];
     snap.forEach(docSnap => anomalies.push({ docId: docSnap.id, ...(docSnap.data()||{}) }));
-    anomalies.sort((a,b)=> (a.itemNumber||'').localeCompare(b.itemNumber||''));
+    anomalies.sort((a,b)=> compareItemNumbers(a.itemNumber || a.docId || '', b.itemNumber || b.docId || ''));
     renderList();
   }, (err)=>{
     console.error('Firestore error:', err);
@@ -424,9 +456,6 @@ function kickoff(){
   refreshPreview(); 
   subscribe(); 
   if(searchInput) searchInput.addEventListener('input', renderList); 
-  classFilter?.addEventListener('change', renderList); 
-  riskFilter?.addEventListener('change', renderList); 
-  disruptionFilter?.addEventListener('change', renderList); 
   // Wire modal after a small delay to ensure character is loaded
   setTimeout(() => { wireModal(); }, 50);
   // auto-load anomaly if id or item param provided

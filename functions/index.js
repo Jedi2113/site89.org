@@ -1,6 +1,6 @@
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
-const { onRequest } = require('firebase-functions/v2/https');
+const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
@@ -9,6 +9,31 @@ const crypto = require('crypto');
 admin.initializeApp();
 
 const db = admin.firestore();
+const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
+const EMAIL_PURGE_BATCH_SIZE = 400;
+const SUPPRESSED_BANK_EMAIL_TX_TYPES = new Set(['late_fee_assessed', 'overdraft_fee_assessed']);
+
+function normalizeMailboxAddress(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+async function assertEmailPurgeAdmin(request) {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError('unauthenticated', 'Authentication required.');
+  }
+
+  const callerEmail = normalizeMailboxAddress(request.auth.token && request.auth.token.email);
+  if (callerEmail === PRIMARY_ADMIN_EMAIL) {
+    return;
+  }
+
+  const userDoc = await db.collection('users').doc(request.auth.uid).get();
+  if (userDoc.exists && userDoc.data() && userDoc.data().isAdmin === true) {
+    return;
+  }
+
+  throw new HttpsError('permission-denied', 'Admin access required.');
+}
 
 // Fallback webhook URLs (move to Firestore or environment variables for production)
 const FALLBACK_EVENTS_WEBHOOK = 'https://discord.com/api/webhooks/1479885470216356098/xD9Et7LyKEqqaq3S8ESNIyUa3wqnqXvtS7Z-ulfvgcewkcKOn5Qn4yg4DdxRLfyPN3EN';
@@ -123,6 +148,529 @@ function shouldRunMonthlyNow(nowParts, monthlyConfig) {
   const safeDay = Math.max(1, Math.min(31, Math.trunc(configuredDay)));
   const dueDay = Math.min(safeDay, getDaysInMonth(nowParts.year, nowParts.month));
   return nowParts.day >= dueDay;
+}
+
+const SITE_FINANCE_ACCOUNT_DEFINITIONS = {
+  site_total: {
+    id: 'site_total',
+    name: 'Site Total Fund',
+    category: 'site',
+    department: 'SITE'
+  },
+  reserve: {
+    id: 'reserve',
+    name: 'Reserve Fund',
+    category: 'site',
+    department: 'RESERVE'
+  },
+  dept_ad: {
+    id: 'dept_ad',
+    name: 'Administrative Department',
+    category: 'department',
+    department: 'AD'
+  },
+  dept_ia: {
+    id: 'dept_ia',
+    name: 'Internal Affairs',
+    category: 'department',
+    department: 'IA'
+  },
+  dept_tsd: {
+    id: 'dept_tsd',
+    name: 'Technical Services Department',
+    category: 'department',
+    department: 'TSD'
+  },
+  dept_sd: {
+    id: 'dept_sd',
+    name: 'Security Department',
+    category: 'department',
+    department: 'SD'
+  },
+  dept_scd: {
+    id: 'dept_scd',
+    name: 'Scientific Department',
+    category: 'department',
+    department: 'ScD'
+  }
+};
+
+const SITE_FINANCE_DEPARTMENTS = [
+  { code: 'AD', accountId: 'dept_ad' },
+  { code: 'IA', accountId: 'dept_ia' },
+  { code: 'TSD', accountId: 'dept_tsd' },
+  { code: 'SD', accountId: 'dept_sd' },
+  { code: 'ScD', accountId: 'dept_scd' }
+];
+
+function roundToCents(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function clampNumber(value, min, max) {
+  const num = Number(value || 0);
+  if (!Number.isFinite(num)) return min;
+  return Math.max(min, Math.min(max, num));
+}
+
+function getAccountBalances(account = {}) {
+  const checking = roundToCents(Number(account.checkingBalance ?? account.balance ?? 0));
+  const savings = roundToCents(Number(account.savingsBalance ?? 0));
+  return {
+    checking,
+    savings,
+    total: roundToCents(checking + savings)
+  };
+}
+
+function normalizeBankPid(value) {
+  const normalized = String(value || '').trim();
+  return normalized || null;
+}
+
+function getCanonicalBankAccountPid(docId, account = {}) {
+  return normalizeBankPid(account.pid) || normalizeBankPid(docId);
+}
+
+function pickCanonicalAccountDocs(snapshot) {
+  const byPid = new Map();
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const canonicalPid = getCanonicalBankAccountPid(docSnap.id, data);
+    if (!canonicalPid) return;
+
+    const current = byPid.get(canonicalPid);
+    if (!current) {
+      byPid.set(canonicalPid, docSnap);
+      return;
+    }
+
+    // Prefer the canonical PID document when duplicate/legacy docs exist.
+    if (docSnap.id === canonicalPid && current.id !== canonicalPid) {
+      byPid.set(canonicalPid, docSnap);
+    }
+  });
+  return byPid;
+}
+
+function debitFromCheckingThenSavings(checkingInput, savingsInput, amountInput) {
+  let checking = roundToCents(checkingInput);
+  let savings = roundToCents(savingsInput);
+  let remaining = roundToCents(amountInput);
+  let paid = 0;
+
+  if (remaining <= 0) {
+    return { checking, savings, paid: 0 };
+  }
+
+  if (checking > 0) {
+    const useFromChecking = Math.min(checking, remaining);
+    checking = roundToCents(checking - useFromChecking);
+    remaining = roundToCents(remaining - useFromChecking);
+    paid = roundToCents(paid + useFromChecking);
+  }
+
+  if (remaining > 0 && savings > 0) {
+    const useFromSavings = Math.min(savings, remaining);
+    savings = roundToCents(savings - useFromSavings);
+    remaining = roundToCents(remaining - useFromSavings);
+    paid = roundToCents(paid + useFromSavings);
+  }
+
+  return {
+    checking,
+    savings,
+    paid
+  };
+}
+
+function getConfiguredDeductions(account = {}) {
+  if (Array.isArray(account.deductions) && account.deductions.length) return account.deductions;
+  if (Array.isArray(account.monthlyDeductions)) return account.monthlyDeductions;
+  return [];
+}
+
+function normalizeCreditProfile(rawProfile = {}) {
+  return {
+    monthsEvaluated: Math.max(0, Number(rawProfile.monthsEvaluated || 0)),
+    onTimeMonths: Math.max(0, Number(rawProfile.onTimeMonths || 0)),
+    lateMonths: Math.max(0, Number(rawProfile.lateMonths || 0)),
+    overdraftEvents: Math.max(0, Number(rawProfile.overdraftEvents || 0)),
+    consecutiveOnTimeMonths: Math.max(0, Number(rawProfile.consecutiveOnTimeMonths || 0)),
+    consecutiveLateMonths: Math.max(0, Number(rawProfile.consecutiveLateMonths || 0)),
+    lastEvaluatedMonthKey: String(rawProfile.lastEvaluatedMonthKey || ''),
+    lastMonthlyDueTotal: roundToCents(rawProfile.lastMonthlyDueTotal || 0),
+    lastMonthlyPaidAmount: roundToCents(rawProfile.lastMonthlyPaidAmount || 0),
+    lastLateFeeAmount: roundToCents(rawProfile.lastLateFeeAmount || 0),
+    lastOverdraftFeeAmount: roundToCents(rawProfile.lastOverdraftFeeAmount || 0),
+    lastLateFeeMonthKey: String(rawProfile.lastLateFeeMonthKey || ''),
+    lastOverdraftFeeMonthKey: String(rawProfile.lastOverdraftFeeMonthKey || ''),
+    outstandingBalance: roundToCents(rawProfile.outstandingBalance || 0)
+  };
+}
+
+function getAccountAgeMonths(createdAt) {
+  if (!createdAt || typeof createdAt.toDate !== 'function') return 0;
+  const created = createdAt.toDate();
+  if (!(created instanceof Date) || Number.isNaN(created.getTime())) return 0;
+  const now = new Date();
+  let months = (now.getUTCFullYear() - created.getUTCFullYear()) * 12;
+  months += now.getUTCMonth() - created.getUTCMonth();
+  if (now.getUTCDate() < created.getUTCDate()) months -= 1;
+  return Math.max(0, months);
+}
+
+function computeCreditScore({ account = {}, creditProfile = {}, deductionsDueMonthly = 0, outstandingBalance = 0 }) {
+  const safeProfile = normalizeCreditProfile(creditProfile);
+  const accountAgeMonths = getAccountAgeMonths(account.createdAt);
+  const recurringIncome = roundToCents(Number(account?.recurring?.amount || 0));
+  const balances = getAccountBalances(account);
+
+  const baseScore = 620;
+  const ageFactor = Math.min(60, accountAgeMonths * 1.5);
+
+  const paymentMonths = Math.max(1, safeProfile.monthsEvaluated);
+  const onTimeRatio = safeProfile.onTimeMonths / paymentMonths;
+  const paymentHistoryFactor = Math.round((onTimeRatio - 0.5) * 240);
+  const latePenalty = Math.min(220, safeProfile.lateMonths * 12 + safeProfile.consecutiveLateMonths * 10);
+  const streakBonus = Math.min(45, safeProfile.consecutiveOnTimeMonths * 3);
+
+  const burdenRatio = recurringIncome > 0 ? deductionsDueMonthly / recurringIncome : (deductionsDueMonthly > 0 ? 2 : 0);
+  let utilizationFactor = 0;
+  if (burdenRatio <= 0.2) utilizationFactor = 45;
+  else if (burdenRatio <= 0.35) utilizationFactor = 25;
+  else if (burdenRatio <= 0.5) utilizationFactor = 5;
+  else if (burdenRatio <= 0.75) utilizationFactor = -35;
+  else utilizationFactor = -70;
+
+  const liquidBufferRatio = deductionsDueMonthly > 0 ? balances.total / deductionsDueMonthly : 2;
+  const bufferFactor = clampNumber((liquidBufferRatio - 1) * 20, -40, 40);
+  const outstandingPenalty = Math.min(170, Math.floor(outstandingBalance / 20));
+  const overdraftPenalty = Math.min(140, safeProfile.overdraftEvents * 10);
+
+  const rawScore = baseScore
+    + ageFactor
+    + paymentHistoryFactor
+    + streakBonus
+    + utilizationFactor
+    + bufferFactor
+    - latePenalty
+    - outstandingPenalty
+    - overdraftPenalty;
+
+  const score = Math.round(clampNumber(rawScore, 300, 850));
+
+  return {
+    score,
+    factors: {
+      paymentHistory: Math.round(paymentHistoryFactor - latePenalty),
+      utilization: Math.round(utilizationFactor),
+      accountAge: Math.round(ageFactor),
+      liquidity: Math.round(bufferFactor),
+      overdraft: Math.round(-overdraftPenalty),
+      outstandingDebt: Math.round(-outstandingPenalty),
+      onTimeRatio: roundToCents(onTimeRatio),
+      recurringIncome,
+      deductionsDueMonthly: roundToCents(deductionsDueMonthly),
+      accountAgeMonths,
+      outstandingBalance: roundToCents(outstandingBalance)
+    }
+  };
+}
+
+function normalizeFinanceAllocations(rawAllocations = {}) {
+  const normalized = {};
+  SITE_FINANCE_DEPARTMENTS.forEach(({ code }) => {
+    const value = Number(rawAllocations?.[code] || 0);
+    normalized[code] = Number.isFinite(value) && value > 0 ? Math.min(100, value) : 0;
+  });
+  return normalized;
+}
+
+function normalizeSiteFinanceSettings(raw = {}) {
+  return {
+    foundationMonthlyDeposit: roundToCents(raw.foundationMonthlyDeposit || 0),
+    autoAllocateEnabled: raw.autoAllocateEnabled === true,
+    allocations: normalizeFinanceAllocations(raw.allocations || {}),
+    lastFoundationDepositMonthKey: String(raw.lastFoundationDepositMonthKey || '')
+  };
+}
+
+function computeAllocationRows(baseAmount, allocations) {
+  const normalizedBase = roundToCents(baseAmount);
+  if (!normalizedBase || normalizedBase <= 0) {
+    return { rows: [], totalAllocated: 0 };
+  }
+
+  const percentageRows = SITE_FINANCE_DEPARTMENTS
+    .map(({ code, accountId }) => ({ code, accountId, percent: Number(allocations?.[code] || 0) }))
+    .filter(row => row.percent > 0);
+
+  if (!percentageRows.length) {
+    return { rows: [], totalAllocated: 0 };
+  }
+
+  const totalPct = percentageRows.reduce((sum, row) => sum + row.percent, 0);
+  const cappedPct = Math.min(totalPct, 100);
+  if (cappedPct <= 0) {
+    return { rows: [], totalAllocated: 0 };
+  }
+
+  const allocatableCents = Math.round((normalizedBase * cappedPct / 100) * 100);
+  if (allocatableCents <= 0) {
+    return { rows: [], totalAllocated: 0 };
+  }
+
+  const rawRows = percentageRows.map(row => {
+    const fraction = row.percent / totalPct;
+    const rawCents = allocatableCents * fraction;
+    return {
+      ...row,
+      rawCents,
+      cents: Math.floor(rawCents)
+    };
+  });
+
+  let remaining = allocatableCents - rawRows.reduce((sum, row) => sum + row.cents, 0);
+  if (remaining > 0) {
+    rawRows
+      .sort((a, b) => (b.rawCents - b.cents) - (a.rawCents - a.cents))
+      .forEach((row) => {
+        if (remaining <= 0) return;
+        row.cents += 1;
+        remaining -= 1;
+      });
+  }
+
+  const rows = rawRows
+    .filter(row => row.cents > 0)
+    .map(row => ({
+      code: row.code,
+      accountId: row.accountId,
+      amount: roundToCents(row.cents / 100)
+    }));
+
+  const totalAllocated = roundToCents(rows.reduce((sum, row) => sum + row.amount, 0));
+  return { rows, totalAllocated };
+}
+
+function getSiteFinanceAccountRef(accountId) {
+  return db.collection('site_finance_accounts').doc(accountId);
+}
+
+function siteFinanceAccountPayload(accountId, balance = 0) {
+  const def = SITE_FINANCE_ACCOUNT_DEFINITIONS[accountId];
+  if (!def) {
+    return { id: accountId, name: accountId, balance: roundToCents(balance) };
+  }
+
+  return {
+    id: def.id,
+    name: def.name,
+    category: def.category,
+    department: def.department,
+    balance: roundToCents(balance),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedByUid: 'system'
+  };
+}
+
+async function applySiteFinanceInflow(options = {}) {
+  const amount = roundToCents(options.amount || 0);
+  if (!amount || amount <= 0) {
+    return { applied: false, reason: 'no-amount' };
+  }
+
+  const inflowType = String(options.inflowType || 'system_inflow');
+  const note = String(options.note || 'Automated site finance inflow');
+  const monthKey = String(options.monthKey || '');
+  const timezone = String(options.timezone || 'America/New_York');
+
+  return db.runTransaction(async tx => {
+    const settingsRef = db.collection('bank_config').doc('site_finance_settings');
+    const settingsSnap = await tx.get(settingsRef);
+    const settings = normalizeSiteFinanceSettings(settingsSnap.exists ? settingsSnap.data() : {});
+
+    const siteRef = getSiteFinanceAccountRef('site_total');
+    const siteSnap = await tx.get(siteRef);
+    const currentSiteBalance = roundToCents(siteSnap.exists ? siteSnap.data()?.balance : 0);
+    let siteBalance = roundToCents(currentSiteBalance + amount);
+
+    tx.set(siteRef, siteFinanceAccountPayload('site_total', siteBalance), { merge: true });
+    tx.set(siteRef.collection('transactions').doc(), {
+      scope: 'site_finance',
+      type: inflowType,
+      direction: 'credit',
+      amount,
+      note,
+      monthKey,
+      timezone,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdByUid: 'system',
+      createdByName: 'Finance Scheduler',
+      balanceAfter: siteBalance
+    });
+
+    let allocatedTotal = 0;
+    const allocationBreakdown = [];
+    if (settings.autoAllocateEnabled) {
+      const allocation = computeAllocationRows(amount, settings.allocations);
+      allocatedTotal = allocation.totalAllocated;
+
+      for (const row of allocation.rows) {
+        const deptRef = getSiteFinanceAccountRef(row.accountId);
+        const deptSnap = await tx.get(deptRef);
+        const deptBalance = roundToCents((deptSnap.exists ? deptSnap.data()?.balance : 0) + row.amount);
+
+        tx.set(deptRef, siteFinanceAccountPayload(row.accountId, deptBalance), { merge: true });
+        tx.set(deptRef.collection('transactions').doc(), {
+          scope: 'site_finance',
+          type: 'auto_allocation_in',
+          direction: 'credit',
+          amount: row.amount,
+          note: `Auto-allocation from site inflow (${row.code})`,
+          monthKey,
+          timezone,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdByUid: 'system',
+          createdByName: 'Finance Scheduler',
+          balanceAfter: deptBalance
+        });
+
+        siteBalance = roundToCents(siteBalance - row.amount);
+        allocationBreakdown.push({ code: row.code, amount: row.amount });
+      }
+
+      if (allocatedTotal > 0) {
+        tx.set(siteRef, siteFinanceAccountPayload('site_total', siteBalance), { merge: true });
+        tx.set(siteRef.collection('transactions').doc(), {
+          scope: 'site_finance',
+          type: 'auto_allocation_out',
+          direction: 'debit',
+          amount: allocatedTotal,
+          note: 'Automatic department budget allocation',
+          monthKey,
+          timezone,
+          breakdown: allocationBreakdown,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdByUid: 'system',
+          createdByName: 'Finance Scheduler',
+          balanceAfter: siteBalance
+        });
+      }
+    }
+
+    tx.set(settingsRef, {
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedByUid: 'system'
+    }, { merge: true });
+
+    return {
+      applied: true,
+      inflowAmount: amount,
+      allocatedTotal,
+      siteBalanceAfter: siteBalance
+    };
+  });
+}
+
+async function applyFoundationDepositForMonth(monthKey, timezone) {
+  return db.runTransaction(async tx => {
+    const settingsRef = db.collection('bank_config').doc('site_finance_settings');
+    const settingsSnap = await tx.get(settingsRef);
+    const settings = normalizeSiteFinanceSettings(settingsSnap.exists ? settingsSnap.data() : {});
+
+    const deposit = roundToCents(settings.foundationMonthlyDeposit || 0);
+    if (!deposit || deposit <= 0) {
+      return { applied: false, reason: 'deposit-disabled' };
+    }
+
+    if (String(settings.lastFoundationDepositMonthKey || '') === monthKey) {
+      return { applied: false, reason: 'already-applied' };
+    }
+
+    const siteRef = getSiteFinanceAccountRef('site_total');
+    const siteSnap = await tx.get(siteRef);
+    const currentSiteBalance = roundToCents(siteSnap.exists ? siteSnap.data()?.balance : 0);
+    let siteBalance = roundToCents(currentSiteBalance + deposit);
+
+    tx.set(siteRef, siteFinanceAccountPayload('site_total', siteBalance), { merge: true });
+    tx.set(siteRef.collection('transactions').doc(), {
+      scope: 'site_finance',
+      type: 'foundation_monthly_deposit',
+      direction: 'credit',
+      amount: deposit,
+      note: 'Monthly Foundation operating deposit',
+      monthKey,
+      timezone,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdByUid: 'system',
+      createdByName: 'Foundation Finance Scheduler',
+      balanceAfter: siteBalance
+    });
+
+    let allocatedTotal = 0;
+    const allocationBreakdown = [];
+    if (settings.autoAllocateEnabled) {
+      const allocation = computeAllocationRows(deposit, settings.allocations);
+      allocatedTotal = allocation.totalAllocated;
+
+      for (const row of allocation.rows) {
+        const deptRef = getSiteFinanceAccountRef(row.accountId);
+        const deptSnap = await tx.get(deptRef);
+        const deptBalance = roundToCents((deptSnap.exists ? deptSnap.data()?.balance : 0) + row.amount);
+
+        tx.set(deptRef, siteFinanceAccountPayload(row.accountId, deptBalance), { merge: true });
+        tx.set(deptRef.collection('transactions').doc(), {
+          scope: 'site_finance',
+          type: 'auto_allocation_in',
+          direction: 'credit',
+          amount: row.amount,
+          note: `Auto-allocation from Foundation deposit (${row.code})`,
+          monthKey,
+          timezone,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdByUid: 'system',
+          createdByName: 'Foundation Finance Scheduler',
+          balanceAfter: deptBalance
+        });
+
+        siteBalance = roundToCents(siteBalance - row.amount);
+        allocationBreakdown.push({ code: row.code, amount: row.amount });
+      }
+
+      if (allocatedTotal > 0) {
+        tx.set(siteRef, siteFinanceAccountPayload('site_total', siteBalance), { merge: true });
+        tx.set(siteRef.collection('transactions').doc(), {
+          scope: 'site_finance',
+          type: 'auto_allocation_out',
+          direction: 'debit',
+          amount: allocatedTotal,
+          note: 'Automatic department allocation from Foundation deposit',
+          monthKey,
+          timezone,
+          breakdown: allocationBreakdown,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdByUid: 'system',
+          createdByName: 'Foundation Finance Scheduler',
+          balanceAfter: siteBalance
+        });
+      }
+    }
+
+    tx.set(settingsRef, {
+      lastFoundationDepositMonthKey: monthKey,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedByUid: 'system'
+    }, { merge: true });
+
+    return {
+      applied: true,
+      deposit,
+      allocatedTotal,
+      siteBalanceAfter: siteBalance
+    };
+  });
 }
 
 function baseLocalFromName(name) {
@@ -394,33 +942,62 @@ exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'Ameri
       .where('recurring.enabled', '==', true)
       .get();
 
-    console.log('💼 Payroll accounts found', { count: payrollAccounts.size, payrollRunKey });
+    const payrollAccountsByPid = pickCanonicalAccountDocs(payrollAccounts);
+
+    console.log('💼 Payroll accounts found', {
+      count: payrollAccounts.size,
+      uniquePidCount: payrollAccountsByPid.size,
+      payrollRunKey
+    });
 
     const payrollTasks = [];
-    payrollAccounts.forEach(docSnap => {
+    payrollAccountsByPid.forEach((docSnap, canonicalPid) => {
       payrollTasks.push(db.runTransaction(async tx => {
-        const accountRef = docSnap.ref;
-        const accountSnap = await tx.get(accountRef);
-        if (!accountSnap.exists) return;
+        const sourceRef = docSnap.ref;
+        const sourceSnap = await tx.get(sourceRef);
+        if (!sourceSnap.exists) return;
 
-        const account = accountSnap.data() || {};
-        const recurring = account.recurring || {};
+        const sourceAccount = sourceSnap.data() || {};
+        const targetRef = db.collection('bank_accounts').doc(canonicalPid);
+        const targetSnap = targetRef.path === sourceRef.path ? sourceSnap : await tx.get(targetRef);
+        const targetAccount = targetSnap.exists ? (targetSnap.data() || {}) : {
+          ...sourceAccount,
+          pid: canonicalPid
+        };
+
+        const sourceRecurring = sourceAccount.recurring || {};
+        const targetRecurring = targetAccount.recurring || {};
+        const mergedLastPayrollKey = String(targetRecurring.lastPayrollKey || sourceRecurring.lastPayrollKey || '');
+        const mergedAmount = Number(sourceRecurring.amount || targetRecurring.amount || 0);
+        const recurring = {
+          ...targetRecurring,
+          ...sourceRecurring,
+          amount: mergedAmount,
+          lastPayrollKey: mergedLastPayrollKey,
+          enabled: sourceRecurring.enabled !== false || targetRecurring.enabled !== false
+        };
+
         const amount = Number(recurring.amount || 0);
         if (!amount || amount <= 0) {
-          console.log('💼 Payroll skip: invalid amount', { pid: account.pid || docSnap.id, amount: recurring.amount });
+          console.log('💼 Payroll skip: invalid amount', { pid: canonicalPid, amount: recurring.amount });
           return;
         }
 
         if (String(recurring.lastPayrollKey || '') === payrollRunKey) {
-          console.log('💼 Payroll skip: already paid this cycle', { pid: account.pid || docSnap.id, payrollRunKey });
+          console.log('💼 Payroll skip: already paid this cycle', { pid: canonicalPid, payrollRunKey });
           return;
         }
 
-        const balance = Number(account.balance || 0) + amount;
-        const txRef = accountRef.collection('transactions').doc();
+        const balances = getAccountBalances(targetAccount);
+        const newChecking = roundToCents(balances.checking + amount);
+        const newTotal = roundToCents(newChecking + balances.savings);
+        const txRef = targetRef.collection('transactions').doc();
 
-        tx.set(accountRef, {
-          balance,
+        tx.set(targetRef, {
+          pid: canonicalPid,
+          checkingBalance: newChecking,
+          savingsBalance: balances.savings,
+          balance: newTotal,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedByUid: 'system',
           recurring: {
@@ -432,20 +1009,34 @@ exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'Ameri
           }
         }, { merge: true });
 
+        if (targetRef.path !== sourceRef.path && sourceRecurring.enabled !== false) {
+          tx.set(sourceRef, {
+            recurring: {
+              ...sourceRecurring,
+              enabled: false,
+              redirectedToPid: canonicalPid,
+              redirectUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+            },
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedByUid: 'system'
+          }, { merge: true });
+        }
+
         tx.set(txRef, {
           type: 'payroll',
+          accountType: 'checking',
           amount,
           note: `Automated bi-weekly payroll (${timezone})`,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           createdByUid: 'system',
           createdByName: 'Payroll Scheduler',
-          balanceAfter: balance
+          balanceAfter: newChecking
         });
 
         console.log('✅ Payroll applied', {
-          pid: account.pid || docSnap.id,
+          pid: canonicalPid,
           amount,
-          newBalance: balance,
+          newBalance: newTotal,
           payrollRunKey
         });
       }));
@@ -467,25 +1058,44 @@ exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'Ameri
   if (monthlyDueNow) {
     console.log('🏠 Monthly deductions are due now; loading accounts');
     const monthlyAccounts = await db.collection('bank_accounts').get();
-    console.log('🏠 Monthly accounts found', { count: monthlyAccounts.size, monthKey });
+    const monthlyAccountsByPid = pickCanonicalAccountDocs(monthlyAccounts);
+    console.log('🏠 Monthly accounts found', {
+      count: monthlyAccounts.size,
+      uniquePidCount: monthlyAccountsByPid.size,
+      monthKey
+    });
 
     const monthlyTasks = [];
 
-    monthlyAccounts.forEach(docSnap => {
+    monthlyAccountsByPid.forEach((docSnap, canonicalPid) => {
       monthlyTasks.push(db.runTransaction(async tx => {
-        const accountRef = docSnap.ref;
-        const accountSnap = await tx.get(accountRef);
-        if (!accountSnap.exists) return;
+        const sourceRef = docSnap.ref;
+        const sourceSnap = await tx.get(sourceRef);
+        if (!sourceSnap.exists) return 0;
 
-        const account = accountSnap.data() || {};
-        const existingDeductions = Array.isArray(account.monthlyDeductions) ? account.monthlyDeductions : [];
-        if (!existingDeductions.length) {
-          console.log('🏠 Monthly skip: no deductions configured', { pid: account.pid || docSnap.id });
-          return;
+        const sourceAccount = sourceSnap.data() || {};
+        const accountRef = db.collection('bank_accounts').doc(canonicalPid);
+        const canonicalSnap = accountRef.path === sourceRef.path ? sourceSnap : await tx.get(accountRef);
+        const account = canonicalSnap.exists ? (canonicalSnap.data() || {}) : {
+          ...sourceAccount,
+          pid: canonicalPid
+        };
+
+        let existingDeductions = getConfiguredDeductions(account);
+        if (!existingDeductions.length && accountRef.path !== sourceRef.path) {
+          existingDeductions = getConfiguredDeductions(sourceAccount);
         }
 
-        let totalDeduction = 0;
-        const chargeRows = [];
+        const outstandingBefore = roundToCents(Number(account.overdueDeductionsBalance ?? sourceAccount.overdueDeductionsBalance ?? 0));
+        const startingBalances = getAccountBalances(account);
+
+        if (!existingDeductions.length && outstandingBefore <= 0 && startingBalances.total >= 0) {
+          console.log('🏠 Monthly skip: no deductions, no overdue balance', { pid: account.pid || docSnap.id });
+          return 0;
+        }
+
+        let monthlyDueTotal = 0;
+        const dueRows = [];
         const chargedAt = admin.firestore.Timestamp.now();
 
         const updatedDeductions = existingDeductions.map((item) => {
@@ -496,8 +1106,8 @@ exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'Ameri
             return item;
           }
 
-          totalDeduction += amount;
-          chargeRows.push({
+          monthlyDueTotal += amount;
+          dueRows.push({
             type: String(item?.type || 'other'),
             label: String(item?.label || ''),
             amount
@@ -511,45 +1121,161 @@ exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'Ameri
           };
         });
 
-        if (!chargeRows.length) {
-          console.log('🏠 Monthly skip: nothing chargeable this month', {
-            pid: account.pid || docSnap.id,
-            monthKey
-          });
-          return;
+        const monthlyEnabledDeductionTotal = roundToCents(existingDeductions
+          .filter(item => item?.enabled !== false && Number(item?.amount || 0) > 0)
+          .reduce((sum, item) => sum + Number(item?.amount || 0), 0));
+
+        const outstandingAfterDue = roundToCents(outstandingBefore + monthlyDueTotal);
+        const autoPayment = debitFromCheckingThenSavings(
+          startingBalances.checking,
+          startingBalances.savings,
+          Math.min(Math.max(startingBalances.total, 0), outstandingAfterDue)
+        );
+
+        let outstandingAfterPayment = roundToCents(outstandingAfterDue - autoPayment.paid);
+
+        const shouldAssessLateFee = outstandingAfterPayment > 0
+          && creditProfile.lastLateFeeMonthKey !== monthKey;
+        const lateFeeAmount = shouldAssessLateFee
+          ? roundToCents(Math.max(15, outstandingAfterPayment * 0.05))
+          : 0;
+
+        const shouldAssessOverdraftFee = (
+          startingBalances.checking < 0
+          || startingBalances.savings < 0
+          || startingBalances.total < 0
+        ) && creditProfile.lastOverdraftFeeMonthKey !== monthKey;
+        const overdraftFeeAmount = shouldAssessOverdraftFee ? 35 : 0;
+
+        outstandingAfterPayment = roundToCents(outstandingAfterPayment + lateFeeAmount + overdraftFeeAmount);
+
+        const creditProfile = normalizeCreditProfile(account.creditProfile || {});
+        const hadMonthlyObligation = monthlyDueTotal > 0 || outstandingBefore > 0;
+        if (hadMonthlyObligation && creditProfile.lastEvaluatedMonthKey !== monthKey) {
+          creditProfile.monthsEvaluated += 1;
+          if (outstandingAfterPayment <= 0) {
+            creditProfile.onTimeMonths += 1;
+            creditProfile.consecutiveOnTimeMonths += 1;
+            creditProfile.consecutiveLateMonths = 0;
+          } else {
+            creditProfile.lateMonths += 1;
+            creditProfile.consecutiveLateMonths += 1;
+            creditProfile.consecutiveOnTimeMonths = 0;
+          }
         }
 
-        const newBalance = Number(account.balance || 0) - totalDeduction;
+        if (overdraftFeeAmount > 0) {
+          creditProfile.overdraftEvents += 1;
+          creditProfile.lastOverdraftFeeMonthKey = monthKey;
+        }
+
+        if (lateFeeAmount > 0) {
+          creditProfile.lastLateFeeMonthKey = monthKey;
+        }
+
+        creditProfile.lastEvaluatedMonthKey = monthKey;
+        creditProfile.lastMonthlyDueTotal = roundToCents(monthlyDueTotal);
+        creditProfile.lastMonthlyPaidAmount = roundToCents(autoPayment.paid);
+        creditProfile.lastLateFeeAmount = roundToCents(lateFeeAmount);
+        creditProfile.lastOverdraftFeeAmount = roundToCents(overdraftFeeAmount);
+        creditProfile.outstandingBalance = roundToCents(outstandingAfterPayment);
+
+        const scoreSnapshot = computeCreditScore({
+          account: {
+            ...account,
+            checkingBalance: autoPayment.checking,
+            savingsBalance: autoPayment.savings
+          },
+          creditProfile,
+          deductionsDueMonthly: monthlyEnabledDeductionTotal,
+          outstandingBalance: outstandingAfterPayment
+        });
+
+        const finalTotalBalance = roundToCents(autoPayment.checking + autoPayment.savings);
 
         tx.set(accountRef, {
-          balance: newBalance,
+          pid: canonicalPid,
+          checkingBalance: autoPayment.checking,
+          savingsBalance: autoPayment.savings,
+          balance: finalTotalBalance,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedByUid: 'system',
-          monthlyDeductions: updatedDeductions
+          deductions: updatedDeductions,
+          monthlyDeductions: updatedDeductions,
+          overdueDeductionsBalance: outstandingAfterPayment,
+          creditScore: scoreSnapshot.score,
+          creditFactors: scoreSnapshot.factors,
+          creditProfile
         }, { merge: true });
 
-        chargeRows.forEach((charge) => {
+        dueRows.forEach((charge) => {
           const txRef = accountRef.collection('transactions').doc();
           const typeLabel = charge.type.replace(/_/g, ' ');
           const namePart = charge.label ? ` - ${charge.label}` : '';
           tx.set(txRef, {
-            type: 'monthly_deduction',
+            type: 'monthly_deduction_due',
             amount: charge.amount,
-            note: `Monthly deduction (${typeLabel}${namePart})`,
+            note: `Monthly deduction due (${typeLabel}${namePart})`,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             createdByUid: 'system',
             createdByName: 'Monthly Deduction Scheduler',
-            balanceAfter: newBalance
+            balanceAfter: finalTotalBalance
           });
         });
 
+        if (autoPayment.paid > 0) {
+          const paymentTxRef = accountRef.collection('transactions').doc();
+          tx.set(paymentTxRef, {
+            type: 'monthly_deduction_payment',
+            amount: autoPayment.paid,
+            note: 'Automatic payment applied to monthly deductions',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdByUid: 'system',
+            createdByName: 'Monthly Deduction Scheduler',
+            balanceAfter: finalTotalBalance
+          });
+        }
+
+        if (lateFeeAmount > 0) {
+          const lateTxRef = accountRef.collection('transactions').doc();
+          tx.set(lateTxRef, {
+            type: 'late_fee_assessed',
+            amount: lateFeeAmount,
+            note: 'Late fee assessed for unpaid monthly deductions',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdByUid: 'system',
+            createdByName: 'Monthly Deduction Scheduler',
+            balanceAfter: finalTotalBalance
+          });
+        }
+
+        if (overdraftFeeAmount > 0) {
+          const overdraftTxRef = accountRef.collection('transactions').doc();
+          tx.set(overdraftTxRef, {
+            type: 'overdraft_fee_assessed',
+            amount: overdraftFeeAmount,
+            note: 'Overdraft fee assessed due to negative balance',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdByUid: 'system',
+            createdByName: 'Monthly Deduction Scheduler',
+            balanceAfter: finalTotalBalance
+          });
+        }
+
         console.log('✅ Monthly deductions applied', {
-          pid: account.pid || docSnap.id,
-          chargeCount: chargeRows.length,
-          totalDeduction,
-          newBalance,
+          pid: canonicalPid,
+          dueCount: dueRows.length,
+          monthlyDueTotal,
+          autoPayment: autoPayment.paid,
+          lateFeeAmount,
+          overdraftFeeAmount,
+          overdueAfterRun: outstandingAfterPayment,
+          creditScore: scoreSnapshot.score,
+          newBalance: finalTotalBalance,
           monthKey
         });
+
+        return autoPayment.paid;
       }));
     });
 
@@ -563,6 +1289,46 @@ exports.processPayroll = onSchedule({ schedule: 'every minute', timeZone: 'Ameri
       });
     } else {
       console.log('✅ Monthly deduction tasks completed', { total: monthlyResults.length });
+    }
+
+    const monthlyDeductionInflow = roundToCents(monthlyResults
+      .filter(result => result.status === 'fulfilled')
+      .reduce((sum, result) => sum + Number(result.value || 0), 0));
+
+    if (monthlyDeductionInflow > 0) {
+      try {
+        const inflowResult = await applySiteFinanceInflow({
+          amount: monthlyDeductionInflow,
+          inflowType: 'monthly_deduction_inflow',
+          note: `Aggregated monthly deductions credited to Site funds (${monthKey})`,
+          monthKey,
+          timezone
+        });
+        console.log('🏦 Site finance inflow applied from monthly deductions', {
+          monthKey,
+          monthlyDeductionInflow,
+          inflowResult
+        });
+      } catch (error) {
+        console.error('❌ Failed to apply site finance inflow from monthly deductions', {
+          monthKey,
+          monthlyDeductionInflow,
+          error: String(error?.message || error)
+        });
+      }
+    }
+
+    try {
+      const foundationResult = await applyFoundationDepositForMonth(monthKey, timezone);
+      console.log('🏦 Foundation monthly deposit processing complete', {
+        monthKey,
+        foundationResult
+      });
+    } catch (error) {
+      console.error('❌ Failed to process Foundation monthly deposit', {
+        monthKey,
+        error: String(error?.message || error)
+      });
     }
   }
 
@@ -606,6 +1372,11 @@ exports.onBankTransaction = onDocumentCreated('bank_accounts/{pid}/transactions/
   console.log('📧 Recipient resolved:', recipient);
 
   const txType = (txData.type || 'transaction').toString();
+  if (SUPPRESSED_BANK_EMAIL_TX_TYPES.has(txType)) {
+    console.log('⏭️ Suppressed bank email notification for transaction type', { txType, pid });
+    return;
+  }
+
   const typeLabel = txType.replace(/_/g, ' ').toUpperCase();
   const subject = `Transaction Alert: ${typeLabel}`;
   const amountText = formatCurrency(txData.amount || 0);
@@ -907,6 +1678,75 @@ imageApiApp.use((_req, res) => {
 });
 
 exports.imageApi = onRequest({ invoker: 'public' }, imageApiApp);
+
+exports.purgeMailboxEmails = onCall(async (request) => {
+  await assertEmailPurgeAdmin(request);
+
+  const mailboxInput = String(request.data && request.data.mailbox ? request.data.mailbox : '').trim();
+  const mailbox = normalizeMailboxAddress(mailboxInput);
+  const includeSent = request.data && request.data.includeSent !== false;
+
+  if (!mailbox || !mailbox.includes('@')) {
+    throw new HttpsError('invalid-argument', 'A valid mailbox email is required.');
+  }
+
+  const mailboxVariants = [...new Set([mailboxInput, mailbox].filter(Boolean))];
+  const emailRefsById = new Map();
+  let recipientMatches = 0;
+  let senderMatches = 0;
+
+  await Promise.all(mailboxVariants.map(async (variant) => {
+    const recipientSnap = await db.collection('emails')
+      .where('recipients', 'array-contains', variant)
+      .get();
+    recipientSnap.forEach((docSnap) => {
+      recipientMatches += 1;
+      emailRefsById.set(docSnap.id, docSnap.ref);
+    });
+  }));
+
+  if (includeSent) {
+    await Promise.all(mailboxVariants.map(async (variant) => {
+      const [senderSnap, senderEmailSnap] = await Promise.all([
+        db.collection('emails').where('sender', '==', variant).get(),
+        db.collection('emails').where('senderEmail', '==', variant).get()
+      ]);
+
+      senderSnap.forEach((docSnap) => {
+        senderMatches += 1;
+        emailRefsById.set(docSnap.id, docSnap.ref);
+      });
+
+      senderEmailSnap.forEach((docSnap) => {
+        senderMatches += 1;
+        emailRefsById.set(docSnap.id, docSnap.ref);
+      });
+    }));
+  }
+
+  const refsToDelete = [...emailRefsById.values()];
+  for (let i = 0; i < refsToDelete.length; i += EMAIL_PURGE_BATCH_SIZE) {
+    const batch = db.batch();
+    refsToDelete.slice(i, i + EMAIL_PURGE_BATCH_SIZE).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+
+  console.log('🧹 Mailbox purge complete', {
+    mailbox,
+    includeSent,
+    recipientMatches,
+    senderMatches,
+    deletedCount: refsToDelete.length
+  });
+
+  return {
+    mailbox,
+    includeSent,
+    deletedCount: refsToDelete.length,
+    recipientMatches,
+    senderMatches
+  };
+});
 
 // ==============================================
 // Discord Email Notifications

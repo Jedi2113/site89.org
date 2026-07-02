@@ -42,6 +42,12 @@
         return;
       }
 
+      if (reqNum <= 0) {
+        // Level 0 is public access and must not require authentication.
+        completeCheck(true);
+        return;
+      }
+
       // Check clearance result
       if (Number.isNaN(userClearance)) {
         // No valid user/clearance - BLOCK

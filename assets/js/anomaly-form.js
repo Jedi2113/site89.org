@@ -35,8 +35,30 @@ function canSubmit(){ const c = userClearance(); if(!isNaN(c) && c >= 5) return 
 function displayName(){ const ch = getSelectedCharacter(); if(ch && ch.name) return ch.name; return null; }
 function characterId(){ const ch = getSelectedCharacter(); return ch && ch.id ? ch.id : null; }
 
-function formatItemNumber(raw){ const s = (raw || '').toUpperCase().replace(/\s+/g,''); const digits = s.match(/\d+/); if(!digits) return s || 'SCP-000'; const padded = digits[0].padStart(3,'0'); return `SCP-${padded}`; }
-function docIdFromItemNumber(itemNumber){ const m = (itemNumber || '').match(/\d+/); if(m) return m[0]; return (itemNumber || 'scp-000').replace(/[^A-Za-z0-9]/g,'-'); }
+function formatItemNumber(raw){
+  let s = String(raw || '').toUpperCase().trim();
+  if(!s) return 'SCP-000';
+  s = s.replace(/\s+/g, '-').replace(/_+/g, '-').replace(/[^A-Z0-9-]/g, '');
+  s = s.replace(/-+/g, '-').replace(/^-|-$/g, '');
+  if(!s.startsWith('SCP')) s = `SCP-${s}`;
+  s = s.replace(/^SCP(?=\d)/, 'SCP-').replace(/^SCP-+/, 'SCP-');
+  const m = s.match(/^SCP-(\d+)(.*)$/);
+  if(!m) return s || 'SCP-000';
+  const numberPart = m[1].padStart(3, '0');
+  const suffix = (m[2] || '').replace(/^-+/, '').replace(/[^A-Z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return suffix ? `SCP-${numberPart}-${suffix}` : `SCP-${numberPart}`;
+}
+
+function docIdFromItemNumber(itemNumber){
+  const formatted = formatItemNumber(itemNumber);
+  const m = formatted.match(/^SCP-(\d+)(?:-(.+))?$/);
+  if(m){
+    const base = String(parseInt(m[1], 10));
+    const suffix = String(m[2] || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return suffix ? `${base}-${suffix}` : base;
+  }
+  return formatted.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'scp-000';
+}
 
 function renderMarkdown(md){ return DOMPurify.sanitize(marked.parse(md || '')); }
 function refreshPreview(){ proceduresPreview.innerHTML = renderMarkdown(proceduresInput.value); descriptionPreview.innerHTML = renderMarkdown(descriptionInput.value); }

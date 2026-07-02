@@ -198,7 +198,7 @@
           btn.style.display = "block";
           btn.style.marginBottom = "0.5rem";
           btn.addEventListener("click", () => {
-            localStorage.setItem("selectedCharacter", JSON.stringify(char));
+            localStorage.setItem("selectedCharacter", JSON.stringify({ id: doc.id, ...char }));
             window.location.href = "index.html";
           });
           characterList.appendChild(btn);

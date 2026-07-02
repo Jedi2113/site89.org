@@ -37,6 +37,7 @@ const STATUS_ORDER = [
 ];
 
 const IA_EMAIL = 'ia.mgmt@site89.org';
+const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
 const PAGE_SIZE = 9;
 
 let allAccounts = [];
@@ -48,6 +49,62 @@ let filteredAccounts = [];
 let currentPage = 1;
 let activeUid = null;
 let currentUser = null;
+
+function normalizeRole(value) {
+  const role = String(value || '').trim().toLowerCase();
+  if (role === 'admin') return 'admin';
+  if (role === 'manager') return 'manager';
+  if (role === 'raisa') return 'manager';
+  return 'member';
+}
+
+function getStaffTierFromText(value) {
+  const text = String(value || '').trim().toLowerCase();
+  if (!text) return 0;
+
+  if (text.includes('trial roleplay manager')) return 1;
+  if (text === 'rp manager' || text.includes('roleplay manager')) return 2;
+
+  // Staff levels above Roleplay Manager.
+  if (
+    text.includes('roleplay administrator') ||
+    text.includes('server administrator') ||
+    text.includes('board of executives') ||
+    text.includes('chief executive officer') ||
+    text === 'ceo' ||
+    text.includes('department director') ||
+    text.includes('site director') ||
+    text.includes('director') ||
+    text.includes('executive')
+  ) {
+    return 3;
+  }
+
+  return 0;
+}
+
+function hasRoleplayManagerOrAboveFromUserDoc(user, userDoc) {
+  if (!user) return false;
+  if ((user.email || '').toLowerCase() === PRIMARY_ADMIN_EMAIL) return true;
+  if (userDoc?.isAdmin === true) return true;
+
+  const normalizedRole = normalizeRole(userDoc?.role);
+  if (normalizedRole === 'manager' || normalizedRole === 'admin') return true;
+
+  const candidates = [
+    userDoc?.rank,
+    userDoc?.staffRank,
+    userDoc?.staffRole,
+    userDoc?.discordRole,
+    userDoc?.title
+  ];
+
+  return candidates.some(value => getStaffTierFromText(value) >= 2);
+}
+
+function hasRoleplayManagerOrAboveFromCharacter(characterRow) {
+  return getStaffTierFromText(characterRow?.rank) >= 2;
+}
 
 function safeText(value, fallback = 'N/A') {
   const text = (value || '').toString().trim();
@@ -1009,14 +1066,22 @@ async function initializePanel() {
     currentUser = user;
 
     try {
+      let userDoc = null;
+      try {
+        const userSnap = await getDoc(doc(db, 'users', user.uid));
+        userDoc = userSnap.exists() ? userSnap.data() : null;
+      } catch {
+        userDoc = null;
+      }
+
       const charQuery = query(collection(db, 'characters'), where('linkedUID', '==', user.uid));
       const charSnap = await getDocs(charQuery);
 
-      let hasAccess = false;
+      let hasAccess = hasRoleplayManagerOrAboveFromUserDoc(user, userDoc);
       charSnap.forEach(docSnap => {
         const row = docSnap.data() || {};
         const dept = (row.department || '').toLowerCase();
-        if (dept.includes('ia') || dept.includes('raisa')) {
+        if (dept.includes('ia') || dept.includes('raisa') || hasRoleplayManagerOrAboveFromCharacter(row)) {
           hasAccess = true;
         }
       });

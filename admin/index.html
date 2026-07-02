@@ -88,6 +88,22 @@
     </div>
 
     <div class="about-box">
+      <h2>Site Finance</h2>
+      <p>Manage total site funds, departmental budgets (AD, IA, TSD, SD, ScD), transfers, and funding rules.</p>
+      <a href="/admin/site-finance/" class="btn-primary" style="display:inline-block;margin-bottom:1rem;">Open Site Finance</a>
+
+      <h3 style="margin:.2rem 0 .4rem;">Foundation Monthly Deposit (used by automated finance scheduler)</h3>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;max-width:560px;">
+        <div style="flex:1;min-width:220px;">
+          <label for="foundationDepositAdminInput" style="display:block;font-size:.8rem;opacity:.8;margin-bottom:.3rem;">Amount</label>
+          <input id="foundationDepositAdminInput" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%;padding:.55rem;">
+        </div>
+        <button id="foundationDepositAdminSaveBtn" class="btn-primary" type="button">Save Deposit Amount</button>
+      </div>
+      <p id="foundationDepositAdminFeedback" class="feedback" style="margin-top:.45rem;"></p>
+    </div>
+
+    <div class="about-box">
       <h2>Email Snoop Console</h2>
       <p>Audit all outgoing and incoming mail with search and filters for compliance review.</p>
       <a href="/admin/snoop/" class="btn-primary" style="display:inline-block;">Open Snoop Console</a>

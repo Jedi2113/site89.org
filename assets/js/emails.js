@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, orderBy, getDocs, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.esm.js';
 
 // Normalize a name into a local-part seed like "lastname.firstname"
@@ -243,11 +243,64 @@ function getADDirectorAliases(selectedCharacter){
   return [];
 }
 
-function buildSendAsAddresses(divisions, selectedCharacter, user){
+function getScDDirectorAliases(selectedCharacter){
+  const scdAliases = [
+    'scd.mgmt@site89.org',
+    'r&d.mgmt@site89.org',
+    'md.mgmt@site89.org',
+    'tsrd.mgmt@site89.org'
+  ];
+  const selectedName = ((selectedCharacter && selectedCharacter.name) || '').toLowerCase();
+  if(selectedName.includes('kristen') && selectedName.includes('fisher')) return scdAliases;
+  if(selectedName.includes('natalie') && selectedName.includes('anderson')) return ['tsrd.mgmt@site89.org'];
+  return [];
+}
+
+function normalizeManagementEmails(input){
+  if(!Array.isArray(input)) return [];
+  const result = [];
+  input.forEach(email => {
+    const normalized = String(email || '').trim().toLowerCase();
+    if(isValidEmail(normalized)) result.push(normalized);
+  });
+  return [...new Set(result)];
+}
+
+function getStoredManagementEmailsFromCharacter(selectedCharacter){
+  if(!selectedCharacter) return [];
+
+  const fromManagementEmails = normalizeManagementEmails(selectedCharacter.managementEmails);
+  const fromLegacySendAs = normalizeManagementEmails(selectedCharacter.sendAsEmails);
+  const fromLegacyDirectorOf = Array.isArray(selectedCharacter.directorOf)
+    ? selectedCharacter.directorOf.map(div => `${String(div || '').toLowerCase()}.mgmt@site89.org`)
+    : [];
+
+  return [...new Set([...fromManagementEmails, ...fromLegacySendAs, ...fromLegacyDirectorOf])];
+}
+
+function normalizeUserRole(role){
+  const normalized = String(role || '').trim().toLowerCase();
+  if(normalized === 'admin') return 'admin';
+  if(normalized === 'manager') return 'manager';
+  if(normalized === 'raisa') return 'manager';
+  return 'member';
+}
+
+function isManagerOrAbove(userDoc){
+  if(!userDoc) return false;
+  if(userDoc.isAdmin === true) return true;
+  const role = normalizeUserRole(userDoc.role);
+  return role === 'manager' || role === 'admin';
+}
+
+function buildSendAsAddresses(divisions, selectedCharacter, user, userDoc){
   const divisionAddresses = (divisions || []).map(div => `${div}.mgmt@site89.org`.toLowerCase());
   const securityAliases = getSecurityDirectorAliases(selectedCharacter, user);
   const adAliases = getADDirectorAliases(selectedCharacter);
-  return [...new Set([...divisionAddresses, ...securityAliases, ...adAliases])];
+  const scdAliases = getScDDirectorAliases(selectedCharacter);
+  const storedAliases = getStoredManagementEmailsFromCharacter(selectedCharacter);
+  const roleAliases = isManagerOrAbove(userDoc) ? ['ia.mgmt@site89.org'] : [];
+  return [...new Set([...divisionAddresses, ...securityAliases, ...adAliases, ...scdAliases, ...storedAliases, ...roleAliases])];
 }
 
 function getOwnedAddresses(primaryAddress, sendAsAddresses){
@@ -299,6 +352,48 @@ async function expandMailingLists(recipients, db){
   return [...new Set(expanded)];
 }
 
+function normalizeDeptToken(value){
+  return String(value || '').trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+function tokenBoundaryRegex(token){
+  return new RegExp(`(^|/)${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|/)`, 'i');
+}
+
+function departmentTokenMatches(fullDepartment, token){
+  const normalizedToken = normalizeDeptToken(token);
+  if(!normalizedToken) return true;
+  const normalizedDepartment = normalizeDeptToken(fullDepartment).replace(/\s*\/\s*/g, '/');
+  return tokenBoundaryRegex(normalizedToken.replace(/\s*\/\s*/g, '/')).test(normalizedDepartment);
+}
+
+function splitDepartmentSegments(value){
+  return String(value || '')
+    .split('/')
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function matchEntryToDepartmentFilter(entryDepartment, departmentInput, divisionInput){
+  const fullDepartment = String(entryDepartment || '').trim();
+  if(!fullDepartment) return false;
+
+  const hasDepartment = String(departmentInput || '').trim().length > 0;
+  const hasDivision = String(divisionInput || '').trim().length > 0;
+
+  if(hasDepartment && !departmentTokenMatches(fullDepartment, departmentInput)) return false;
+
+  if(hasDivision){
+    const segments = splitDepartmentSegments(fullDepartment);
+    const divisionSegments = segments.slice(1).join('/');
+    if(!departmentTokenMatches(divisionSegments, divisionInput) && !departmentTokenMatches(fullDepartment, divisionInput)){
+      return false;
+    }
+  }
+
+  return hasDepartment || hasDivision;
+}
+
 // Friendly date (handles Firestore Timestamp objects too)
 function fmtDate(ts){
   if(!ts) return '';
@@ -327,6 +422,12 @@ document.addEventListener('includesLoaded', () => {
   const btnDelete = document.getElementById('btnDelete');
   const composeSendAs = document.getElementById('composeSendAs');
   const composeSuggestions = document.getElementById('composeSuggestions');
+  const composeAutofillSection = document.getElementById('composeAutofillSection');
+  const composeDeptAutofill = document.getElementById('composeDeptAutofill');
+  const composeDivisionAutofill = document.getElementById('composeDivisionAutofill');
+  const composeFillRecipientsBtn = document.getElementById('composeFillRecipientsBtn');
+  const composeUseMyDeptBtn = document.getElementById('composeUseMyDeptBtn');
+  const composeAutofillHint = document.getElementById('composeAutofillHint');
   const folderTitle = document.getElementById('folderTitle');
   const refreshBtn = document.getElementById('refreshBtn');
   const mailApp = document.querySelector('.mail-app');
@@ -338,6 +439,9 @@ document.addEventListener('includesLoaded', () => {
   let currentFolder = 'inbox';
   let myAddress = '';
   let currentUser = null;
+  let currentUserDoc = null;
+  let currentSelectedCharacter = null;
+  let canUseRecipientAutofill = false;
   let currentMessage = null;
   let selectedMessageId = null;
   let allMessages = [];
@@ -387,6 +491,81 @@ document.addEventListener('includesLoaded', () => {
     discordPromptShownThisSession = true;
   }
 
+  function updateRecipientAutofillVisibility(){
+    if(!composeAutofillSection) return;
+
+    const selectedClearance = Number(currentSelectedCharacter && currentSelectedCharacter.clearance) || 0;
+    canUseRecipientAutofill = isManagerOrAbove(currentUserDoc) || selectedClearance >= 5 || (sendAsAddresses || []).length > 0;
+    composeAutofillSection.style.display = canUseRecipientAutofill ? 'block' : 'none';
+
+    if(composeAutofillHint){
+      if(canUseRecipientAutofill){
+        composeAutofillHint.textContent = 'Finds characters by department path and appends their character emails to the To field.';
+      } else {
+        composeAutofillHint.textContent = '';
+      }
+    }
+  }
+
+  function appendRecipientsToCompose(recipients){
+    if(!composeTo || !Array.isArray(recipients) || !recipients.length) return 0;
+    const existing = (composeTo.value || '')
+      .split(',')
+      .map(v => v.trim().toLowerCase())
+      .filter(Boolean);
+    const merged = new Set(existing);
+    recipients.forEach(email => {
+      const normalized = String(email || '').trim().toLowerCase();
+      if(isValidEmail(normalized)) merged.add(normalized);
+    });
+    composeTo.value = Array.from(merged).join(', ');
+    return merged.size - existing.length;
+  }
+
+  async function applyDepartmentAutofill(){
+    if(!canUseRecipientAutofill) return;
+    const deptInput = composeDeptAutofill ? composeDeptAutofill.value : '';
+    const divisionInput = composeDivisionAutofill ? composeDivisionAutofill.value : '';
+
+    if(!String(deptInput || '').trim() && !String(divisionInput || '').trim()){
+      alert('Enter a department or division to autofill recipients.');
+      return;
+    }
+
+    try {
+      const directory = await getEmailDirectory(db);
+      const entries = directory.entries || [];
+      const matched = entries
+        .filter(entry => matchEntryToDepartmentFilter(entry.department, deptInput, divisionInput))
+        .map(entry => (entry.email || '').toLowerCase())
+        .filter(Boolean);
+
+      const addedCount = appendRecipientsToCompose([...new Set(matched)]);
+      if(composeAutofillHint){
+        composeAutofillHint.textContent = addedCount > 0
+          ? `Added ${addedCount} recipient${addedCount === 1 ? '' : 's'} from department filters.`
+          : 'No new recipients matched (or all matches are already in To).';
+      }
+    } catch(err){
+      console.warn('Department autofill failed:', err);
+      alert('Failed to autofill recipients. Please try again.');
+    }
+  }
+
+  function useSelectedCharacterDepartment(){
+    if(!currentSelectedCharacter) return;
+    const deptPath = String(currentSelectedCharacter.department || '').trim();
+    if(!deptPath){
+      if(composeAutofillHint) composeAutofillHint.textContent = 'Your selected character has no department set.';
+      return;
+    }
+
+    const segments = splitDepartmentSegments(deptPath);
+    if(composeDeptAutofill) composeDeptAutofill.value = segments[0] || '';
+    if(composeDivisionAutofill) composeDivisionAutofill.value = segments.slice(1).join('/') || '';
+    if(composeAutofillHint) composeAutofillHint.textContent = `Loaded ${deptPath} from your selected character.`;
+  }
+
   async function maybeShowDiscordLinkPrompt(user){
     if(!user || !user.uid) return;
     if(discordPromptShownThisSession || shouldHideDiscordPrompt()) return;
@@ -401,6 +580,74 @@ document.addEventListener('includesLoaded', () => {
       }
     } catch (err) {
       console.warn('Unable to verify Discord link status:', err);
+    }
+  }
+
+  async function syncUserMailboxAccess(user, primaryAddress, aliases){
+    if(!user || !user.uid) return;
+
+    try {
+      const mailboxAddresses = [...new Set([
+        String(primaryAddress || '').trim().toLowerCase(),
+        ...((aliases || []).map(v => String(v || '').trim().toLowerCase()))
+      ].filter(addr => isValidEmail(addr)))];
+
+      if(!mailboxAddresses.length) return;
+
+      const managementAliases = mailboxAddresses.filter(addr => addr.endsWith('.mgmt@site89.org'));
+      await setDoc(doc(db, 'users', user.uid), {
+        emailMailboxes: mailboxAddresses,
+        managementEmails: managementAliases,
+        emailMailboxSyncAt: serverTimestamp()
+      }, { merge: true });
+    } catch(err){
+      console.warn('Failed syncing user mailbox access:', err);
+    }
+  }
+
+  async function hydrateSelectedCharacterFromFirestore(selected, user){
+    if(!selected || !user || !user.uid) return selected;
+
+    try {
+      // Fast path: selected character includes docId.
+      if(selected.docId){
+        const snap = await getDoc(doc(db, 'characters', String(selected.docId)));
+        if(snap.exists()){
+          const data = snap.data() || {};
+          if(data.linkedUID === user.uid){
+            return { ...selected, ...data, docId: snap.id };
+          }
+        }
+      }
+
+      // Fallback path: locate by owned characters and match by PID first, then name+department.
+      const ownedSnap = await getDocs(query(collection(db, 'characters'), where('linkedUID', '==', user.uid)));
+      let matched = null;
+      const selectedPid = String(selected.pid || '').trim();
+      const selectedName = String(selected.name || '').trim().toLowerCase();
+      const selectedDept = String(selected.department || '').trim().toLowerCase();
+
+      ownedSnap.forEach(characterDoc => {
+        if(matched) return;
+        const data = characterDoc.data() || {};
+        const pid = String(data.pid || '').trim();
+        const name = String(data.name || '').trim().toLowerCase();
+        const dept = String(data.department || '').trim().toLowerCase();
+
+        if(selectedPid && pid && selectedPid === pid){
+          matched = { ...selected, ...data, docId: characterDoc.id };
+          return;
+        }
+
+        if(selectedName && name === selectedName && (!selectedDept || selectedDept === dept)){
+          matched = { ...selected, ...data, docId: characterDoc.id };
+        }
+      });
+
+      return matched || selected;
+    } catch(err){
+      console.warn('Failed to hydrate selected character from Firestore:', err);
+      return selected;
     }
   }
 
@@ -543,6 +790,7 @@ document.addEventListener('includesLoaded', () => {
 
   composeBtn.addEventListener('click', ()=> { 
     updateSendAsOptions();
+    updateRecipientAutofillVisibility();
     mailContentWrapper.style.display = 'none';
     composeArea.classList.add('active');
     
@@ -553,6 +801,14 @@ document.addEventListener('includesLoaded', () => {
     
     composeTo.focus();
   });
+
+  if(composeFillRecipientsBtn){
+    composeFillRecipientsBtn.addEventListener('click', ()=> { applyDepartmentAutofill(); });
+  }
+
+  if(composeUseMyDeptBtn){
+    composeUseMyDeptBtn.addEventListener('click', ()=> { useSelectedCharacterDepartment(); });
+  }
   
   composeClose.addEventListener('click', ()=> { 
     composeArea.classList.remove('active');
@@ -571,6 +827,7 @@ document.addEventListener('includesLoaded', () => {
     composeTo.value=''; 
     composeSubject.value='';
     composeBody.value='';
+    if(composeAutofillHint) composeAutofillHint.textContent = '';
   }
 
   // Contacts autocomplete helpers
@@ -1048,12 +1305,34 @@ document.addEventListener('includesLoaded', () => {
   // Auth and address detection
   onAuthStateChanged(auth, async (user) => {
     currentUser = user; // Store current user for UID in emails
+    currentUserDoc = null;
     // Load contacts from localStorage
     loadContacts();
     
     // Use selectedCharacter if present, otherwise fallback to user email
     let selected = null;
     try { selected = JSON.parse(localStorage.getItem('selectedCharacter')); } catch(e){ selected = null; }
+
+    if(selected && user && user.uid){
+      selected = await hydrateSelectedCharacterFromFirestore(selected, user);
+      try {
+        localStorage.setItem('selectedCharacter', JSON.stringify(selected));
+      } catch(_err){
+        // Ignore localStorage failures.
+      }
+    }
+
+    currentSelectedCharacter = selected;
+
+    if(user && user.uid){
+      try {
+        const userSnap = await getDoc(doc(db, 'users', user.uid));
+        currentUserDoc = userSnap.exists() ? (userSnap.data() || null) : null;
+      } catch(err){
+        console.warn('Unable to load user role document:', err);
+        currentUserDoc = null;
+      }
+    }
     
     // Check if user has a character with level 1+ clearance
     if (!selected || !selected.name || !selected.clearance || Number(selected.clearance) < 1) {
@@ -1069,12 +1348,12 @@ document.addEventListener('includesLoaded', () => {
         const directory = await getEmailDirectory(db);
         myAddress = resolveEmailForCharacter(selected, directory);
         directorDivisions = getDirectorDivisions();
-        sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user);
+        sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user, currentUserDoc);
         updateSendAsOptions();
       } else if (user && user.email){
         myAddress = user.email;
         directorDivisions = [];
-        sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user);
+        sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user, currentUserDoc);
       } else {
         myAddress = '';
         directorDivisions = [];
@@ -1090,12 +1369,15 @@ document.addEventListener('includesLoaded', () => {
         myAddress = user && user.email ? user.email : '';
       }
       directorDivisions = selected ? getDirectorDivisions() : [];
-      sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user);
+      sendAsAddresses = buildSendAsAddresses(directorDivisions, selected, user, currentUserDoc);
       updateSendAsOptions();
     }
 
     myAddress = (myAddress || '').toLowerCase();
     myAddressEl.textContent = myAddress || 'Not signed in';
+    updateRecipientAutofillVisibility();
+
+    await syncUserMailboxAccess(user, myAddress, sendAsAddresses);
 
     if(!myAddress){
       // no identity; show notice and stop any active listener

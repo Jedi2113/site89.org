@@ -74,18 +74,6 @@ document.addEventListener("includesLoaded", () => {
       }
     };
 
-    // Update button href based on login status
-    let navAccountsBtn = document.getElementById("navAccountsBtn");
-    if (navAccountsBtn) {
-      if (isLoggedIn) {
-        // Link to character select for logged-in users
-        navAccountsBtn.href = '/character-select/';
-      } else {
-        // Link to login for non-logged-in users
-        navAccountsBtn.href = '/login/';
-      }
-    }
-
     window.addEventListener('resize', clampAccountsDropdown);
   });
 

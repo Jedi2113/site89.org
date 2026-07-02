@@ -243,40 +243,98 @@
 
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1.5rem;
+      gap: 1.1rem;
+      align-items: start;
+    }
+
+    .gallery-row {
+      display: grid;
+      gap: 1.1rem;
+      align-items: start;
+      width: 100%;
+    }
+
+    .gallery-row-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .gallery-row-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 78rem;
+      margin-inline: auto;
+    }
+
+    .gallery-row-1 {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 58rem;
+      margin-inline: auto;
     }
 
     .gallery-item {
       position: relative;
-      background: var(--bg-card);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
+      background: rgba(10, 16, 18, 0.92);
+      border: 1px solid rgba(78,250,170,0.12);
+      border-radius: 16px;
       overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      min-height: 100%;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      min-height: 220px;
     }
 
-    .gallery-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    .gallery-item:hover,
+    .gallery-item:focus-within {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.35);
+      border-color: rgba(78,250,170,0.28);
+    }
+
+    .gallery-item::after {
+      content: 'Open details';
+      position: absolute;
+      left: 0.85rem;
+      right: 0.85rem;
+      bottom: 0.85rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(7, 18, 16, 0.92), rgba(7, 18, 16, 0.62));
+      color: #ecfff7;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .gallery-item:hover::after,
+    .gallery-item:focus-within::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .gallery-tile {
+      display: block;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .gallery-tile:focus-visible {
+      outline: 2px solid var(--accent-mint);
+      outline-offset: -2px;
     }
 
     .gallery-thumb {
       width: 100%;
-      height: 240px;
-      object-fit: cover;
+      height: auto;
       display: block;
-      cursor: pointer;
-    }
-
-    .gallery-body {
-      padding: 1rem 1.1rem 1.2rem;
-      display: grid;
-      gap: 0.5rem;
-      color: var(--text-light);
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .gallery-badge {
@@ -308,6 +366,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
+      flex-wrap: wrap;
     }
 
     .gallery-rating .vote-btn {
@@ -345,25 +404,6 @@
       text-align: center;
       font-weight: 700;
       color: var(--text-light);
-    }
-
-    .gallery-delete {
-      position: absolute;
-      top: 0.6rem;
-      right: 0.6rem;
-      background: var(--alert-warn);
-      color: white;
-      border: none;
-      padding: 0.35rem 0.6rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.78rem;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    .gallery-item:hover .gallery-delete {
-      opacity: 1;
     }
 
     .loading-text,
@@ -496,6 +536,7 @@
       display: grid;
       gap: 1rem;
       justify-items: center;
+      width: min(960px, 92vw);
     }
 
     .photo-expand-img {
@@ -530,6 +571,17 @@
       border-radius: 10px;
       border: 1px solid var(--card-border);
       width: 100%;
+      display: grid;
+      gap: 0.9rem;
+      box-sizing: border-box;
+    }
+
+    .photo-expand-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .expand-title {
@@ -542,7 +594,40 @@
     .expand-meta {
       font-size: 0.85rem;
       color: var(--muted);
-      margin-bottom: 0.6rem;
+    }
+
+    .expand-description {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-light);
+      opacity: 0.92;
+      max-width: 72ch;
+      justify-self: center;
+    }
+
+    .photo-expand-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .gallery-rating.modal-rating {
+      margin-top: 0;
+    }
+
+    .gallery-rating.modal-rating .vote-btn {
+      width: 38px;
+      height: 38px;
+    }
+
+    .photo-expand-links {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .expand-source {
@@ -554,14 +639,46 @@
       text-decoration: none;
     }
 
+    .expand-delete {
+      border: 1px solid rgba(255, 139, 139, 0.35);
+      background: rgba(255, 139, 139, 0.12);
+      color: #ffd4d4;
+      border-radius: 999px;
+      padding: 0.55rem 0.95rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .expand-delete:hover {
+      background: rgba(255, 139, 139, 0.18);
+    }
+
     @media (max-width: 720px) {
       .gallery-actions {
         flex-direction: column;
         align-items: stretch;
       }
 
+      .gallery-grid {
+        gap: 0.7rem;
+      }
+
+      .gallery-row,
+      .gallery-row-3,
+      .gallery-row-2,
+      .gallery-row-1 {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: none;
+      }
+
       .photo-expand-close {
         top: -36px;
+      }
+
+      .photo-expand-header,
+      .photo-expand-actions {
+        display: grid;
       }
     }
   </style>
@@ -666,8 +783,10 @@
       <label for="imageFile">Image File</label>
       <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" style="padding: 0.75rem;">
       <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Max 10MB. Supported: PNG, JPEG, WebP, GIF, BMP</div>
-      <label for="imageCaption">Caption</label>
-      <textarea id="imageCaption" placeholder="Add context, character, or location" rows="4" maxlength="300"></textarea>
+      <label for="imageCaption">Title / Caption</label>
+      <textarea id="imageCaption" placeholder="Short title for the image" rows="2" maxlength="160"></textarea>
+      <label for="imageDescription">Description</label>
+      <textarea id="imageDescription" placeholder="Required. Add the full context, people, location, or event shown in the image." rows="5" maxlength="1200"></textarea>
       <label for="imageSource">Source link (optional)</label>
       <input id="imageSource" type="text" placeholder="Credit link or original post" maxlength="500">
       <div class="modal-buttons">
@@ -683,11 +802,25 @@
       <button class="photo-expand-close" onclick="closePhotoExpand()">&times;</button>
       <img id="expandedPhotoImg" class="photo-expand-img" src="" alt="Expanded photo">
       <div id="expandedPhotoCaption" class="photo-expand-caption">
-        <div id="expandedPhotoTitle" class="expand-title"></div>
-        <div id="expandedPhotoMeta" class="expand-meta"></div>
-        <a id="expandedPhotoSource" class="expand-source" href="" target="_blank" rel="noopener" style="display:none;">
-          <i class="fas fa-link"></i>View source
-        </a>
+        <div class="photo-expand-header">
+          <div>
+            <div id="expandedPhotoTitle" class="expand-title"></div>
+            <div id="expandedPhotoMeta" class="expand-meta"></div>
+          </div>
+          <span id="expandedPhotoBadge" class="gallery-badge"></span>
+        </div>
+        <p id="expandedPhotoDescription" class="expand-description"></p>
+        <div class="photo-expand-actions">
+          <div id="expandedPhotoRating" class="gallery-rating modal-rating"></div>
+          <div class="photo-expand-links">
+            <a id="expandedPhotoSource" class="expand-source" href="" target="_blank" rel="noopener" style="display:none;">
+              <i class="fas fa-link"></i>View source
+            </a>
+            <button id="expandedPhotoDelete" class="expand-delete" type="button" style="display:none;">
+              <i class="fas fa-trash" style="margin-right:0.35rem;"></i>Delete
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -710,9 +843,15 @@
     const gallerySearchInput = document.getElementById('gallerySearchInput');
     const galleryTypeFilter = document.getElementById('galleryTypeFilter');
     const galleryCount = document.getElementById('galleryCount');
+    const expandedPhotoDescription = document.getElementById('expandedPhotoDescription');
+    const expandedPhotoRating = document.getElementById('expandedPhotoRating');
+    const expandedPhotoDelete = document.getElementById('expandedPhotoDelete');
     let currentUser = null;
     let currentUserClearance = 0;
     let galleryItems = [];
+    let activeExpandedPhoto = null;
+
+    const galleryRowPattern = [3, 2, 1];
 
     // Check authentication status
     onAuthStateChanged(auth, async (user) => {
@@ -789,10 +928,65 @@
     function buildSearchText(item) {
       return [
         item.caption,
+        item.description,
         item.uploaderName,
         item.typeLabel,
         item.type
       ].filter(Boolean).join(' ').toLowerCase();
+    }
+
+    function buildExpandedPhotoData(data) {
+      const uploadDate = data.timestamp
+        ? new Date(data.timestamp.toDate ? data.timestamp.toDate() : data.timestamp).toLocaleDateString()
+        : 'Unknown';
+
+      return {
+        ...data,
+        description: data.description || '',
+        uploadDate,
+        canDelete: Boolean(currentUser && (currentUser.uid === data.uploaderId || currentUserClearance >= 5)),
+        hasUpvoted: Boolean(data.upvoters?.includes(currentUser?.uid)),
+        hasDownvoted: Boolean(data.downvoters?.includes(currentUser?.uid)),
+        score: (data.upvotes || 0) - (data.downvotes || 0)
+      };
+    }
+
+    function renderExpandedPhotoActions(data) {
+      if (!expandedPhotoRating) return;
+
+      expandedPhotoRating.innerHTML = '';
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.className = `vote-btn ${data.hasUpvoted ? 'upvoted' : ''}`;
+      upBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+      upBtn.title = 'Upvote';
+      upBtn.addEventListener('click', () => handleGalleryVote(data.id, 'up'));
+
+      const voteCount = document.createElement('span');
+      voteCount.className = 'vote-count';
+      voteCount.textContent = String(data.score);
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.className = `vote-btn ${data.hasDownvoted ? 'downvoted' : ''}`;
+      downBtn.innerHTML = '<i class="fas fa-arrow-down"></i>';
+      downBtn.title = 'Downvote';
+      downBtn.addEventListener('click', () => handleGalleryVote(data.id, 'down'));
+
+      expandedPhotoRating.appendChild(upBtn);
+      expandedPhotoRating.appendChild(voteCount);
+      expandedPhotoRating.appendChild(downBtn);
+
+      if (expandedPhotoDelete) {
+        if (data.canDelete) {
+          expandedPhotoDelete.style.display = 'inline-flex';
+          expandedPhotoDelete.onclick = () => deleteImage(data.id);
+        } else {
+          expandedPhotoDelete.style.display = 'none';
+          expandedPhotoDelete.onclick = null;
+        }
+      }
     }
 
     function renderGalleryItems(items) {
@@ -805,95 +999,44 @@
       }
 
       galleryGrid.innerHTML = '';
-      items.forEach(data => {
-        const uploadDate = data.timestamp
-          ? new Date(data.timestamp.toDate ? data.timestamp.toDate() : data.timestamp).toLocaleDateString()
-          : 'Unknown';
-        const canDelete = currentUser && (currentUser.uid === data.uploaderId || currentUserClearance >= 5);
-        const hasUpvoted = data.upvoters?.includes(currentUser?.uid);
-        const hasDownvoted = data.downvoters?.includes(currentUser?.uid);
-        const score = (data.upvotes || 0) - (data.downvotes || 0);
+      let itemIndex = 0;
+      let rowIndex = 0;
 
-        const item = document.createElement('article');
-        item.className = 'gallery-item';
+      while (itemIndex < items.length) {
+        const rowSize = galleryRowPattern[rowIndex % galleryRowPattern.length];
+        const rowItems = items.slice(itemIndex, itemIndex + rowSize);
+        const row = document.createElement('div');
+        row.className = `gallery-row gallery-row-${rowItems.length}`;
 
-        const img = document.createElement('img');
-        img.className = 'gallery-thumb';
-        img.src = data.imageUrl;
-        img.alt = data.caption || 'Gallery submission';
-        img.loading = 'lazy';
-        img.addEventListener('click', () => {
-          expandPhoto({
-            imageUrl: data.imageUrl,
-            caption: data.caption || 'Untitled',
-            uploaderName: data.uploaderName || 'Anonymous',
-            uploadDate: uploadDate,
-            typeLabel: data.typeLabel,
-            sourceUrl: data.sourceUrl || ''
+        rowItems.forEach(data => {
+          const expandedData = buildExpandedPhotoData(data);
+
+          const item = document.createElement('article');
+          item.className = 'gallery-item';
+
+          const trigger = document.createElement('button');
+          trigger.type = 'button';
+          trigger.className = 'gallery-tile';
+          trigger.setAttribute('aria-label', `Open details for ${data.caption || 'gallery submission'}`);
+          trigger.addEventListener('click', () => {
+            expandPhoto(expandedData);
           });
+
+          const img = document.createElement('img');
+          img.className = 'gallery-thumb';
+          img.src = data.imageUrl;
+          img.alt = data.caption || 'Gallery submission';
+          img.loading = 'lazy';
+
+          trigger.appendChild(img);
+          item.appendChild(trigger);
+          row.appendChild(item);
         });
 
-        const body = document.createElement('div');
-        body.className = 'gallery-body';
-
-        const badge = document.createElement('span');
-        badge.className = 'gallery-badge';
-        badge.textContent = data.typeLabel;
-
-        const caption = document.createElement('p');
-        caption.className = 'gallery-caption';
-        caption.textContent = data.caption || 'Untitled';
-
-        const meta = document.createElement('div');
-        meta.className = 'gallery-meta';
-        meta.textContent = `By ${data.uploaderName || 'Anonymous'} • ${uploadDate}`;
-
-        const rating = document.createElement('div');
-        rating.className = 'gallery-rating';
-
-        const upBtn = document.createElement('button');
-        upBtn.className = `vote-btn ${hasUpvoted ? 'upvoted' : ''}`;
-        upBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
-        upBtn.title = 'Upvote';
-        upBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          handleGalleryVote(data.id, 'up');
-        });
-
-        const voteCount = document.createElement('span');
-        voteCount.className = 'vote-count';
-        voteCount.textContent = String(score);
-
-        const downBtn = document.createElement('button');
-        downBtn.className = `vote-btn ${hasDownvoted ? 'downvoted' : ''}`;
-        downBtn.innerHTML = '<i class="fas fa-arrow-down"></i>';
-        downBtn.title = 'Downvote';
-        downBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          handleGalleryVote(data.id, 'down');
-        });
-
-        body.appendChild(badge);
-        body.appendChild(caption);
-        body.appendChild(meta);
-        rating.appendChild(upBtn);
-        rating.appendChild(voteCount);
-        rating.appendChild(downBtn);
-        body.appendChild(rating);
-
-        item.appendChild(img);
-        item.appendChild(body);
-
-        if (canDelete) {
-          const deleteBtn = document.createElement('button');
-          deleteBtn.className = 'gallery-delete';
-          deleteBtn.innerHTML = '<i class="fas fa-trash" style="margin-right:0.3rem;"></i>Delete';
-          deleteBtn.addEventListener('click', () => deleteImage(data.id));
-          item.appendChild(deleteBtn);
-        }
-
-        galleryGrid.appendChild(item);
-      });
+        galleryGrid.appendChild(row);
+        itemIndex += rowSize;
+        rowIndex += 1;
+      }
 
       if (galleryCount) {
         galleryCount.textContent = `${items.length} submission${items.length === 1 ? '' : 's'}`;
@@ -1008,6 +1151,13 @@
 
       await updateDoc(galleryRef, updates);
       await loadGallery();
+
+      if (activeExpandedPhoto && activeExpandedPhoto.id === galleryId) {
+        const refreshedItem = galleryItems.find(item => item.id === galleryId);
+        if (refreshedItem) {
+          expandPhoto(buildExpandedPhotoData(refreshedItem));
+        }
+      }
     }
 
     // Submit gallery image
@@ -1016,6 +1166,7 @@
       const imageFile = document.getElementById('imageFile');
       const selectedFile = imageFile.files && imageFile.files[0];
       const imageCaption = document.getElementById('imageCaption').value.trim();
+      const imageDescription = document.getElementById('imageDescription').value.trim();
       const imageSource = document.getElementById('imageSource').value.trim();
 
       if (!imageType) {
@@ -1025,6 +1176,11 @@
 
       if (!selectedFile) {
         alert('Please select an image file');
+        return;
+      }
+
+      if (!imageDescription) {
+        alert('Please add a description');
         return;
       }
 
@@ -1088,6 +1244,7 @@
         await addDoc(collection(db, 'gallery'), {
           imageUrl: imageUrl,
           caption: imageCaption,
+          description: imageDescription,
           uploaderId: currentUser.uid,
           uploaderName: uploaderName,
           timestamp: new Date(),
@@ -1110,6 +1267,9 @@
 
       try {
         await deleteDoc(doc(db, 'gallery', docId));
+        if (activeExpandedPhoto && activeExpandedPhoto.id === docId) {
+          closePhotoExpand();
+        }
         loadGallery();
       } catch (err) {
         alert('Error deleting image: ' + err.message);
@@ -1122,6 +1282,7 @@
       document.getElementById('imageType').value = '';
       document.getElementById('imageFile').value = '';
       document.getElementById('imageCaption').value = '';
+      document.getElementById('imageDescription').value = '';
       document.getElementById('imageSource').value = '';
       const submitBtn = document.querySelector('.btn-submit');
       submitBtn.disabled = false;
@@ -1138,9 +1299,14 @@
 
     // Photo expansion functions
     window.expandPhoto = function(data) {
+      activeExpandedPhoto = data;
       document.getElementById('expandedPhotoImg').src = data.imageUrl;
       document.getElementById('expandedPhotoTitle').textContent = data.caption || 'Untitled';
-      document.getElementById('expandedPhotoMeta').textContent = `${data.typeLabel} • ${data.uploaderName} • ${data.uploadDate}`;
+      document.getElementById('expandedPhotoMeta').textContent = `By ${data.uploaderName || 'Anonymous'} • ${data.uploadDate}`;
+      document.getElementById('expandedPhotoBadge').textContent = data.typeLabel || 'Submission';
+      if (expandedPhotoDescription) {
+        expandedPhotoDescription.textContent = data.description || 'No description provided.';
+      }
 
       const sourceLink = document.getElementById('expandedPhotoSource');
       if (data.sourceUrl) {
@@ -1150,6 +1316,8 @@
         sourceLink.href = '';
         sourceLink.style.display = 'none';
       }
+
+      renderExpandedPhotoActions(data);
 
       document.getElementById('photoExpandModal').classList.add('active');
     };
@@ -1163,6 +1331,7 @@
     }
 
     window.closePhotoExpand = function() {
+      activeExpandedPhoto = null;
       document.getElementById('photoExpandModal').classList.remove('active');
     };
 

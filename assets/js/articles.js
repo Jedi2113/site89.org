@@ -51,6 +51,12 @@ let editingArticleId = null;
 
 marked.setOptions({ gfm: true, breaks: true });
 
+const ARTICLE_SANITIZE_OPTIONS = {
+  USE_PROFILES: { html: true },
+  ADD_TAGS: ['iframe'],
+  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'loading', 'referrerpolicy', 'target', 'rel']
+};
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   currentCharacter = null;
@@ -157,7 +163,7 @@ function renderFeaturedArticle(articles) {
   featuredWrap.innerHTML = `
     <div class="feature-pill">${featuredLabel}</div>
     <h2>${escapeHtml(featured.title || 'Untitled article')}</h2>
-    <p>${escapeHtml(excerpt(featured.bodyMd || '', 220))}</p>
+    <p>${escapeHtml(excerpt(bodyPreviewText(featured.bodyMd || ''), 220))}</p>
     <div class="feature-meta">
       <span>${escapeHtml(formatAuthorLabel(featured))}</span>
       <span>${formatDate(featured.createdAt)}</span>
@@ -201,7 +207,7 @@ function buildArticleCard(article) {
     <article class="article-card" data-article-id="${article.id}">
       <div class="article-type ${article.mode === 'ooc' ? 'type-ooc' : 'type-ic'}">${article.mode === 'ooc' ? 'Out of Character' : 'In Character'}</div>
       <h3><a href="/articles/view/?id=${article.id}">${escapeHtml(article.title || 'Untitled article')}</a></h3>
-      <p class="article-excerpt">${escapeHtml(excerpt(article.bodyMd || '', 260))}</p>
+      <p class="article-excerpt">${escapeHtml(excerpt(bodyPreviewText(article.bodyMd || ''), 260))}</p>
       <div class="article-tags">${tags.map((tag) => `<span>#${escapeHtml(tag)}</span>`).join('')}</div>
       <div class="article-meta">
         <span>${escapeHtml(formatAuthorLabel(article))}</span>
@@ -362,8 +368,31 @@ function parseTags(value) {
 }
 
 function renderPreview() {
-  const html = DOMPurify.sanitize(marked.parse(articleBody.value || ''));
-  articlePreview.innerHTML = html || '<p class="preview-empty">Markdown preview will appear here.</p>';
+  const html = renderArticleBody(articleBody.value || '');
+  articlePreview.innerHTML = html || '<p class="preview-empty">HTML preview will appear here.</p>';
+}
+
+function looksLikeHtml(content) {
+  return /<\/?[a-z][\s\S]*>/i.test(content || '');
+}
+
+function renderArticleBody(content) {
+  const source = String(content || '');
+  const parsed = looksLikeHtml(source) ? source : marked.parse(source);
+  return DOMPurify.sanitize(parsed, ARTICLE_SANITIZE_OPTIONS);
+}
+
+function bodyPreviewText(content) {
+  const source = String(content || '');
+  if (!source) return '';
+
+  if (looksLikeHtml(source)) {
+    const temp = document.createElement('div');
+    temp.innerHTML = DOMPurify.sanitize(source, ARTICLE_SANITIZE_OPTIONS);
+    return (temp.textContent || temp.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
+  return source.replace(/\s+/g, ' ').trim();
 }
 
 function canEditArticle(article) {

@@ -64,8 +64,23 @@
     .an-section h3{margin-top:0}
     .an-photo{height:220px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center}
     .an-photo img{width:100%;height:100%;object-fit:cover}
+    .an-actions{display:flex;justify-content:flex-end;margin:.75rem 0 0}
+    .an-edit-btn{padding:.55rem 1rem;border-radius:8px;border:1px solid rgba(78,250,170,0.32);background:rgba(78,250,170,0.14);color:var(--accent-mint);font-weight:700;cursor:pointer;display:none}
+    .an-edit-btn:hover{background:rgba(78,250,170,0.22)}
+    .an-addendum-card{border:1px solid rgba(78,250,170,0.14);background:rgba(78,250,170,0.05);border-radius:8px;padding:.9rem;margin-top:.75rem}
+    .an-addendum-card h4{margin:.1rem 0 .5rem;font-size:1rem;color:var(--accent-mint)}
+    .an-source-editor{margin-top:1.4rem;background:var(--bg-card);border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:1rem}
+    .an-source-editor h3{margin-top:0}
+    .an-source-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
+    .an-source-field{display:flex;flex-direction:column;gap:.35rem;font-size:.92rem}
+    .an-source-field input,.an-source-field select,.an-source-field textarea{padding:.6rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--text)}
+    .an-source-field textarea{font-family:var(--font-mono);min-height:160px}
+    .an-source-wide{grid-column:1 / -1}
+    .an-source-addendum-item{border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);border-radius:8px;padding:.7rem;display:flex;flex-direction:column;gap:.5rem}
+    .an-source-controls{margin-top:1rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+    .an-source-status{font-size:.9rem;color:var(--text-light)}
     .placeholder{text-align:center;color:var(--text-light)}
-    @media(max-width:900px){.an-layout{grid-template-columns:1fr}.an-header-bar{grid-template-columns:1fr;gap:1rem}.an-clearance-bar{align-items:flex-start}.an-classes{grid-template-columns:1fr}}
+    @media(max-width:900px){.an-layout{grid-template-columns:1fr}.an-header-bar{grid-template-columns:1fr;gap:1rem}.an-clearance-bar{align-items:flex-start}.an-classes{grid-template-columns:1fr}.an-source-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -90,6 +105,9 @@
 
     <div class="an-layout">
       <article class="an-body" id="contentArea">
+        <div class="an-actions">
+          <button id="editSourceBtn" class="an-edit-btn" type="button">Edit Source</button>
+        </div>
         <div class="an-section">
           <h3>Special Containment Procedures</h3>
           <div id="proceduresRender">Loading...</div>
@@ -110,11 +128,96 @@
           <h3>Related Articles</h3>
           <div id="relatedArticlesContainer" style="display:flex;flex-direction:column;gap:.5rem"></div>
         </div>
+        <div class="an-section" id="addendumsSection" style="display:none">
+          <h3>Addendums</h3>
+          <div id="addendumsRender"></div>
+        </div>
       </article>
       <aside>
         <div class="an-photo" id="photoArea">No photo provided.</div>
       </aside>
     </div>
+
+    <section id="sourceEditorSection" class="an-source-editor" hidden>
+      <h3>Page Source Editor</h3>
+      <p class="hero-meta">This keeps the normal page readable while exposing editable source at the bottom, including addendums.</p>
+      <div class="an-source-grid">
+        <label class="an-source-field">
+          Item Number
+          <input id="sourceItemNumber" placeholder="SCP-045-S89">
+        </label>
+        <label class="an-source-field">
+          Nickname
+          <input id="sourceNickname" placeholder="Optional nickname">
+        </label>
+        <label class="an-source-field">
+          Photo URL
+          <input id="sourcePhotoUrl" placeholder="https://...">
+        </label>
+        <label class="an-source-field">
+          Containment Class
+          <select id="sourceContainmentClass">
+            <option value="">Select</option>
+            <option>Safe</option>
+            <option>Euclid</option>
+            <option>Keter</option>
+            <option>Thaumiel</option>
+            <option>Neutralized</option>
+            <option>Explained</option>
+          </select>
+        </label>
+        <label class="an-source-field">
+          Risk Class
+          <select id="sourceRiskClass">
+            <option value="">Select</option>
+            <option>Notice</option>
+            <option>Caution</option>
+            <option>Warning</option>
+            <option>Danger</option>
+            <option>Critical</option>
+          </select>
+        </label>
+        <label class="an-source-field">
+          Disruption Class
+          <select id="sourceDisruptionClass">
+            <option value="">Select</option>
+            <option>Dark</option>
+            <option>Vlam</option>
+            <option>Keneq</option>
+            <option>Ekhi</option>
+            <option>Amida</option>
+          </select>
+        </label>
+        <label class="an-source-field">
+          Viewing Clearance Required
+          <select id="sourceClearanceLevel">
+            <option value="">Select</option>
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+            <option value="4">Level 4</option>
+            <option value="5">Level 5</option>
+          </select>
+        </label>
+        <label class="an-source-field an-source-wide">
+          Special Containment Procedures (Markdown)
+          <textarea id="sourceProcedures" placeholder="Containment procedures markdown..."></textarea>
+        </label>
+        <label class="an-source-field an-source-wide">
+          Description (Markdown)
+          <textarea id="sourceDescription" placeholder="Description markdown..."></textarea>
+        </label>
+        <div class="an-source-field an-source-wide">
+          <strong>Addendums</strong>
+          <div id="sourceAddendumsList" style="display:flex;flex-direction:column;gap:.6rem"></div>
+          <button type="button" id="addAddendumBtn" class="btn-secondary" style="align-self:flex-start">+ Add Addendum</button>
+        </div>
+      </div>
+      <div class="an-source-controls">
+        <button type="button" id="saveSourceBtn" class="btn-primary">Save Source Changes</button>
+        <span id="sourceEditorStatus" class="an-source-status"></span>
+      </div>
+    </section>
   </main>
 
   <div data-include="/components/footer.html"></div>

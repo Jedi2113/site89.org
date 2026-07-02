@@ -138,6 +138,18 @@
       opacity: 0.9;
     }
 
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .hero-top {
       display: flex;
       flex-direction: column;
@@ -149,6 +161,32 @@
 
     .hero-title-block {
       text-align: center;
+    }
+
+    .hero-wordmark-title {
+      margin: 0;
+      line-height: 0;
+    }
+
+    .hero-wordmark {
+      display: block;
+      width: min(1080px, 72vw);
+      aspect-ratio: 1516 / 300;
+      margin: 0 auto;
+      background-color: #4efaaa;
+      -webkit-mask-image: url('/assets/img/Site89wide.png');
+      mask-image: url('/assets/img/Site89wide.png');
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      filter: drop-shadow(0 0 18px rgba(78, 250, 170, 0.28)) drop-shadow(0 0 36px rgba(0, 124, 107, 0.22));
+    }
+
+    html[data-theme="light"] .hero-wordmark {
+      filter: drop-shadow(0 0 14px rgba(0, 124, 107, 0.2));
     }
 
     .hero-event-card {
@@ -316,12 +354,12 @@
       gap: 1.5rem;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 3rem;
+      margin-bottom: 1.5rem;
     }
 
     .btn-primary, .btn-secondary {
-      padding: 0.9rem 2.5rem;
-      font-size: 1rem;
+      padding: 1.05rem 2.9rem;
+      font-size: 1.1rem;
       font-weight: 600;
       border: none;
       border-radius: 6px;
@@ -648,16 +686,16 @@
 
     /* Social buttons in hero */
     .hero-social {
-      position: absolute;
-      bottom: 4rem;
       display: flex;
       gap: 1.5rem;
+      justify-content: center;
+      margin-top: 0.65rem;
       z-index: 10;
     }
 
     .hero-social a {
-      width: 45px;
-      height: 45px;
+      width: 56px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -666,7 +704,7 @@
       border: 1px solid rgba(78, 250, 170, 0.3);
       color: var(--accent-mint);
       transition: all 0.3s ease;
-      font-size: 1.2rem;
+      font-size: 1.45rem;
       text-decoration: none;
     }
 
@@ -798,6 +836,20 @@
 
       .main-title {
         font-size: clamp(2rem, 10vw, 3rem);
+      }
+
+      .hero-wordmark {
+        width: min(430px, 88vw);
+      }
+
+      .btn-secondary {
+        width: 100%;
+      }
+
+      .hero-social a {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
       }
 
       .subtitle {
@@ -943,6 +995,21 @@
       background: rgba(0, 124, 107, 0.1);
       color: var(--accent-mint);
       border-color: var(--accent-mint);
+    }
+
+    .btn-welcome-discord {
+      background: #5865f2;
+      color: #ffffff;
+      border: 2px solid #5865f2;
+      box-shadow: 0 0 16px rgba(88, 101, 242, 0.28);
+    }
+
+    .btn-welcome-discord:hover {
+      background: #4752c4;
+      border-color: #4752c4;
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 0 24px rgba(88, 101, 242, 0.45);
     }
 
     /* ===== SECTION 2: WHY SITE-89 VALUE PROPOSITION ===== */
@@ -1533,111 +1600,7 @@
 </head>
 <body>
 
-  <!-- Boot overlay (auto-play on first visit) -->
-  <div id="bootOverlay" aria-hidden="true">
-    <div class="boot-screen">
-      <div class="boot-lines" id="bootLines"></div>
-      <div class="boot-progress" id="bootProgressWrap">
-        <div class="boot-progress-bar" id="bootProgress"></div>
-      </div>
-      <div class="boot-access" id="bootAccess" aria-hidden="true">ACCESS GRANTED</div>
-      <div class="scanline-layer" aria-hidden="true"></div>
-      <div class="crt-noise" aria-hidden="true"></div>
-    </div>
-  </div>
-
   <style id="boot-style">
-    /* Boot overlay styles (CRT, scanlines, noise) */
-    #bootOverlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #000000; /* full black for retro effect */
-      z-index: 9999;
-      color: var(--accent-mint);
-      font-family: var(--font-mono);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow: hidden;
-    }
-
-    .boot-screen {
-      width: 90%;
-      max-width: 920px;
-      text-align: left;
-      position: relative;
-      padding: 1rem;
-      box-sizing: border-box;
-    }
-
-    .boot-lines {
-      background: rgba(0,0,0,1);
-      padding: 1.1rem;
-      border-radius: 6px;
-      min-height: 180px;
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-      color: var(--accent-mint);
-      line-height: 1.4;
-      white-space: pre-wrap;
-      overflow: hidden;
-      box-shadow: 0 8px 60px rgba(0,0,0,0.7);
-      border: 1px solid rgba(78,250,170,0.04);
-      position: relative;
-      z-index: 2;
-    }
-
-    /* scanlines layer */
-    .scanline-layer {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 4;
-      background-image: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,0.06) 2px 4px);
-      mix-blend-mode: overlay;
-      opacity: 0.55;
-      animation: scanlineMove 7s linear infinite;
-      border-radius: 8px;
-    }
-
-    /* subtle noise */
-    .crt-noise {
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      pointer-events: none;
-      background-image: radial-gradient(rgba(255,255,255,0.02) 0.5px, transparent 0.6px);
-      background-size: 3px 3px;
-      opacity: 0.03;
-      animation: noise 0.4s steps(2, end) infinite;
-      border-radius: 8px;
-    }
-
-    @keyframes scanlineMove { from { background-position: 0 0 } to { background-position: 0 60px } }
-    @keyframes noise { 0% { opacity: 0.02 } 50% { opacity: 0.045 } 100% { opacity: 0.02 } }
-
-    .boot-progress { margin-top: 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; height: 10px; overflow:hidden; z-index:2; }
-    .boot-progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal)); transition: width 0.18s linear; }
-
-    .boot-access { margin-top: 1rem; font-size: 1.8rem; font-weight: 900; opacity: 0; transform: scale(0.98); transition: all 0.35s ease; text-align: center; color: var(--accent-mint); text-shadow: 0 0 18px rgba(78,250,170,0.45); z-index:2; }
-    .boot-access.show { opacity: 1; transform: scale(1); }
-
-    .boot-screen::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); pointer-events: none; z-index:3; border-radius: 8px; mix-blend-mode: soft-light; }
-
-    @keyframes crtFlicker {
-      0% { opacity: 1 }
-      6% { opacity: 0.9 }
-      8% { opacity: 0.98 }
-      12% { opacity: 0.92 }
-      20% { opacity: 0.97 }
-      100% { opacity: 1 }
-    }
-
-    .boot-screen { animation: crtFlicker 3.8s linear infinite; }
-
-    @media (max-width: 600px) { .boot-screen { width: 96%; } .boot-access { font-size: 1.25rem; } }
 
     /* First-time visitor modal */
     .first-time-modal-overlay {
@@ -1744,6 +1707,17 @@
       border-color: var(--accent-mint);
     }
 
+    .first-time-btn-discord {
+      background: #5865f2;
+      color: #ffffff;
+    }
+
+    .first-time-btn-discord:hover {
+      background: #4752c4;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(88, 101, 242, 0.35);
+    }
+
     /* Beta warning modal */
     .beta-warning-modal-overlay {
       display: none;
@@ -1844,6 +1818,9 @@
         <button class="first-time-btn first-time-btn-primary" onclick="window.location.href = '/login/'">
           Create Account & Start
         </button>
+        <a href="https://discord.gg/UdefBEPYhp" target="_blank" rel="noopener noreferrer" class="first-time-btn first-time-btn-discord">
+          <i class="fab fa-discord"></i> Join Discord
+        </a>
         <button class="first-time-btn first-time-btn-secondary" onclick="closeFirstTimeModal()">
           Continue Browsing
         </button>
@@ -1857,8 +1834,10 @@
 
       <div class="hero-top">
         <div class="hero-title-block">
-          <h1 class="main-title">SITE-89</h1>
-          <p class="subtitle">Secure Foundation Portal</p>
+          <h1 class="hero-wordmark-title">
+            <span class="visually-hidden">SITE-89</span>
+            <span class="hero-wordmark" aria-hidden="true"></span>
+          </h1>
         </div>
         <div class="hero-event-card is-initializing" id="heroEventCard" aria-expanded="true">
           <div class="hero-event-header">
@@ -1887,26 +1866,28 @@
       </div>
 
       <div class="cta-buttons">
-        <button class="btn-primary" onclick="scrollToFacilityContent()">
-          <i class="fas fa-arrow-down"></i> Enter Facility
-        </button>
         <button id="authBtn" class="btn-secondary">
           <i class="fas fa-user"></i> <span id="authBtnText">Authenticate</span>
         </button>
       </div>
-    </div>
-
-    <!-- Social buttons -->
-    <div class="hero-social">
-      <a href="https://www.instagram.com/site.89_rp/" target="_blank" title="Instagram">
-        <i class="fab fa-instagram"></i>
-      </a>
-      <a href="https://www.youtube.com/@scpfoundation.site.89" target="_blank" title="YouTube">
-        <i class="fab fa-youtube"></i>
-      </a>
-      <a href="https://discord.gg/UdefBEPYhp" target="_blank" title="Discord">
-        <i class="fab fa-discord"></i>
-      </a>
+      <!-- Social buttons -->
+      <div class="hero-social">
+        <a href="https://www.instagram.com/site.89_rp/" target="_blank" title="Instagram">
+          <i class="fab fa-instagram"></i>
+        </a>
+        <a href="https://www.youtube.com/@scpfoundation.site.89" target="_blank" title="YouTube">
+          <i class="fab fa-youtube"></i>
+        </a>
+        <a href="https://discord.gg/UdefBEPYhp" target="_blank" title="Discord">
+          <i class="fab fa-discord"></i>
+        </a>
+        <a href="https://www.patreon.com/c/site89" target="_blank" rel="noopener noreferrer" title="Patreon" aria-label="Patreon">
+          <i class="fab fa-patreon"></i>
+        </a>
+        <a href="https://that-one-merch-store.printify.me/" target="_blank" rel="noopener noreferrer" title="Merch Store" aria-label="Merch Store">
+          <i class="fas fa-shirt"></i>
+        </a>
+      </div>
     </div>
 
     <div class="scroll-indicator">
@@ -1955,6 +1936,9 @@
         <button class="btn-welcome btn-welcome-primary" onclick="window.location.href='/accounts/'">
           <i class="fas fa-user-check"></i> Create Account
         </button>
+        <a href="https://discord.gg/UdefBEPYhp" target="_blank" rel="noopener noreferrer" class="btn-welcome btn-welcome-discord">
+          <i class="fab fa-discord"></i> Join Discord
+        </a>
         <a href="/orientation/" class="btn-welcome btn-welcome-secondary">
           <i class="fas fa-graduation-cap"></i> Orientation
         </a>
@@ -2254,12 +2238,17 @@
     import { autoSelectFirstCharacter } from "/assets/js/character-auto-select.js";
 
     const db = getFirestore(app);
+    window.site89AuthResolved = false;
+    window.site89IsAuthenticated = false;
 
     // Auth button functionality
     const authBtn = document.getElementById("authBtn");
     const authBtnText = document.getElementById("authBtnText");
 
     onAuthStateChanged(auth, (user) => {
+      window.site89AuthResolved = true;
+      window.site89IsAuthenticated = !!user;
+
       if (user) {
         // Auto-select first active character if not already selected
         autoSelectFirstCharacter(user.uid).catch(err => {
@@ -2267,6 +2256,7 @@
         });
 
         // Close modal if user logs in
+        closeBetaWarningModal(true);
         closeFirstTimeModal();
         
         // Hide welcome section for logged-in users
@@ -2298,6 +2288,10 @@
       } else {
         authBtnText.textContent = "Authenticate";
         authBtn.onclick = () => window.location.href = "/login/";
+
+        if (typeof checkFirstTimeVisitor === 'function') {
+          checkFirstTimeVisitor({ isAuthenticated: false });
+        }
       }
       
       // Reorganize page sections for better flow
@@ -2726,172 +2720,55 @@
     });
   </script>
 
-  <!-- Boot overlay script -->
+  <!-- First-time visitor script -->
   <script>
     (function(){
-      const bootOverlay = document.getElementById('bootOverlay');
-      const bootLines = document.getElementById('bootLines');
-      const bootProgress = document.getElementById('bootProgress');
-      const bootAccess = document.getElementById('bootAccess');
-      const STORAGE_KEY = 'site89_boot_played';
-      let playing = false;
-
-      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-      async function typeWithVariance(el, text, opts = {}){
-        const speed = opts.speed ?? 18;
-        const variance = opts.variance ?? 8;
-        if(opts.burst){
-          const linesArr = text.split('\n');
-          for(let li=0; li<linesArr.length; li++){
-            const line = linesArr[li];
-            if(line.length === 0){ el.textContent += '\n'; await sleep(60 + Math.random()*80); continue; }
-            const slowPrefix = Math.min(3, line.length);
-            for(let j=0;j<line.length;j++){
-              el.textContent += line[j];
-              const s = (j < slowPrefix) ? Math.max(8, speed) : Math.max(2, Math.floor(speed / (2 + Math.random()*2)));
-              await sleep(s + Math.floor((Math.random()-0.5) * variance));
-            }
-            el.textContent += '\n';
-            await sleep(80 + Math.random()*140);
-          }
-        } else {
-          for(let i=0;i<text.length;i++){
-            el.textContent += text[i];
-            const jitter = Math.floor((Math.random()-0.5) * variance);
-            await sleep(Math.max(2, speed + jitter));
-          }
-        }
-      }
-
-      async function playBoot(replay=false){
-        if(playing) return;
-        playing = true;
-        try{
-          bootOverlay.style.display = 'flex';
-          bootOverlay.style.opacity = '1';
-          bootOverlay.setAttribute('aria-hidden','false');
-          bootLines.textContent = '';
-          bootProgress.style.width = '0%';
-
-          const lines = [
-            { text: 'Initializing secure shell ...', speed: 20 },
-            { text: 'Verifying integrity of core modules...', speed: 14 },
-            { text: 'Loading security policy: OK', speed: 10 },
-            { text: 'Establishing connection to Site-89 network...', speed: 12 },
-            { text: 'Authenticating environment...', speed: 16 },
-            { text: 'Running system tree scan:\n', speed: 12 },
-            { text: 'C:\\\n├─ bin\n├─ etc\n├─ lib\n├─ usr\n└─ var\n', burst: true },
-            { text: 'Starting diagnostics: [          ] 0%', speed: 10 }
-          ];
-
-          for(let i=0;i<lines.length;i++){
-            const item = lines[i];
-            await typeWithVariance(bootLines, item.text + '\n', { speed: item.speed, burst: !!item.burst });
-            await sleep(120 + Math.random()*220);
-            if(i===1) bootProgress.style.width = '18%';
-            if(i===3) bootProgress.style.width = '42%';
-            if(i===4) bootProgress.style.width = '68%';
-            if(i===6) bootProgress.style.width = '84%';
-            if(i===7) bootProgress.style.width = '96%';
-          }
-
-          // final progress sweep
-          for(let p=96;p<=100;p+=1){
-            bootProgress.style.width = p + '%';
-            await sleep(18 + Math.random()*8);
-          }
-
-          // Access granted with flicker
-          bootAccess.classList.add('show');
-          await sleep(700 + Math.random()*200);
-
-          // Fade out overlay
-          bootOverlay.style.transition = 'opacity 0.6s ease';
-          bootOverlay.style.opacity = '0';
-          await sleep(700);
-          bootOverlay.style.display = 'none';
-          bootOverlay.setAttribute('aria-hidden','true');
-
-          // Trigger layout recalculation and ensure viewport sizing
-          try{
-            document.body.style.minHeight = '100vh';
-            window.dispatchEvent(new Event('resize'));
-            setTimeout(()=> window.scrollTo(0,0), 60);
-          }catch(e){/* ignore */}
-
-          // Persist played flag unless replay requested
-          if(!replay) localStorage.setItem(STORAGE_KEY, '1');
-        }catch(e){
-          console.error('Boot overlay error:', e);
-          bootOverlay.style.display = 'none';
-        }finally{
-          playing = false;
-        }
-      }
-
-
-
-      // Play on first load if not yet played
       document.addEventListener('DOMContentLoaded', () => {
-        if(!localStorage.getItem(STORAGE_KEY)){
-          // slight delay so fonts/layout settle
-          setTimeout(() => playBoot(false), 300);
-        } else {
-          // ensure overlay hidden if already played
-          if(bootOverlay) {
-            bootOverlay.style.display = 'none';
-            bootOverlay.setAttribute('aria-hidden','true');
-          }
+        if (window.site89AuthResolved && typeof checkFirstTimeVisitor === 'function') {
+          checkFirstTimeVisitor({ isAuthenticated: !!window.site89IsAuthenticated });
         }
-
-        // Wire replay button if present in footer
-        const replayBtn = document.getElementById('playIntroBtn');
-        if(replayBtn) {
-          replayBtn.addEventListener('click', (e)=>{
-            e.preventDefault();
-            localStorage.removeItem(STORAGE_KEY);
-            // slight delay and then play
-            setTimeout(()=>playBoot(true), 80);
-          });
-        }
-
-        // First-time visitor detection
-        checkFirstTimeVisitor();
       });
     })();
 
     // First-time visitor modal logic
-    function checkFirstTimeVisitor() {
+    function checkFirstTimeVisitor(options = {}) {
       const betaWarningModal = document.getElementById('betaWarningModal');
       const firstTimeModalOverlay = document.getElementById('firstTimeModal');
       const hasVisited = localStorage.getItem('site89_visited');
-      
-      // Check if user is NOT logged in
-      const selectedChar = localStorage.getItem('selectedCharacter');
-      const hasAuth = selectedChar !== null;
+      const hasAuth = typeof options.isAuthenticated === 'boolean'
+        ? options.isAuthenticated
+        : !!window.site89IsAuthenticated;
+
+      if (window.site89FirstTimePromptShown) {
+        return;
+      }
 
       // Show modals only for non-logged-in first-time visitors
-      if (!hasVisited && !hasAuth) {
+      if (!hasVisited && !hasAuth && firstTimeModalOverlay) {
         // Mark as visited
         localStorage.setItem('site89_visited', 'true');
+        window.site89FirstTimePromptShown = true;
         
-        // Show beta warning first after a short delay (after boot animation if it plays)
+        // Show beta warning first when present, otherwise show the welcome modal directly.
         setTimeout(() => {
           if (betaWarningModal) {
             betaWarningModal.classList.add('show');
+          } else {
+            firstTimeModalOverlay.classList.add('show');
           }
         }, 1000);
       }
     }
 
-    function closeBetaWarningModal() {
+    function closeBetaWarningModal(forceCloseOnly = false) {
       const betaWarningModal = document.getElementById('betaWarningModal');
       const firstTimeModalOverlay = document.getElementById('firstTimeModal');
       
       if (betaWarningModal) {
         betaWarningModal.classList.remove('show');
-        
+      }
+
+      if (!forceCloseOnly) {
         // Show welcome modal after beta warning closes
         setTimeout(() => {
           if (firstTimeModalOverlay) {

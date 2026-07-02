@@ -42,6 +42,48 @@ document.addEventListener('includesLoaded', () => {
     const accountsList = document.getElementById('accountsList');
     const charactersList = document.getElementById('charactersList');
     const charSearchInput = document.getElementById('charSearchInput');
+    const foundationDepositAdminInput = document.getElementById('foundationDepositAdminInput');
+    const foundationDepositAdminSaveBtn = document.getElementById('foundationDepositAdminSaveBtn');
+    const foundationDepositAdminFeedback = document.getElementById('foundationDepositAdminFeedback');
+
+    async function loadFoundationDepositSetting() {
+      if (!foundationDepositAdminInput) return;
+      try {
+        const snap = await getDoc(doc(db, 'bank_config', 'site_finance_settings'));
+        const amount = snap.exists() ? Number(snap.data()?.foundationMonthlyDeposit || 0) : 0;
+        foundationDepositAdminInput.value = Number.isFinite(amount) ? amount : 0;
+        if (foundationDepositAdminFeedback) {
+          foundationDepositAdminFeedback.style.color = 'var(--muted)';
+          foundationDepositAdminFeedback.textContent = 'Current deposit amount loaded.';
+        }
+      } catch (err) {
+        if (foundationDepositAdminFeedback) {
+          foundationDepositAdminFeedback.style.color = 'var(--accent-red)';
+          foundationDepositAdminFeedback.textContent = `Failed to load setting: ${err.message}`;
+        }
+      }
+    }
+
+    foundationDepositAdminSaveBtn?.addEventListener('click', async () => {
+      const amount = Math.max(0, parseFloat(foundationDepositAdminInput?.value || '0') || 0);
+      try {
+        await setDoc(doc(db, 'bank_config', 'site_finance_settings'), {
+          foundationMonthlyDeposit: amount,
+          updatedAt: new Date(),
+          updatedByUid: user.uid
+        }, { merge: true });
+
+        if (foundationDepositAdminFeedback) {
+          foundationDepositAdminFeedback.style.color = 'var(--accent-mint)';
+          foundationDepositAdminFeedback.textContent = 'Foundation monthly deposit saved.';
+        }
+      } catch (err) {
+        if (foundationDepositAdminFeedback) {
+          foundationDepositAdminFeedback.style.color = 'var(--accent-red)';
+          foundationDepositAdminFeedback.textContent = `Save failed: ${err.message}`;
+        }
+      }
+    });
 
     async function loadPersonnel() {
       const snaps = await getDocs(collection(db,'personnel'));
@@ -345,5 +387,6 @@ document.addEventListener('includesLoaded', () => {
     loadPersonnel();
     loadAccounts();
     loadCharacters();
+    loadFoundationDepositSetting();
   });
 });

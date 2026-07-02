@@ -100,6 +100,11 @@
     }
     .stat-icon { font-size: 1.3rem; margin-bottom: .6rem; color: #4efaaa; opacity: .8; }
     .stat-value { font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin-bottom: .3rem; }
+    .stat-value-text {
+      font-size: 1.35rem;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
     .stat-label { font-size: .78rem; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
     .stat-sub { font-size: .75rem; color: rgba(255,255,255,.35); margin-top: .2rem; }
     .stat-badge-online {
@@ -197,6 +202,34 @@
     .empty-state { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,.35); }
     .empty-state i { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
 
+    .rank-list { display: flex; flex-direction: column; gap: .55rem; }
+    .rank-row {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      align-items: center;
+      gap: .75rem;
+      padding: .55rem .7rem;
+      border-radius: 8px;
+      border: 1px solid rgba(78,250,170,.1);
+      background: rgba(255,255,255,.02);
+      font-size: .84rem;
+    }
+    .rank-idx {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(78,250,170,.14);
+      border: 1px solid rgba(78,250,170,.26);
+      color: #4efaaa;
+      font-weight: 700;
+      font-size: .76rem;
+    }
+    .rank-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.82); }
+    .rank-val { color: #4efaaa; font-weight: 700; font-family: 'Roboto Mono', monospace; }
+
     .config-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
     .config-row input { flex: 1; min-width: 180px; padding: .6rem .9rem; background: rgba(0,0,0,.3); border: 1px solid rgba(78,250,170,.2); border-radius: 8px; color: #fff; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
     .config-row input:focus { outline: none; border-color: #4efaaa; }
@@ -254,6 +287,7 @@
         <button class="tab-btn"        data-tab="community" role="tab"><i class="fa-brands fa-discord"></i>      Community</button>
         <button class="tab-btn"        data-tab="events"    role="tab"><i class="fa-solid fa-calendar-days"></i> Events</button>
         <button class="tab-btn"        data-tab="server"    role="tab"><i class="fa-solid fa-server"></i>        Server</button>
+        <button class="tab-btn"        data-tab="email"     role="tab"><i class="fa-solid fa-envelope-open-text"></i> Email</button>
         <button class="tab-btn"        data-tab="reports"   role="tab"><i class="fa-solid fa-clipboard-list"></i>Staff Reports</button>
       </nav>
 
@@ -435,6 +469,147 @@
         </div>
       </div>
 
+      <!-- TAB: EMAIL -->
+      <div class="tab-pane" id="tab-email">
+        <div class="panel" style="margin-bottom:1.2rem;">
+          <div class="panel-header" style="margin-bottom:.85rem;">
+            <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Email Intelligence (Last 90 Days)</h2>
+          </div>
+          <p style="font-size:.84rem;color:rgba(255,255,255,.55);margin:0;">
+            Categorization is generated with a weighted keyword scoring algorithm over email subject/body text and sender context.
+          </p>
+        </div>
+
+        <div class="stats-grid" id="emailKpiGrid" style="margin-bottom:1.5rem;"></div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-tags"></i> Most Common Email Types</h2>
+            </div>
+            <div class="chart-wrap" style="max-height:290px;"><canvas id="emailTypeChart"></canvas></div>
+            <div id="emailCategoryTable" style="margin-top:1rem;"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-inbox"></i> Top Recipients</h2>
+            </div>
+            <div id="topRecipientsList" class="rank-list"></div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-paper-plane"></i> Top Senders</h2>
+            </div>
+            <div id="topSendersList" class="rank-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="section-title"><i class="fa-solid fa-lightbulb"></i> Email Insights</h2>
+            </div>
+            <div id="emailInsightList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-chart-column"></i> Email Volume (Last 12 Weeks)</h2>
+          </div>
+          <div class="chart-wrap" style="max-height:280px;"><canvas id="emailTrendChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="section-title"><i class="fa-solid fa-user-secret"></i> Email Snoop Console</h2>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:1rem;">
+            <div class="fld full-col">
+              <label for="emailSnoopSearchInput">Keyword Search</label>
+              <input id="emailSnoopSearchInput" type="text" placeholder="Search sender, recipient, subject, body..." autocomplete="off">
+            </div>
+            <div class="fld">
+              <label for="emailSnoopFolderFilter">Folder</label>
+              <select id="emailSnoopFolderFilter">
+                <option value="">All</option>
+                <option value="inbox">Inbox</option>
+                <option value="sent">Sent</option>
+                <option value="drafts">Drafts</option>
+                <option value="trash">Trash</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="emailSnoopStatusFilter">Status</label>
+              <select id="emailSnoopStatusFilter">
+                <option value="">All</option>
+                <option value="sent">Sent</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="emailSnoopFromDate">From Date</label>
+              <input id="emailSnoopFromDate" type="date">
+            </div>
+            <div class="fld">
+              <label for="emailSnoopToDate">To Date</label>
+              <input id="emailSnoopToDate" type="date">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <span class="badge badge-blue" id="emailSnoopTotalCount">Total: 0</span>
+            <span class="badge badge-green" id="emailSnoopFilteredCount">Filtered: 0</span>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:1rem;">
+            <div class="fld">
+              <label for="purgeMailboxInputAnalytics">Purge Mailbox</label>
+              <input id="purgeMailboxInputAnalytics" type="email" placeholder="user@site89.org" autocomplete="off">
+            </div>
+            <div class="fld" style="display:flex;align-items:flex-end;">
+              <button id="purgeMailboxBtnAnalytics" class="btn btn-danger" type="button" style="width:100%;justify-content:center;">
+                <i class="fa-solid fa-trash"></i> Delete All Mailbox Emails
+              </button>
+            </div>
+            <div class="fld full-col">
+              <div id="purgeMailboxStatusAnalytics" style="font-size:.82rem;color:rgba(255,255,255,.5);">Deletes emails where mailbox appears in recipients or as sender.</div>
+            </div>
+          </div>
+
+          <div class="data-table-wrap" style="max-height:520px;overflow:auto;border:1px solid rgba(78,250,170,.12);border-radius:10px;">
+            <table class="data-table" style="min-width:980px;">
+              <thead>
+                <tr>
+                  <th style="width:170px;">Time</th>
+                  <th style="width:190px;">From</th>
+                  <th style="width:240px;">To</th>
+                  <th style="width:220px;">Subject</th>
+                  <th style="width:100px;">Status</th>
+                  <th style="width:100px;">Folder</th>
+                </tr>
+              </thead>
+              <tbody id="emailSnoopBody">
+                <tr><td colspan="6" style="text-align:center;padding:1.2rem;color:rgba(255,255,255,.4);">Loading emails…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;margin-top:.8rem;flex-wrap:wrap;">
+            <button id="emailSnoopPrevBtn" class="btn btn-secondary btn-sm" type="button"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+            <span id="emailSnoopPageInfo" style="font-size:.84rem;color:rgba(255,255,255,.55);">Page 1</span>
+            <button id="emailSnoopNextBtn" class="btn btn-secondary btn-sm" type="button">Next <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+
+          <div style="margin-top:.85rem;padding:.8rem .9rem;border:1px solid rgba(78,250,170,.12);border-radius:8px;background:rgba(255,255,255,.02);">
+            <div style="font-size:.75rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem;">Selected Email</div>
+            <div id="emailSnoopDetail" style="font-size:.84rem;color:rgba(255,255,255,.75);min-height:1.2rem;">Click a row to preview details.</div>
+            <div id="emailSnoopBodyPreview" style="margin-top:.65rem;white-space:pre-wrap;line-height:1.55;font-size:.84rem;color:rgba(255,255,255,.88);min-height:6rem;max-height:22rem;overflow:auto;padding:.7rem;border:1px solid rgba(78,250,170,.12);border-radius:8px;background:rgba(0,0,0,.26);">Select an email to read its contents.</div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB: STAFF REPORTS -->
       <div class="tab-pane" id="tab-reports">
         <div class="panel">
@@ -493,6 +668,6 @@
     </div><!-- /dashContent -->
   </main>
 
-  <script type="module" src="/assets/js/admin-analytics-dashboard.js"></script>
+  <script type="module" src="/assets/js/admin-analytics-dashboard.js?v=20260523b"></script>
 </body>
 </html>

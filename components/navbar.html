@@ -1,15 +1,179 @@
-<nav id="main-nav">
-  <!-- Navbar with fixed dropdown positioning - v2.1 -->
-  <!-- Left side: logo + links -->
-  <div class="nav-left">
-    <a href="/" class="nav-logo">
-      <img src="/assets/img/Site89wide.png" alt="Site-89 Logo" style="height:40px; vertical-align:middle;">
+<nav id="main-nav" aria-label="Primary navigation">
+  <div class="nav-shell">
+    <div class="nav-brand-group">
+      <a href="/" class="nav-logo" aria-label="Site-89 Home">
+        <img src="/assets/img/Site89wide.png" alt="Site-89 Logo">
+      </a>
+
+      <div class="nav-desktop" aria-label="Main sections">
+        <div class="nav-group" data-group="departments">
+          <button class="nav-group-trigger" type="button" aria-expanded="false" aria-controls="nav-panel-departments">
+            Departments
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="nav-group-panel" id="nav-panel-departments">
+            <a href="/departments/">Overview</a>
+            <a href="/departments/AD/">Administrative Department</a>
+            <a href="/departments/TSD/">Technical Services Department</a>
+            <a href="/departments/IA/">Internal Affairs</a>
+            <a href="/departments/ScD/">Scientific Department</a>
+            <a href="/departments/SD/">Security Department</a>
+            <a href="/departments/MTF/">Red-Four Squadron</a>
+          </div>
+        </div>
+
+        <div class="nav-group" data-group="archives">
+          <button class="nav-group-trigger" type="button" aria-expanded="false" aria-controls="nav-panel-archives">
+            Archives
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="nav-group-panel" id="nav-panel-archives">
+            <a href="/archives/">Archive Hub</a>
+            <a href="/personnel-files/">Personnel Files</a>
+            <a href="/anomalies/">Anomalies</a>
+            <a href="/research-logs/">Research Logs</a>
+            <a href="/incident-reports/">Incident Reports</a>
+            <a href="/rules/">Rules & Guidelines</a>
+          </div>
+        </div>
+
+        <div class="nav-group" data-group="community">
+          <button class="nav-group-trigger" type="button" aria-expanded="false" aria-controls="nav-panel-community">
+            Community
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="nav-group-panel" id="nav-panel-community">
+            <a href="/forum/">Forum</a>
+            <a href="/articles/">Articles</a>
+            <a href="/events/">Events</a>
+            <a href="/gallery/">Gallery</a>
+            <a href="/newsletter/">Newsletter</a>
+            <a href="/feedback/">Feedback</a>
+          </div>
+        </div>
+
+        <div class="nav-group" data-group="resources">
+          <button class="nav-group-trigger" type="button" aria-expanded="false" aria-controls="nav-panel-resources">
+            Resources
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="nav-group-panel" id="nav-panel-resources">
+            <a href="/guides/">All Guides</a>
+            <a href="/uploads/">Image Uploads</a>
+            <a href="/roadmap/">Roadmap</a>
+            <a href="/guides/codes-alarms/">Codes & Alarms</a>
+            <a href="/about/">About</a>
+          </div>
+        </div>
+
+        <div id="adminNavDropdown" class="nav-group" style="display:none;">
+          <button class="nav-group-trigger" type="button" aria-expanded="false" aria-controls="nav-panel-admin">
+            Admin
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="nav-group-panel" id="nav-panel-admin">
+            <a id="adminAnalyticsNavLink" href="/admin/analytics/">Analytics Dashboard</a>
+            <a id="adminBankNavLink" href="/admin/bank-manager/">Bank Manager</a>
+            <a id="adminIaManagerNavLink" href="/admin/io-personnel-manager/">IA Personnel Manager</a>
+            <a id="adminModerationNavLink" href="/admin/moderation/">Moderation Panel</a>
+            <a id="adminRolesNavLink" href="/admin/roles/" style="display:none;">Roles Manager</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-utility">
+      <div class="nav-search" id="navSearch">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input id="siteSearchInput" placeholder="Search pages, guides, archives..." aria-label="Search site" autocomplete="off">
+        <div id="siteSearchResults" class="search-results" role="listbox" aria-hidden="true"></div>
+      </div>
+
+      <div class="nav-mail-wrapper">
+        <a href="/emails/" id="navMailBtn" class="nav-mail" title="Mail" aria-label="Mail inbox">
+          <i class="fa-solid fa-envelope"></i>
+          <span id="navMailBadge"></span>
+        </a>
+      </div>
+
+      <div class="nav-accounts" id="navAccounts">
+        <button type="button" class="nav-accounts-btn" id="navAccountsBtn" aria-expanded="false" aria-controls="navAccountsDropdown">
+          <i class="fa-solid fa-user"></i>
+          <span id="navAccountsText">Login</span>
+          <i class="fa-solid fa-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown-accounts hidden" id="navAccountsDropdown">
+          <a href="/bank/">Bank</a>
+          <a href="/character-select/">Manage Characters</a>
+          <a href="/accounts/">Manage Account</a>
+          <a href="/orientation/" id="orientationLink" style="display:none;">Orientation</a>
+          <a href="/login/" id="logoutBtn" class="logout-item" style="display:none;">Logout</a>
+          <div id="navMeritDisplay" class="nav-merit-display" style="display:none;">
+            <i class="fas fa-star nav-merit-icon"></i>
+            <span class="nav-merit-badge" id="navMeritTier">Newcomer</span>
+            <span class="nav-merit-separator">-</span>
+            <span id="navMeritScore" class="nav-merit-score">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-mobile-actions">
+      <a href="/emails/" id="mobileMailBtn" class="mobile-icon-btn" title="Mail" aria-label="Mail">
+        <i class="fa-solid fa-envelope"></i>
+      </a>
+      <button id="mobileAccountsBtn" class="mobile-icon-btn" aria-label="Account menu">
+        <i class="fa-solid fa-user"></i>
+      </button>
+      <button id="navToggle" class="mobile-icon-btn nav-toggle" aria-expanded="false" aria-label="Open menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div id="mobileAccountsDropdown" class="mobile-accounts-dropdown hidden" aria-hidden="true">
+  <a href="/bank/" class="mobile-accounts-item">
+    <i class="fa-solid fa-wallet"></i>
+    <span>Bank</span>
+  </a>
+  <a href="/character-select/" class="mobile-accounts-item">
+    <i class="fa-solid fa-people-arrows"></i>
+    <span>Manage Characters</span>
+  </a>
+  <a href="/accounts/" class="mobile-accounts-item">
+    <i class="fa-solid fa-gear"></i>
+    <span>Manage Account</span>
+  </a>
+  <a href="/orientation/" class="mobile-accounts-item" id="mobileOrientationLink" style="display:none;">
+    <i class="fa-solid fa-graduation-cap"></i>
+    <span>Orientation</span>
+  </a>
+  <div class="mobile-accounts-divider"></div>
+  <button id="mobileLogoutBtn" class="mobile-accounts-item logout-item" style="display:none;">
+    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+    <span>Logout</span>
+  </button>
+  <a href="/login/" id="mobileLoginBtn" class="mobile-accounts-item">
+    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+    <span>Login</span>
+  </a>
+</div>
+
+<div id="mobileMenu" class="mobile-menu hidden" aria-hidden="true">
+  <div class="mobile-menu-panel">
+    <a href="/" class="mobile-home-link">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
     </a>
 
-    <!-- Departments Dropdown -->
-    <div class="nav-dropdown-parent">
-      <a href="/departments/">Departments <i class="fa-solid fa-caret-down"></i></a>
-      <div class="nav-dropdown-content">
+    <div class="mobile-menu-section">
+      <button class="mobile-section-toggle" type="button" aria-expanded="false">
+        <span>Departments</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      <div class="mobile-section-links">
+        <a href="/departments/">Overview</a>
         <a href="/departments/AD/">Administrative Department</a>
         <a href="/departments/TSD/">Technical Services Department</a>
         <a href="/departments/IA/">Internal Affairs</a>
@@ -19,10 +183,13 @@
       </div>
     </div>
 
-    <!-- Foundation Archives Dropdown -->
-    <div class="nav-dropdown-parent">
-      <a href="/archives/">Foundation Archives <i class="fa-solid fa-caret-down"></i></a>
-      <div class="nav-dropdown-content">
+    <div class="mobile-menu-section">
+      <button class="mobile-section-toggle" type="button" aria-expanded="false">
+        <span>Archives</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      <div class="mobile-section-links">
+        <a href="/archives/">Archive Hub</a>
         <a href="/personnel-files/">Personnel Files</a>
         <a href="/anomalies/">Anomalies</a>
         <a href="/research-logs/">Research Logs</a>
@@ -31,10 +198,12 @@
       </div>
     </div>
 
-    <!-- Community Dropdown -->
-    <div class="nav-dropdown-parent">
-      <a href="/forum/">Community <i class="fa-solid fa-caret-down"></i></a>
-      <div class="nav-dropdown-content">
+    <div class="mobile-menu-section">
+      <button class="mobile-section-toggle" type="button" aria-expanded="false">
+        <span>Community</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      <div class="mobile-section-links">
         <a href="/forum/">Forum</a>
         <a href="/articles/">Articles</a>
         <a href="/events/">Events</a>
@@ -44,209 +213,28 @@
       </div>
     </div>
 
-    <!-- Resources Dropdown -->
-    <div class="nav-dropdown-parent">
-      <a href="/guides/">Resources & Guides <i class="fa-solid fa-caret-down"></i></a>
-      <div class="nav-dropdown-content">
+    <div class="mobile-menu-section">
+      <button class="mobile-section-toggle" type="button" aria-expanded="false">
+        <span>Resources</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      <div class="mobile-section-links">
+        <a href="/guides/">All Guides</a>
         <a href="/uploads/">Image Uploads</a>
         <a href="/roadmap/">Roadmap</a>
         <a href="/guides/codes-alarms/">Codes & Alarms</a>
+        <div id="mobileAdminResources" style="display:none;">
+          <a id="mobileAdminAnalyticsNavLink" href="/admin/analytics/">Admin: Analytics Dashboard</a>
+          <a id="mobileAdminBankNavLink" href="/admin/bank-manager/">Admin: Bank Manager</a>
+          <a id="mobileAdminIaManagerNavLink" href="/admin/io-personnel-manager/">Admin: IA Personnel Manager</a>
+          <a id="mobileAdminModerationNavLink" href="/admin/moderation/">Admin: Moderation Panel</a>
+          <a id="mobileAdminRolesNavLink" href="/admin/roles/" style="display:none;">Admin: Roles Manager</a>
+        </div>
         <a href="/about/">About</a>
       </div>
     </div>
-
-    <div id="adminNavDropdown" class="nav-dropdown-parent" style="display:none;">
-      <a href="/admin/analytics/">Admin <i class="fa-solid fa-caret-down"></i></a>
-      <div class="nav-dropdown-content">
-        <a href="/admin/analytics/">Analytics Dashboard</a>
-        <a href="/admin/bank-manager/">Bank Manager</a>
-        <a href="/admin/io-personnel-manager/">IA Personnel Manager</a>
-        <a id="adminRolesNavLink" href="/admin/roles/" style="display:none;">Roles Manager</a>
-      </div>
-    </div>
   </div>
-
-  <!-- Clocks -->
-  <!-- <div class="nav-clocks">
-    <div class="nav-clock">
-      <div class="clock-label">Local Time</div>
-      <div class="clock-time" id="localClock">--:--:--</div>
-    </div>
-    <div class="nav-clock">
-      <div class="clock-label">Site-89 Time (EST/EDT)</div>
-      <div class="clock-time" id="siteClock">--:--:--</div>
-    </div>
-  </div> -->
-
-  <button id="navToggle" class="nav-toggle" aria-expanded="false" aria-label="Open menu"></button>
-
-  <!-- Mobile Accounts Button -->
-  <button id="mobileAccountsBtn" class="mobile-accounts-btn" aria-label="Account menu">
-    <i class="fa-solid fa-user"></i>
-  </button>
-
-  <!-- Mobile Accounts Dropdown -->
-  <div id="mobileAccountsDropdown" class="mobile-accounts-dropdown hidden" aria-hidden="true">
-    <a href="/bank/" class="mobile-accounts-item">
-      <i class="fa-solid fa-wallet"></i>
-      <span>Bank</span>
-    </a>
-    <a href="/accounts/" class="mobile-accounts-item">
-      <i class="fa-solid fa-gear"></i>
-      <span>Manage Account</span>
-    </a>
-    <a href="/orientation/" class="mobile-accounts-item" id="mobileOrientationLink" style="display:none;">
-      <i class="fa-solid fa-graduation-cap"></i>
-      <span>Orientation</span>
-    </a>
-    <div class="mobile-accounts-divider"></div>
-    <button id="mobileLogoutBtn" class="mobile-accounts-item logout-item" style="display:none;">
-      <i class="fa-solid fa-arrow-right-from-bracket"></i>
-      <span>Logout</span>
-    </button>
-    <a href="/login/" id="mobileLoginBtn" class="mobile-accounts-item">
-      <i class="fa-solid fa-arrow-right-to-bracket"></i>
-      <span>Login</span>
-    </a>
-  </div>
-
-  <div id="mobileMenu" class="mobile-menu hidden" aria-hidden="true">
-    <!-- Quadrant grid view -->
-    <div id="mobileMenuGrid" class="mobile-menu-grid">
-      <button class="mobile-menu-quadrant" data-category="departments">
-        <span>Departments</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-      <button class="mobile-menu-quadrant" data-category="archives">
-        <span>Foundation Archives</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-      <button class="mobile-menu-quadrant" data-category="community">
-        <span>Community</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-      <button class="mobile-menu-quadrant" data-category="resources">
-        <span>Resources</span>
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-
-    <!-- Fullscreen category view -->
-    <div id="mobileMenuFullscreen" class="mobile-menu-fullscreen hidden">
-      <div class="mobile-fullscreen-header">
-        <button id="mobileMenuBackBtn" class="mobile-back-btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          <span id="mobileFullscreenTitle">Back</span>
-        </button>
-      </div>
-      <div id="mobileFullscreenContent" class="mobile-fullscreen-content">
-        <!-- Content populated by JS -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Fullscreen menu category data -->
-  <div id="mobileMenuData" style="display:none;">
-    <div data-category="departments">
-      <a href="/departments/AD/">Administrative Department</a>
-      <a href="/departments/TSD/">Technical Services Department</a> 
-      <a href="/departments/IA/">Internal Affairs</a>
-      <a href="/departments/ScD/">Scientific Department</a>
-      <a href="/departments/SD/">Security Department</a>
-      <a href="/departments/MTF/">Red-Four Squadron</a>
-    </div>
-    <div data-category="archives">
-      <a href="/personnel-files/">Personnel Files</a>
-      <a href="/anomalies/">Anomalies</a>
-      <a href="/research-logs/">Research Logs</a>
-      <a href="/incident-reports/">Incident Reports</a>
-      <a href="/rules/">Rules & Guidelines</a>
-    </div>
-    <div data-category="community">
-      <a href="/forum/">Forum</a>
-      <a href="/articles/">Articles</a>
-      <a href="/events/">Events</a>
-      <a href="/gallery/">Gallery</a>
-      <a href="/newsletter/">Newsletter</a>
-      <a href="/feedback/">Feedback</a>
-    </div>
-    <div data-category="resources">
-      <a href="/guides/">All Guides</a>
-      <a href="/roadmap/">Roadmap</a>
-      <a href="/guides/codes-alarms/">Codes & Alarms</a>
-      <div id="mobileAdminResources" style="display:none;">
-        <a href="/admin/analytics/">Admin: Analytics Dashboard</a>
-        <a href="/admin/bank-manager/">Admin: Bank Manager</a>
-        <a href="/admin/io-personnel-manager/">Admin: IA Personnel Manager</a>
-        <a id="mobileAdminRolesNavLink" href="/admin/roles/" style="display:none;">Admin: Roles Manager</a>
-      </div>
-      <a href="https://www.patreon.com/c/site89" target="_blank" rel="noopener noreferrer">Support Site-89 (Patreon)</a>
-      <a href="https://that-one-merch-store.printify.me/" target="_blank" rel="noopener noreferrer">Site-89 Merch Store</a>
-      <a href="/about/">About</a>
-    </div>
-  </div>
-
-  <!-- Right side: socials + login -->
-  <div class="nav-right">
-    <div class="nav-dropdown-parent nav-support-dropdown-parent">
-      <button class="nav-support-btn" type="button" aria-label="Support Site-89 links">
-        <i class="fa-solid fa-heart"></i>
-        <span>Support Site-89</span>
-        <i class="fa-solid fa-caret-down"></i>
-      </button>
-      <div class="nav-dropdown-content nav-dropdown-support">
-        <a href="https://www.patreon.com/c/site89" target="_blank" rel="noopener noreferrer">
-          <i class="fa-brands fa-patreon"></i>
-          <span>Patreon</span>
-        </a>
-        <a href="https://that-one-merch-store.printify.me/" target="_blank" rel="noopener noreferrer">
-          <i class="fa-solid fa-shirt"></i>
-          <span>Merch Store</span>
-        </a>
-      </div>
-    </div>
-
-    <div class="nav-search" id="navSearch">
-      <input id="siteSearchInput" placeholder="Search site…" aria-label="Search site" autocomplete="off">
-      <div id="siteSearchResults" class="search-results" role="listbox" aria-hidden="true"></div>
-    </div>
-
-    <div class="nav-mail-wrapper" style="position:relative;display:flex;align-items:center;gap:10px;">
-      <a href="/emails/" id="navMailBtn" class="nav-mail" title="Mail">
-        <i class="fa-solid fa-envelope"></i>
-        <span id="navMailBadge" style="position:absolute;top:-6px;right:-6px;background:var(--accent-mint);color:#081413;border-radius:50%;width:20px;height:20px;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;line-height:1;min-width:20px;text-align:center;display:none"></span>
-      </a>
-    </div>
-
-    <!-- Mobile Emails Button (shown on mobile) -->
-    <a href="/emails/" id="mobileMailBtn" class="mobile-mail-btn" title="Mail" style="display:none;">
-      <i class="fa-solid fa-envelope"></i>
-    </a>
-
-    <!-- ACCOUNTS BUTTON WITH DROPDOWN -->
-    <div class="nav-accounts" id="navAccounts">
-      <a href="/character-select/" class="nav-accounts-btn" id="navAccountsBtn">
-        <i class="fa-solid fa-user"></i>
-        <span id="navAccountsText">Login</span>
-        <i class="fa-solid fa-chevron-down" style="font-size:0.8rem;"></i>
-      </a>
-
-      <!-- Accounts Dropdown -->
-      <div class="nav-dropdown-content nav-dropdown-accounts hidden" id="navAccountsDropdown">
-        <a href="/bank/">Bank</a>
-        <a href="/accounts/">Manage Account</a>
-        <a href="/orientation/" id="orientationLink" style="display:none;">Orientation</a>
-        <a href="/login/" id="logoutBtn" class="logout-item" style="display:none;">Logout</a>
-        <div id="navMeritDisplay" class="nav-merit-display" style="display:none;">
-          <i class="fas fa-star nav-merit-icon"></i>
-          <span class="nav-merit-badge" id="navMeritTier">Newcomer</span>
-          <span class="nav-merit-separator">-</span>
-          <span id="navMeritScore" class="nav-merit-score">0</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</nav>
+</div>
 
 <!-- Breadcrumb Navigation -->
 <div id="breadcrumbNav" class="breadcrumb-nav">
@@ -264,43 +252,635 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-  /* Navbar layout - FIXED at top */
+  :root {
+    --nav-bg: color-mix(in oklab, var(--bg-card) 78%, #06080a 22%);
+    --nav-border: color-mix(in oklab, var(--card-border) 82%, var(--accent-mint) 18%);
+    --nav-panel: color-mix(in oklab, var(--bg-card) 86%, #0f1419 14%);
+    --nav-shadow: 0 10px 32px rgba(0, 0, 0, 0.33);
+    --nav-glow: 0 0 0 1px rgba(78, 250, 170, 0.15), 0 10px 24px rgba(13, 46, 38, 0.35);
+  }
+
   #main-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: rgba(14, 17, 19, 0.95);
-    border-bottom: 1px solid var(--card-border);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 9999;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid var(--nav-border);
+    background:
+      radial-gradient(circle at 12% -20%, rgba(78, 250, 170, 0.16), rgba(78, 250, 170, 0) 42%),
+      radial-gradient(circle at 88% -30%, rgba(23, 166, 192, 0.18), rgba(23, 166, 192, 0) 42%),
+      var(--nav-bg);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--nav-shadow);
     box-sizing: border-box;
   }
 
-  .nav-left, .nav-right {
+  .nav-shell {
     display: flex;
     align-items: center;
-    gap: 15px;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 72px;
+    padding: 0.65rem 1.1rem;
+  }
+
+  .nav-brand-group {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+  }
+
+  .nav-logo {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 10px;
+    outline-offset: 4px;
+  }
+
+  .nav-logo img {
+    display: block;
+    height: 40px;
+    width: auto;
+  }
+
+  .nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .nav-group {
+    position: relative;
+  }
+
+  .nav-group-trigger {
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 0.82rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-body);
+  }
+
+  .nav-group-trigger i {
+    font-size: 0.72rem;
+    opacity: 0.86;
+    transition: transform 0.2s ease;
+  }
+
+  .nav-group.open > .nav-group-trigger,
+  .nav-group-trigger:hover,
+  .nav-group-trigger:focus-visible {
+    border-color: rgba(78, 250, 170, 0.28);
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.08);
+    outline: none;
+  }
+
+  .nav-group.open > .nav-group-trigger i {
+    transform: rotate(180deg);
+  }
+
+  .nav-group-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    z-index: 1002;
+    min-width: 250px;
+    max-height: min(70vh, 520px);
+    overflow: auto;
+    border-radius: 12px;
+    border: 1px solid var(--nav-border);
+    background: var(--nav-panel);
+    box-shadow: var(--nav-shadow), var(--nav-glow);
+    padding: 0.42rem;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .nav-group.open > .nav-group-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .nav-group-panel a {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.62rem 0.72rem;
+    border-radius: 8px;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    transition: all 0.16s ease;
+  }
+
+  .nav-group-panel a:hover,
+  .nav-group-panel a:focus-visible {
+    background: rgba(78, 250, 170, 0.12);
+    color: var(--accent-mint);
+    outline: none;
+  }
+
+  .nav-utility {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  .nav-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 40px;
+    min-width: 260px;
+    max-width: 360px;
+    padding: 0 0.72rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.22);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .nav-search:focus-within {
+    border-color: rgba(78, 250, 170, 0.42);
+    box-shadow: 0 0 0 3px rgba(78, 250, 170, 0.12);
+  }
+
+  .nav-search i {
+    color: var(--text-dim);
+    font-size: 0.83rem;
+    flex-shrink: 0;
+  }
+
+  #siteSearchInput {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    min-width: 0;
+    outline: none;
+    font-family: var(--font-body);
+  }
+
+  #siteSearchInput::placeholder {
+    color: var(--text-dim);
+  }
+
+  .search-results {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 1003;
+    display: none;
+    max-height: 360px;
+    overflow: auto;
+    border-radius: 12px;
+    border: 1px solid var(--nav-border);
+    background: var(--nav-panel);
+    box-shadow: var(--nav-shadow), var(--nav-glow);
+    padding: 0.32rem;
+  }
+
+  .search-results.active {
+    display: block;
+  }
+
+  .search-result {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.58rem 0.65rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.16s ease;
+  }
+
+  .search-result:hover,
+  .search-result.active {
+    background: rgba(78, 250, 170, 0.1);
+  }
+
+  .search-title {
+    color: var(--text-light);
+    font-size: 0.89rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .search-category {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid rgba(78, 250, 170, 0.25);
+    border-radius: 999px;
+    padding: 0.08rem 0.42rem;
+    color: var(--accent-mint);
+  }
+
+  .search-desc {
+    color: var(--text-dim);
+    font-size: 0.79rem;
+    margin-top: 0.1rem;
+  }
+
+  .search-empty {
+    font-size: 0.86rem;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 0.8rem;
+  }
+
+  .nav-mail-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-mail {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-light);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+    line-height: 1;
+    transition: all 0.2s ease;
+  }
+
+  .nav-mail:hover {
+    border-color: rgba(78, 250, 170, 0.38);
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.08);
+  }
+
+  #navMailBadge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 50%;
+    background: var(--accent-mint);
+    color: #081413;
+    font-size: 0.64rem;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .nav-accounts {
+    position: relative;
+  }
+
+  .nav-accounts-btn {
+    appearance: none;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 0.82rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.91rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .nav-accounts.open .nav-accounts-btn,
+  .nav-accounts-btn:hover {
+    border-color: rgba(78, 250, 170, 0.4);
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.08);
+  }
+
+  .nav-chevron {
+    font-size: 0.74rem;
+    opacity: 0.88;
+    transition: transform 0.2s ease;
+  }
+
+  .nav-accounts.open .nav-chevron {
+    transform: rotate(180deg);
+  }
+
+  .nav-dropdown-accounts {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(320px, calc(100vw - 20px));
+    min-width: 240px;
+    border-radius: 12px;
+    border: 1px solid var(--nav-border);
+    background: var(--nav-panel);
+    box-shadow: var(--nav-shadow), var(--nav-glow);
+    padding: 0.35rem;
+    z-index: 1002;
+  }
+
+  .nav-accounts.open .nav-dropdown-accounts {
+    display: block;
+  }
+
+  .nav-dropdown-accounts a {
+    display: block;
+    color: var(--text-light);
+    text-decoration: none;
+    padding: 0.62rem 0.7rem;
+    border-radius: 8px;
+    transition: all 0.16s ease;
+    font-size: 0.9rem;
+  }
+
+  .nav-dropdown-accounts a:hover {
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.12);
+  }
+
+  .logout-item {
+    color: var(--accent-red) !important;
+  }
+
+  .logout-item:hover {
+    background: rgba(176, 0, 0, 0.12) !important;
+    color: #ff6b6b !important;
+  }
+
+  .nav-merit-display {
+    margin-top: 0.35rem;
+    border-top: 1px solid var(--card-border);
+    padding: 0.62rem 0.72rem 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.36rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .nav-merit-icon {
+    color: #f3b95b;
+    font-size: 0.72rem;
+  }
+
+  .nav-merit-badge {
+    color: #f3b95b;
+    font-weight: 700;
+  }
+
+  .nav-merit-score {
+    color: var(--accent-mint);
+    font-weight: 700;
+  }
+
+  .nav-merit-separator {
+    opacity: 0.7;
+  }
+
+  .nav-mobile-actions {
+    display: none;
+    align-items: center;
+    gap: 0.42rem;
+    margin-left: auto;
+  }
+
+  .mobile-icon-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-light);
+    background: rgba(255, 255, 255, 0.02);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-icon-btn:hover {
+    border-color: rgba(78, 250, 170, 0.42);
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.08);
+  }
+
+  .mobile-menu {
+    position: fixed;
+    top: 73px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9997;
+    display: none;
+    background: rgba(5, 8, 10, 0.94);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobile-menu.hidden {
+    display: none !important;
+  }
+
+  .mobile-menu:not(.hidden) {
+    display: block;
+  }
+
+  .mobile-menu-panel {
+    height: 100%;
+    overflow: auto;
+    padding: 0.9rem 0.75rem 1rem;
+  }
+
+  .mobile-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text-light);
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    padding: 0.58rem 0.72rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .mobile-menu-section {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+    margin-bottom: 0.62rem;
+  }
+
+  .mobile-section-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    background: none;
+    border: 0;
+    color: var(--text-light);
+    padding: 0.9rem 0.85rem;
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .mobile-section-toggle i {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+  }
+
+  .mobile-menu-section.open .mobile-section-toggle {
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.08);
+  }
+
+  .mobile-menu-section.open .mobile-section-toggle i {
+    transform: rotate(180deg);
+  }
+
+  .mobile-section-links {
+    display: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.35rem;
+  }
+
+  .mobile-menu-section.open .mobile-section-links {
+    display: block;
+  }
+
+  .mobile-section-links a {
+    display: block;
+    color: var(--text-light);
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 0.62rem 0.7rem;
+    font-size: 0.9rem;
+    transition: all 0.16s ease;
+  }
+
+  .mobile-section-links a:hover {
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.12);
+  }
+
+  .mobile-accounts-dropdown {
+    display: none;
+    position: fixed;
+    top: 74px;
+    right: 0.75rem;
+    z-index: 10001;
+    min-width: min(260px, calc(100vw - 1.5rem));
+    border-radius: 12px;
+    border: 1px solid var(--nav-border);
+    background: var(--nav-panel);
+    box-shadow: var(--nav-shadow), var(--nav-glow);
+    padding: 0.35rem;
+  }
+
+  .mobile-accounts-dropdown.hidden {
+    display: none !important;
+  }
+
+  .mobile-accounts-dropdown:not(.hidden) {
+    display: block;
+  }
+
+  .mobile-accounts-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--text-light);
+    text-decoration: none;
+    border: 0;
+    background: none;
+    border-radius: 8px;
+    padding: 0.62rem 0.66rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .mobile-accounts-item:hover {
+    color: var(--accent-mint);
+    background: rgba(78, 250, 170, 0.12);
+  }
+
+  .mobile-accounts-divider {
+    height: 1px;
+    background: var(--card-border);
+    margin: 0.35rem 0;
+  }
+
+  .hidden {
+    display: none !important;
   }
 
   /* Breadcrumb Navigation */
   .breadcrumb-nav {
     position: fixed;
-    top: 61px; /* Below the main nav */
+    top: 72px;
     left: 0;
     right: 0;
     background: rgba(14, 17, 19, 0.85);
-    border-bottom: 1px solid rgba(78, 250, 170, 0.1);
+    border-bottom: 1px solid rgba(78, 250, 170, 0.14);
     z-index: 9998;
     backdrop-filter: blur(8px);
-    padding: 8px 20px;
-    font-size: 0.85rem;
-    display: none; /* Hidden by default, shown by JS when needed */
+    padding: 7px 18px;
+    font-size: 0.82rem;
+    display: none;
   }
 
   .breadcrumb-nav.visible {
@@ -323,7 +903,7 @@
     color: var(--text-dim);
     text-decoration: none;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.2s ease;
     white-space: nowrap;
   }
@@ -333,13 +913,9 @@
     background: rgba(78, 250, 170, 0.05);
   }
 
-  .breadcrumb-item i {
-    font-size: 0.8rem;
-  }
-
   .breadcrumb-separator {
     color: var(--text-dim);
-    opacity: 0.4;
+    opacity: 0.45;
     user-select: none;
   }
 
@@ -352,1148 +928,147 @@
 
   .breadcrumb-current {
     color: var(--accent-mint);
-    font-weight: 500;
+    font-weight: 600;
     padding: 4px 8px;
   }
 
-  /* Light mode breadcrumb styling */
-  html[data-theme="light"] .breadcrumb-nav {
-    background: rgba(255, 255, 255, 0.95);
-    border-bottom-color: rgba(30, 155, 138, 0.2);
-  }
-
-  html[data-theme="light"] .breadcrumb-item {
-    color: #666;
-  }
-
-  html[data-theme="light"] .breadcrumb-item:hover {
-    color: #1E9B8A;
-    background: rgba(30, 155, 138, 0.08);
-  }
-
-  html[data-theme="light"] .breadcrumb-separator {
-    color: #999;
-  }
-
-  html[data-theme="light"] .breadcrumb-current {
-    color: #1E9B8A;
-  }
-
-  /* Clocks in center */
-  .nav-clocks {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 30px;
-    align-items: center;
-    pointer-events: none;
-  }
-
-  .nav-clock {
-    text-align: center;
-  }
-
-  .clock-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-    font-weight: 500;
-  }
-
-  .clock-time {
-    font-size: 0.95rem;
-    color: var(--accent-mint);
-    font-weight: 600;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.5px;
-  }
-
-  .nav-left a, .nav-right a {
-    color: var(--text-light);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
-
-  .nav-left a:hover, .nav-right a:hover {
-    color: var(--accent-mint);
-  }
-
-  .nav-support-btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.85rem;
-    border-radius: 999px;
-    border: 1px solid rgba(78, 250, 170, 0.4);
-    background: linear-gradient(135deg, rgba(18, 193, 166, 0.97), rgba(78, 250, 170, 0.95));
-    color: #fff !important;
-    text-decoration: none;
-    font-size: 0.86rem;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    box-shadow: 0 0 0 rgba(78, 250, 170, 0.45), 0 0 22px rgba(78, 250, 170, 0.28);
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.25s ease;
-    animation: patreonPulse 2.4s ease-in-out infinite;
-  }
-
-  .nav-support-btn::after {
-    content: '';
-    position: absolute;
-    top: -130%;
-    left: -40%;
-    width: 34%;
-    height: 360%;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
-    transform: rotate(20deg);
-    animation: patreonShine 2.8s linear infinite;
-    pointer-events: none;
-  }
-
-  .nav-support-btn i {
-    font-size: 0.95rem;
-    position: relative;
-    z-index: 1;
-  }
-
-  .nav-support-btn i:last-child {
-    font-size: 0.8rem;
-    opacity: 0.9;
-  }
-
-  .nav-support-btn span {
-    position: relative;
-    z-index: 1;
-    white-space: nowrap;
-  }
-
-  .nav-support-btn:hover {
-    color: #fff !important;
-    transform: translateY(-1px);
-    filter: saturate(1.08);
-    box-shadow: 0 0 0 1px rgba(120, 255, 200, 0.35), 0 0 28px rgba(78, 250, 170, 0.52);
-  }
-
-  .nav-support-btn:active {
-    transform: translateY(0);
-  }
-
-  .nav-dropdown-support {
-    right: 0;
-    left: auto;
-    min-width: 220px;
-  }
-
-  .nav-dropdown-support a {
-    display: flex !important;
-    align-items: center;
-    gap: 0.55rem;
-  }
-
-  .nav-dropdown-support a i {
-    width: 16px;
-    text-align: center;
-  }
-
-  @keyframes patreonPulse {
-    0%, 100% {
-      box-shadow: 0 0 0 rgba(78, 250, 170, 0.4), 0 0 20px rgba(78, 250, 170, 0.24);
-    }
-    50% {
-      box-shadow: 0 0 0 4px rgba(78, 250, 170, 0.2), 0 0 26px rgba(78, 250, 170, 0.42);
-    }
-  }
-
-  @keyframes patreonShine {
-    0% {
-      left: -45%;
-    }
-    100% {
-      left: 130%;
-    }
-  }
-
-  /* Dropdown animations */
-  @keyframes accentLineIn {
-    from {
-      transform: scaleX(0);
-      opacity: 0;
-    }
-    to {
-      transform: scaleX(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes dropdownItemIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .nav-dropdown-parent {
-    position: relative;
-  }
-
-  /* Invisible bridge to prevent dropdown from disappearing */
-  .nav-dropdown-parent::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background: transparent;
-    display: none;
-  }
-
-  .nav-dropdown-parent:hover::after {
-    display: block;
-  }
-
-  /* Default dropdown style */
-  .nav-dropdown-parent > .nav-dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--card-border);
-    border-radius: 6px;
-    min-width: 200px;
-    z-index: 1000;
-    padding: 8px 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-  }
-
-  /* Accent line at the top of dropdown */
-  .nav-dropdown-parent > .nav-dropdown-content::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
-    transform-origin: left;
-    animation: accentLineIn 0.25s ease-out forwards;
-  }
-
-  .nav-dropdown-parent > .nav-dropdown-content a {
-    display: block;
-    padding: 8px 12px;
-    white-space: nowrap;
-    color: var(--text-light);
-    text-decoration: none;
-    opacity: 0;
-    animation: dropdownItemIn 0.2s ease-out forwards;
-  }
-
-  /* Staggered animation delays for dropdown items (up to 12 items) */
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(1) { animation-delay: 0.25s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(2) { animation-delay: 0.30s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(3) { animation-delay: 0.35s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(4) { animation-delay: 0.40s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(5) { animation-delay: 0.45s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(6) { animation-delay: 0.50s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(7) { animation-delay: 0.55s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(8) { animation-delay: 0.60s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(9) { animation-delay: 0.65s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(10) { animation-delay: 0.70s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(11) { animation-delay: 0.75s; }
-  .nav-dropdown-parent > .nav-dropdown-content a:nth-child(12) { animation-delay: 0.80s; }
-
-  .nav-dropdown-parent > .nav-dropdown-content a:hover {
-    background: rgba(78, 250, 170, 0.1);
-    color: var(--accent-mint);
-  }
-
-  /* Archives open on hover - keep open when hovering dropdown too */
-  .nav-dropdown-parent:hover > .nav-dropdown-content,
-  .nav-dropdown-content:hover {
-    display: block;
-  }
-
-  /* LOGIN/ACCOUNTS DROPDOWN FIXES */
-  .nav-accounts {
-    position: relative;
-    overflow: visible;
-  }
-
-  .nav-accounts-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    font-family: var(--font-body);
-    text-decoration: none;
-  }
-
-  .nav-accounts-btn:hover {
-    border-color: var(--accent-mint);
-    background: rgba(78, 250, 170, 0.05);
-  }
-
-  /* Accounts dropdown specific styling */
-  .nav-dropdown-accounts {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    left: auto;
-    width: min(320px, calc(100vw - 24px));
-    min-width: 240px;
-    padding: 0.5rem 0;
-    background: var(--bg-card);
-    border: 1px solid var(--card-border);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 1001;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  /* Invisible bridge to prevent dropdown from disappearing */
-  .nav-accounts::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background: transparent;
-  }
-
-  /* Accent line at the top of accounts dropdown */
-  .nav-dropdown-accounts::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
-    transform-origin: left;
-    animation: accentLineIn 0.25s ease-out forwards;
-  }
-
-  /* Style accounts dropdown links same as archives dropdown */
-  .nav-dropdown-accounts a {
-    display: block;
-    padding: 8px 12px;
-    white-space: nowrap;
-    color: var(--text-light);
-    text-decoration: none;
-    opacity: 0;
-    animation: dropdownItemIn 0.2s ease-out forwards;
-  }
-
-  /* Staggered animation delays */
-  .nav-dropdown-accounts a:nth-child(1) { animation-delay: 0.25s; }
-  .nav-dropdown-accounts a:nth-child(2) { animation-delay: 0.30s; }
-  .nav-dropdown-accounts a:nth-child(3) { animation-delay: 0.35s; }
-  .nav-dropdown-accounts a:nth-child(4) { animation-delay: 0.40s; }
-
-  .nav-dropdown-accounts a:hover {
-    background: rgba(78, 250, 170, 0.1);
-    color: var(--accent-mint);
-  }
-
-  /* Logout link styling */
-  .logout-item {
-    color: var(--accent-red) !important;
-  }
-
-  .logout-item:hover {
-    background-color: rgba(176, 0, 0, 0.1) !important;
-    color: #ff6b6b !important;
-  }
-
-  /* Merit display in accounts dropdown */
-  .nav-merit-display {
-    padding: 0.6rem 0.85rem 0.65rem;
-    border-top: 1px solid var(--card-border);
-    margin-top: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.78rem;
-    color: var(--muted);
-  }
-
-  .nav-merit-icon {
-    font-size: 0.72rem;
-    color: #f3b95b;
-  }
-
-  .nav-merit-score {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--accent-mint);
-  }
-
-  .nav-merit-badge {
-    font-size: 0.78rem;
-    color: #f3b95b;
-    font-weight: 700;
-  }
-
-  .nav-merit-separator {
-    color: var(--muted);
-    opacity: 0.7;
-  }
-
-  /* Show on hover - more specific than hidden class on desktop */
-  @media (min-width: 769px) {
-    .nav-accounts:hover .nav-dropdown-accounts,
-    .nav-dropdown-accounts:hover {
-      display: block !important;
-    }
-  }
-
-  /* For mobile, keep the toggle behavior with hidden class */
-  @media (max-width: 768px) {
-    .nav-dropdown-accounts.hidden {
-      display: none !important;
-    }
-
-    .nav-dropdown-accounts:not(.hidden) {
-      display: block !important;
-    }
-  }
-
-  /* Hide old login styling */
-  .nav-login {
-    display: none !important;
-  }
-
-  .nav-dropdown-login {
-    display: none !important;
-  }
-
-  .hidden {
-    display: none !important;
-  }
-
-  .nav-toggle {
-    display: none;
-    background: none;
-    border: 1px solid rgba(255,255,255,0.04);
-    color: #fff;
-    padding: 0.3rem 0.6rem;
-    border-radius: 6px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1001;
-  }
-
-  .nav-toggle::before {
-    content: '☰';
-    display: block;
-  }
-
-  .nav-toggle[aria-expanded="true"]::before {
-    content: '✕';
-  }
-
-  .mobile-menu {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.98);
-    z-index: 1000;
-    flex-direction: column;
-    backdrop-filter: blur(8px);
-    animation: slideDownMenu 0.3s ease-out;
-    overflow: hidden;
-  }
-
-  .mobile-menu-grid, .mobile-menu-fullscreen {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  @keyframes slideDownMenu {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .mobile-menu-top {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(78, 250, 170, 0.15);
-  }
-
-  .mobile-menu-bottom {
-    margin-top: auto;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(78, 250, 170, 0.15);
-  }
-
-  .mobile-auth-btn {
-    color: var(--text-light);
-    padding: 1.8rem 1.6rem;
-    border-radius: 10px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 1.3rem;
-    background: rgba(78, 250, 170, 0.12);
-    border: 1px solid rgba(78, 250, 170, 0.25);
-    border-left: 4px solid transparent;
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  .mobile-auth-btn:hover {
-    background: rgba(78, 250, 170, 0.18);
-    border-color: rgba(78, 250, 170, 0.3);
-    border-left-color: var(--accent-mint);
-    color: var(--accent-mint);
-    padding-left: 1.8rem;
-    transform: translateX(4px);
-  }
-
-  /* Hide menu data */
-  #mobileMenuData {
-    display: none !important;
-  }
-
-  .mobile-mail-btn {
-    display: none;
-    color: var(--text-light);
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    order: 9;
-  }
-
-  .mobile-mail-btn:hover {
-    color: var(--accent-mint);
-  }
-
-  .mobile-menu a {
-    color: var(--text-light);
-    padding: 1.8rem 1.6rem;
-    border-radius: 10px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 1.3rem;
-    background: rgba(78, 250, 170, 0.08);
-    border: 1px solid rgba(78, 250, 170, 0.15);
-    border-left: 4px solid transparent;
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  /* Mobile Menu Quadrant Grid */
-  .mobile-menu-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    padding: 2rem 1rem;
-    height: fit-content;
-    padding-top: 5rem;
-  }
-
-  .mobile-menu-grid.hidden {
-    display: none !important;
-  }
-
-  /* Mobile Menu Quadrant Grid - Vertical fullscreen quadrants */
-  .mobile-menu-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 0;
-    height: 100%;
-    padding-top: 5rem;
-  }
-
-  .mobile-menu-grid.hidden {
-    display: none !important;
-  }
-
-  .mobile-menu-quadrant {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 0;
-    padding: 2.5rem 1.5rem;
-    color: var(--text-light);
-    font-size: 1.3rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    text-align: left;
-    letter-spacing: 0.3px;
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .mobile-menu-quadrant::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .mobile-menu-quadrant:hover::before {
-    opacity: 0.5;
-  }
-
-  .mobile-menu-quadrant:hover {
-    color: var(--accent-mint);
-  }
-
-  .mobile-menu-quadrant i {
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    flex-shrink: 0;
-    order: 2;
-  }
-
-  .mobile-menu-quadrant:hover i {
-    color: var(--accent-mint);
-  }
-
-  .mobile-menu-quadrant span {
-    order: 1;
-    flex: 1;
-  }
-
-  /* Mobile Menu Fullscreen View */
-  .mobile-menu-fullscreen {
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .mobile-menu-fullscreen.hidden {
-    display: none !important;
-  }
-
-  .mobile-menu-fullscreen:not(.hidden) {
-    display: flex !important;
-  }
-
-  .mobile-fullscreen-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    flex-shrink: 0;
-    position: relative;
-  }
-
-  .mobile-fullscreen-header::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent-mint), var(--accent-teal));
-    animation: accentLineIn 0.3s ease-out forwards;
-  }
-
-  .mobile-back-btn {
-    background: none;
-    border: none;
-    color: var(--text-light);
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.5rem 0;
-    letter-spacing: 0.3px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .mobile-back-btn:hover {
-    color: var(--accent-mint);
-  }
-
-  .mobile-fullscreen-content {
-    overflow-y: auto;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .mobile-fullscreen-content a {
-    color: var(--text-light);
-    padding: 1.8rem 1.5rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 1.1rem;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    font-weight: 400;
-    cursor: pointer;
-    opacity: 0;
-    animation: dropdownItemIn 0.2s ease-out forwards;
-  }
-
-  /* Staggered animation delays for fullscreen items */
-  .mobile-fullscreen-content a:nth-child(1) { animation-delay: 0.15s; }
-  .mobile-fullscreen-content a:nth-child(2) { animation-delay: 0.20s; }
-  .mobile-fullscreen-content a:nth-child(3) { animation-delay: 0.25s; }
-  .mobile-fullscreen-content a:nth-child(4) { animation-delay: 0.30s; }
-  .mobile-fullscreen-content a:nth-child(5) { animation-delay: 0.35s; }
-  .mobile-fullscreen-content a:nth-child(6) { animation-delay: 0.40s; }
-  .mobile-fullscreen-content a:nth-child(7) { animation-delay: 0.45s; }
-  .mobile-fullscreen-content a:nth-child(8) { animation-delay: 0.50s; }
-  .mobile-fullscreen-content a:nth-child(9) { animation-delay: 0.55s; }
-  .mobile-fullscreen-content a:nth-child(10) { animation-delay: 0.60s; }
-
-  .mobile-fullscreen-content a:last-child {
-    border-bottom: none;
-  }
-
-  .mobile-fullscreen-content a:hover {
-    color: var(--accent-mint);
-    padding-left: 2.2rem;
-  }
-
-  /* Hide old accordion styles */
-  .mobile-accordion-item {
-    display: none !important;
-  }
-
-  .mobile-menu-direct-link {
-    display: none !important;
-  }
-
-  .mobile-menu-direct-link {
-    color: var(--text-light);
-    padding: 2rem 1.6rem;
-    border-radius: 0;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 1.3rem;
-    background: transparent;
-    border: none;
-    display: flex;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    font-weight: 700;
-    cursor: pointer;
-    align-items: center;
-    gap: 1rem;
-    box-shadow: none;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .mobile-menu-direct-link:hover {
-    color: var(--accent-mint);
-    border-color: transparent;
-    background: transparent;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .mobile-menu-section a {
-    padding: 1.8rem 1.6rem;
-    background: rgba(78, 250, 170, 0.08);
-    border: 1px solid rgba(78, 250, 170, 0.15);
-  }
-
-  .mobile-menu-section a:hover {
-    background: rgba(78, 250, 170, 0.18);
-    border-color: rgba(78, 250, 170, 0.3);
-    border-left-color: var(--accent-mint);
-    color: var(--accent-mint);
-    padding-left: 1.8rem;
-    transform: translateX(4px);
-  }
-
-  .mobile-menu a:hover {
-    background: rgba(78, 250, 170, 0.18);
-    border-color: rgba(78, 250, 170, 0.3);
-    border-left-color: var(--accent-mint);
-    color: var(--accent-mint);
-    padding-left: 1.8rem;
-    transform: translateX(4px);
-  }
-
-  /* Light mode navbar adjustments */
   html[data-theme="light"] #main-nav {
-    background-color: var(--bg-card);
-    border-bottom-color: #D0D0D0;
+    --nav-bg: color-mix(in oklab, #ffffff 86%, #eff8f5 14%);
+    --nav-panel: #ffffff;
+    --nav-border: rgba(30, 155, 138, 0.28);
+    box-shadow: 0 10px 28px rgba(23, 45, 44, 0.16);
   }
 
-  html[data-theme="light"] .nav-left a,
-  html[data-theme="light"] .nav-right a {
-    color: #1A1A1A;
+  html[data-theme="light"] .nav-group-trigger,
+  html[data-theme="light"] .nav-search,
+  html[data-theme="light"] #siteSearchInput,
+  html[data-theme="light"] .nav-mail,
+  html[data-theme="light"] .nav-accounts-btn,
+  html[data-theme="light"] .mobile-icon-btn,
+  html[data-theme="light"] .mobile-home-link,
+  html[data-theme="light"] .mobile-section-toggle,
+  html[data-theme="light"] .mobile-section-links a,
+  html[data-theme="light"] .mobile-accounts-item {
+    color: #17211f;
   }
 
-  html[data-theme="light"] .nav-left a:hover,
-  html[data-theme="light"] .nav-right a:hover {
-    color: var(--accent-teal);
+  html[data-theme="light"] .nav-search,
+  html[data-theme="light"] .nav-mail,
+  html[data-theme="light"] .nav-accounts-btn,
+  html[data-theme="light"] .mobile-icon-btn,
+  html[data-theme="light"] .mobile-home-link,
+  html[data-theme="light"] .mobile-menu-section {
+    border-color: rgba(30, 155, 138, 0.22);
+    background: rgba(255, 255, 255, 0.78);
   }
 
-  html[data-theme="light"] .nav-dropdown-parent > .nav-dropdown-content {
-    background: var(--bg-card);
-    border-color: #D0D0D0;
-  }
-
-  html[data-theme="light"] .nav-dropdown-parent > .nav-dropdown-content a {
-    color: #1A1A1A;
-  }
-
-  html[data-theme="light"] .nav-dropdown-parent > .nav-dropdown-content a:hover {
-    background: rgba(0, 163, 137, 0.08);
-    color: var(--accent-teal);
-  }
-
-  html[data-theme="light"] .nav-accounts-btn {
-    border-color: #D0D0D0;
-  }
-
-  html[data-theme="light"] .nav-accounts-btn:hover {
-    background: rgba(0, 163, 137, 0.08);
-    border-color: var(--accent-teal);
-  }
-
-  html[data-theme="light"] .nav-dropdown-accounts {
-    background: var(--bg-card);
-    border-color: #D0D0D0;
-  }
-
-  html[data-theme="light"] .nav-dropdown-accounts a {
-    color: #1A1A1A;
-  }
-
-  html[data-theme="light"] .nav-dropdown-accounts a:hover {
-    background-color: rgba(0, 163, 137, 0.08);
-    color: var(--accent-teal);
-  }
-
-  html[data-theme="light"] .nav-support-btn {
-    border-color: rgba(30, 155, 138, 0.5);
-    background: linear-gradient(135deg, #129f8b, #4efaaa);
-    color: #fff !important;
-    box-shadow: 0 0 0 rgba(30, 155, 138, 0.35), 0 0 20px rgba(30, 155, 138, 0.3);
+  html[data-theme="light"] #siteSearchInput::placeholder,
+  html[data-theme="light"] .search-desc,
+  html[data-theme="light"] .breadcrumb-item,
+  html[data-theme="light"] .breadcrumb-separator {
+    color: #5f726d;
   }
 
   html[data-theme="light"] .mobile-menu {
-    background: var(--bg-card);
-    border-bottom-color: #D0D0D0;
+    background: rgba(243, 250, 248, 0.97);
   }
 
-  html[data-theme="light"] .mobile-menu a {
-    color: #1A1A1A;
+  html[data-theme="light"] .breadcrumb-nav {
+    background: rgba(250, 255, 253, 0.95);
+    border-bottom-color: rgba(30, 155, 138, 0.25);
   }
 
-  html[data-theme="light"] .mobile-menu a:hover {
-    background: rgba(0, 163, 137, 0.08);
-    color: var(--accent-teal);
+  @media (max-width: 1320px) {
+    .nav-search {
+      min-width: 210px;
+      max-width: 250px;
+    }
   }
 
-  /* Mobile accounts button */
-  .mobile-accounts-btn {
-    display: none;
-    background: none;
-    border: 1px solid rgba(255,255,255,0.04);
-    color: var(--text-light);
-    padding: 0.3rem 0.6rem;
-    border-radius: 6px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    z-index: 1001;
-  }
-
-  .mobile-accounts-btn:hover {
-    border-color: rgba(78, 250, 170, 0.3);
-    color: var(--accent-mint);
-  }
-
-  /* Mobile accounts dropdown */
-  .mobile-accounts-dropdown {
-    display: none;
-    position: fixed;
-    top: 50px;
-    right: 15px;
-    background: var(--bg-soft);
-    border: 1px solid rgba(78, 250, 170, 0.15);
-    border-radius: 8px;
-    z-index: 1000;
-    min-width: 220px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    flex-direction: column;
-    gap: 0;
-    animation: slideDownMenu 0.2s ease-out;
-  }
-
-  .mobile-accounts-dropdown.hidden {
-    display: none !important;
-  }
-
-  .mobile-accounts-dropdown:not(.hidden) {
-    display: flex !important;
-  }
-
-  .mobile-accounts-item {
-    color: var(--text-light);
-    padding: 1rem 1.2rem;
-    border: none;
-    background: none;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    font-size: 1rem;
-  }
-
-  .mobile-accounts-item:hover {
-    background: rgba(78, 250, 170, 0.1);
-    color: var(--accent-mint);
-  }
-
-  .mobile-accounts-item i {
-    width: 20px;
-    text-align: center;
-  }
-
-  .mobile-accounts-divider {
-    height: 1px;
-    background: rgba(78, 250, 170, 0.1);
-    margin: 0.5rem 0;
-  }
-
-  /* Light mode mobile accounts */
-  html[data-theme="light"] .mobile-accounts-dropdown {
-    background: #FFFFFF;
-    border-color: #D0D0D0;
-  }
-
-  html[data-theme="light"] .mobile-accounts-item {
-    color: #1A1A1A;
-  }
-
-  html[data-theme="light"] .mobile-accounts-item:hover {
-    background: rgba(30, 155, 138, 0.1);
-    color: #1E9B8A;
-  }
-
-  html[data-theme="light"] .mobile-accounts-divider {
-    background: #D0D0D0;
-  }
-
-  /* Light mode clock styling */
-  html[data-theme="light"] .clock-label {
-    color: #666;
-  }
-
-  html[data-theme="light"] .clock-time {
-    color: var(--accent-teal);
-  }
-
-  /* Responsive: hide clocks on smaller screens */
   @media (max-width: 1100px) {
-    .nav-clocks {
-      display: none;
-    }
-  }
-
-  /* Mobile responsive: 768px and below */
-  @media (max-width: 768px) {
-    #main-nav {
-      padding: 12px 15px;
-      justify-content: space-between;
+    .nav-shell {
+      min-height: 70px;
     }
 
-    .nav-left {
-      gap: 0;
-      flex: 1;
-    }
-
-    .nav-left a:not(.nav-logo) {
+    .nav-desktop,
+    .nav-utility {
       display: none;
     }
 
-    .nav-left .nav-logo {
-      margin: 0;
+    .nav-mobile-actions {
+      display: flex;
     }
 
-    .nav-right {
-      display: none;
+    .mobile-menu {
+      top: 70px;
     }
 
-    .nav-toggle {
-      display: block !important;
-      order: 10;
+    .mobile-accounts-dropdown {
+      top: 71px;
     }
 
-    /* Breadcrumb mobile adjustments */
     .breadcrumb-nav {
-      padding: 6px 15px;
-      font-size: 0.75rem;
+      top: 70px;
+      padding: 6px 14px;
+      font-size: 0.77rem;
     }
 
     .breadcrumb-item span {
-      display: none; /* Hide text, keep icons on mobile for home */
-    }
-
-    .breadcrumb-item i {
-      margin: 0;
-    }
-
-    .breadcrumb-current {
-      padding: 4px;
-      font-size: 0.8rem;
-    }
-
-    .mobile-accounts-btn {
-      display: block !important;
-      order: 9;
-    }
-
-    .mobile-mail-btn {
-      display: block !important;
-    }
-
-    .mobile-menu.hidden {
-      display: none !important;
-    }
-
-    .mobile-menu:not(.hidden) {
-      display: flex !important;
-    }
-
-    .mobile-menu {
-      padding-top: 5rem;
-    }
-
-    .mobile-menu-grid {
-      gap: 0;
-      padding: 0;
-      padding-top: 5rem;
-    }
-
-    .mobile-menu-quadrant {
-      padding: 2.5rem 1.5rem;
-      font-size: 1.25rem;
-      flex: 1;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .mobile-menu-quadrant:last-child {
-      border-bottom: none;
+      display: none;
     }
   }
 
-  /* Extra small screens: 480px and below */
-  @media (max-width: 480px) {
+  @media (max-width: 640px) {
+    .nav-shell {
+      padding: 0.58rem 0.65rem;
+      min-height: 66px;
+      gap: 0.55rem;
+    }
+
     .nav-logo img {
-      height: 32px;
+      height: 34px;
     }
 
-    .nav-toggle {
-      padding: 0.25rem 0.5rem;
-      font-size: 1rem;
-    }
-
-    .mobile-accounts-btn {
-      padding: 0.25rem 0.5rem;
-      font-size: 1rem;
-    }
-
-    .mobile-mail-btn {
-      padding: 0.25rem 0.5rem;
-      font-size: 1rem;
+    .mobile-icon-btn {
+      width: 35px;
+      height: 35px;
+      border-radius: 8px;
+      font-size: 0.92rem;
     }
 
     .mobile-menu {
-      padding-top: 5rem;
+      top: 66px;
     }
 
-    .mobile-menu-grid {
-      gap: 0;
-      padding: 0;
-      padding-top: 5rem;
+    .mobile-accounts-dropdown {
+      top: 67px;
+      right: 0.5rem;
+      min-width: calc(100vw - 1rem);
     }
 
-    .mobile-menu-quadrant {
-      padding: 2rem 1rem;
-      font-size: 1.1rem;
-      flex: 1;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    .mobile-menu-panel {
+      padding: 0.65rem 0.5rem 0.85rem;
     }
 
-    .mobile-fullscreen-content a {
-      padding: 1.5rem 1rem;
-      font-size: 1rem;
+    .mobile-section-toggle {
+      font-size: 0.94rem;
+      padding: 0.78rem 0.74rem;
     }
 
-    .mobile-fullscreen-content a:hover {
-      padding-left: 1.5rem;
+    .mobile-section-links a,
+    .mobile-accounts-item {
+      font-size: 0.86rem;
+      padding: 0.56rem 0.58rem;
+    }
+
+    .breadcrumb-nav {
+      top: 66px;
+      padding: 5px 10px;
+      font-size: 0.73rem;
+    }
+
+    .breadcrumb-current {
+      padding: 2px 4px;
     }
   }
 </style>
@@ -1501,34 +1076,112 @@
 <script type="module">
   import { ThemeManager } from '/assets/js/theme.js';
 
-  // Initialize theme on load
   document.addEventListener('DOMContentLoaded', () => {
     ThemeManager.init();
   });
 
-  // Accounts dropdown - now hover-based on desktop
-  // No special handling needed for desktop, CSS handles it
-  // Mobile click behavior still works with the hidden class toggle
-
-
-  // Mobile accounts dropdown toggle
+  const desktopGroups = Array.from(document.querySelectorAll('.nav-desktop .nav-group'));
+  const navToggle = document.getElementById('navToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
   const mobileAccountsBtn = document.getElementById('mobileAccountsBtn');
   const mobileAccountsDropdown = document.getElementById('mobileAccountsDropdown');
-  if (mobileAccountsBtn && mobileAccountsDropdown) {
-    mobileAccountsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      mobileAccountsDropdown.classList.toggle('hidden');
-    });
+  const navAccounts = document.getElementById('navAccounts');
+  const navAccountsBtn = document.getElementById('navAccountsBtn');
+  const navAccountsDropdown = document.getElementById('navAccountsDropdown');
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (mobileAccountsBtn && !mobileAccountsBtn.contains(e.target) && 
-          mobileAccountsDropdown && !mobileAccountsDropdown.contains(e.target)) {
-        mobileAccountsDropdown.classList.add('hidden');
+  function closeDesktopGroups(exceptGroup = null) {
+    desktopGroups.forEach(group => {
+      if (group === exceptGroup) return;
+      group.classList.remove('open');
+      const trigger = group.querySelector('.nav-group-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  desktopGroups.forEach(group => {
+    const trigger = group.querySelector('.nav-group-trigger');
+    if (!trigger) return;
+
+    trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const isOpen = group.classList.contains('open');
+      closeDesktopGroups(group);
+      group.classList.toggle('open', !isOpen);
+      trigger.setAttribute('aria-expanded', (!isOpen).toString());
+    });
+  });
+
+  function openMobileMenu() {
+    if (!mobileMenu || !navToggle) return;
+    mobileMenu.classList.remove('hidden');
+    mobileMenu.setAttribute('aria-hidden', 'false');
+    navToggle.setAttribute('aria-expanded', 'true');
+    const icon = navToggle.querySelector('i');
+    if (icon) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-xmark');
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMobileMenu() {
+    if (!mobileMenu || !navToggle) return;
+    mobileMenu.classList.add('hidden');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    navToggle.setAttribute('aria-expanded', 'false');
+    const icon = navToggle.querySelector('i');
+    if (icon) {
+      icon.classList.remove('fa-xmark');
+      icon.classList.add('fa-bars');
+    }
+    document.body.style.overflow = '';
+  }
+
+  if (navToggle && mobileMenu) {
+    navToggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const isOpen = navToggle.getAttribute('aria-expanded') === 'true';
+      if (isOpen) {
+        closeMobileMenu();
+      } else {
+        if (mobileAccountsDropdown) mobileAccountsDropdown.classList.add('hidden');
+        openMobileMenu();
       }
     });
 
-    // Close dropdown when clicking a link inside it
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        closeMobileMenu();
+      });
+    });
+  }
+
+  const mobileSections = Array.from(document.querySelectorAll('.mobile-menu-section'));
+  mobileSections.forEach(section => {
+    const toggle = section.querySelector('.mobile-section-toggle');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', () => {
+      const willOpen = !section.classList.contains('open');
+      mobileSections.forEach(item => {
+        item.classList.remove('open');
+        const itemToggle = item.querySelector('.mobile-section-toggle');
+        if (itemToggle) itemToggle.setAttribute('aria-expanded', 'false');
+      });
+      section.classList.toggle('open', willOpen);
+      toggle.setAttribute('aria-expanded', willOpen.toString());
+    });
+  });
+
+  if (mobileAccountsBtn && mobileAccountsDropdown) {
+    mobileAccountsBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const isHidden = mobileAccountsDropdown.classList.contains('hidden');
+      closeMobileMenu();
+      mobileAccountsDropdown.classList.toggle('hidden', !isHidden);
+    });
+
     mobileAccountsDropdown.querySelectorAll('a, button').forEach(item => {
       item.addEventListener('click', () => {
         mobileAccountsDropdown.classList.add('hidden');
@@ -1536,117 +1189,78 @@
     });
   }
 
-  // Mobile menu toggle
-  const navToggle = document.getElementById('navToggle');
-  const mobileMenu = document.getElementById('mobileMenu');
-  const mobileMenuGrid = document.getElementById('mobileMenuGrid');
-  const mobileMenuFullscreen = document.getElementById('mobileMenuFullscreen');
-  const mobileBackBtn = document.getElementById('mobileMenuBackBtn');
-  const mobileFullscreenContent = document.getElementById('mobileFullscreenContent');
-  const mobileFullscreenTitle = document.getElementById('mobileFullscreenTitle');
-  const mobileMenuData = document.getElementById('mobileMenuData');
+  function setDesktopAccountsOpen(isOpen) {
+    if (!navAccounts || !navAccountsBtn || !navAccountsDropdown) return;
+    navAccounts.classList.toggle('open', isOpen);
+    navAccountsBtn.setAttribute('aria-expanded', String(isOpen));
+    navAccountsDropdown.classList.toggle('hidden', !isOpen);
+  }
 
-  if (navToggle && mobileMenu) {
-    navToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      mobileMenu.classList.toggle('hidden');
-      const expanded = navToggle.getAttribute('aria-expanded') === 'true';
-      navToggle.setAttribute('aria-expanded', (!expanded).toString());
-      mobileMenu.setAttribute('aria-hidden', (!expanded).toString());
-      
-      // Reset to grid view
-      mobileMenuGrid.classList.remove('hidden');
-      mobileMenuFullscreen.classList.add('hidden');
-      
-      // Prevent scrolling when menu is open
-      if (!expanded) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
-      }
+  if (navAccountsBtn && navAccountsDropdown) {
+    navAccountsBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const willOpen = !navAccounts.classList.contains('open');
+      closeDesktopGroups();
+      setDesktopAccountsOpen(willOpen);
     });
 
-    // Close menu when clicking outside
-    document.addEventListener('click', () => {
-      if (!mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-        navToggle.setAttribute('aria-expanded', 'false');
-        mobileMenu.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-      }
+    navAccountsDropdown.addEventListener('click', (event) => {
+      event.stopPropagation();
     });
   }
 
-  // Mobile quadrant menu handlers
-  const quadrantButtons = document.querySelectorAll('.mobile-menu-quadrant');
-  quadrantButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const category = btn.getAttribute('data-category');
-      const categoryData = mobileMenuData.querySelector(`[data-category="${category}"]`);
-      
-      // Populate fullscreen content
-      mobileFullscreenContent.innerHTML = '';
-      mobileFullscreenTitle.textContent = btn.querySelector('span').textContent;
-      
-      if (categoryData) {
-        const links = categoryData.querySelectorAll('a');
-        links.forEach(link => {
-          const hiddenParent = link.closest('[style*="display:none"]');
-          if (hiddenParent) return;
-          const newLink = link.cloneNode(true);
-          mobileFullscreenContent.appendChild(newLink);
-        });
-      }
-      
-      // Switch to fullscreen view
-      mobileMenuGrid.classList.add('hidden');
-      mobileMenuFullscreen.classList.remove('hidden');
-    });
-  });
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.nav-group')) {
+      closeDesktopGroups();
+    }
 
-  // Mobile back button handler
-  if (mobileBackBtn) {
-    mobileBackBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      mobileMenuGrid.classList.remove('hidden');
-      mobileMenuFullscreen.classList.add('hidden');
-    });
-  }
+    if (!event.target.closest('#navAccounts')) {
+      setDesktopAccountsOpen(false);
+    }
 
-  // Close fullscreen when clicking a link
-  mobileFullscreenContent.addEventListener('click', (e) => {
-    if (e.target.tagName === 'A') {
-      // Navigation will happen naturally
-      setTimeout(() => {
-        mobileMenu.classList.add('hidden');
-        navToggle.setAttribute('aria-expanded', 'false');
-        mobileMenu.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-        mobileMenuGrid.classList.remove('hidden');
-        mobileMenuFullscreen.classList.add('hidden');
-      }, 100);
+    if (
+      mobileAccountsDropdown &&
+      mobileAccountsBtn &&
+      !mobileAccountsBtn.contains(event.target) &&
+      !mobileAccountsDropdown.contains(event.target)
+    ) {
+      mobileAccountsDropdown.classList.add('hidden');
     }
   });
 
-  // Handle mobile logout button
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    closeDesktopGroups();
+    setDesktopAccountsOpen(false);
+    closeMobileMenu();
+    if (mobileAccountsDropdown) mobileAccountsDropdown.classList.add('hidden');
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1100) {
+      closeMobileMenu();
+      if (mobileAccountsDropdown) mobileAccountsDropdown.classList.add('hidden');
+    }
+  });
+
   const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
   if (mobileLogoutBtn) {
-    mobileLogoutBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
+    mobileLogoutBtn.addEventListener('click', async (event) => {
+      event.preventDefault();
       try {
         const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
         const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js');
-        
+
         const firebaseConfig = {
-          apiKey: "AIzaSyBJg7PpBl4M5K7X2vHqpxKz8L1K0vN1vQs",
-          authDomain: "site89-81fa9.firebaseapp.com",
-          projectId: "site89-81fa9",
-          storageBucket: "site89-81fa9.firebasestorage.app",
-          messagingSenderId: "1082370055632",
-          appId: "1:1082370055632:web:5e6c7b8d2a1f3c4e5f"
+          apiKey: 'AIzaSyBJg7PpBl4M5K7X2vHqpxKz8L1K0vN1vQs',
+          authDomain: 'site89-81fa9.firebaseapp.com',
+          projectId: 'site89-81fa9',
+          storageBucket: 'site89-81fa9.firebasestorage.app',
+          messagingSenderId: '1082370055632',
+          appId: '1:1082370055632:web:5e6c7b8d2a1f3c4e5f'
         };
-        
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         await signOut(auth);
@@ -1657,37 +1271,33 @@
     });
   }
 
-  // Update mobile auth UI based on login state
   function updateMobileAuthUI(user) {
     const mobileLoginBtn = document.getElementById('mobileLoginBtn');
-    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    const mobileLogout = document.getElementById('mobileLogoutBtn');
     const mobileOrientationLink = document.getElementById('mobileOrientationLink');
 
     if (user) {
-      // User is logged in
       if (mobileLoginBtn) mobileLoginBtn.style.display = 'none';
-      if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'flex';
+      if (mobileLogout) mobileLogout.style.display = 'flex';
       if (mobileOrientationLink) mobileOrientationLink.style.display = 'flex';
     } else {
-      // User is not logged in
       if (mobileLoginBtn) mobileLoginBtn.style.display = 'flex';
-      if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
+      if (mobileLogout) mobileLogout.style.display = 'none';
       if (mobileOrientationLink) mobileOrientationLink.style.display = 'none';
     }
   }
 
-  // Listen for auth state changes
   try {
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
     const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js');
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBJg7PpBl4M5K7X2vHqpxKz8L1K0vN1vQs",
-      authDomain: "site89-81fa9.firebaseapp.com",
-      projectId: "site89-81fa9",
-      storageBucket: "site89-81fa9.firebasestorage.app",
-      messagingSenderId: "1082370055632",
-      appId: "1:1082370055632:web:5e6c7b8d2a1f3c4e5f"
+      apiKey: 'AIzaSyBJg7PpBl4M5K7X2vHqpxKz8L1K0vN1vQs',
+      authDomain: 'site89-81fa9.firebaseapp.com',
+      projectId: 'site89-81fa9',
+      storageBucket: 'site89-81fa9.firebasestorage.app',
+      messagingSenderId: '1082370055632',
+      appId: '1:1082370055632:web:5e6c7b8d2a1f3c4e5f'
     };
 
     const app = initializeApp(firebaseConfig);
@@ -1699,46 +1309,12 @@
   } catch (err) {
     console.error('Firebase init error:', err);
   }
-
-  // Update clocks
-  function updateClocks() {
-    const localClockEl = document.getElementById('localClock');
-    const siteClockEl = document.getElementById('siteClock');
-    
-    if (!localClockEl || !siteClockEl) return;
-
-    const now = new Date();
-    
-    // Local time
-    const localTime = now.toLocaleTimeString('en-US', { 
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    localClockEl.textContent = localTime;
-    
-    // Site time (EST/EDT - America/New_York)
-    // This automatically handles daylight savings
-    const siteTime = now.toLocaleTimeString('en-US', { 
-      timeZone: 'America/New_York',
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    siteClockEl.textContent = siteTime;
-  }
-
-  // Update immediately and then every second
-  updateClocks();
-  setInterval(updateClocks, 1000);
 </script>
 
 <script type="module">
   // Check if user needs orientation and show button
   import { app, auth } from "/assets/js/auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
   import { calculateMerit, meritTitle } from "/assets/js/merit.js";
 
@@ -1761,17 +1337,108 @@
     return role === 'manager' || role === 'admin';
   }
 
-  function setAdminNavVisibility(user, userData) {
+  function getStaffTierFromText(value) {
+    const text = String(value || '').trim().toLowerCase();
+    if (!text) return 0;
+
+    if (text.includes('trial roleplay manager')) return 1;
+    if (text === 'rp manager' || text.includes('roleplay manager')) return 2;
+    if (
+      text.includes('roleplay administrator') ||
+      text.includes('server administrator') ||
+      text.includes('board of executives') ||
+      text.includes('chief executive officer') ||
+      text === 'ceo' ||
+      text.includes('department director') ||
+      text.includes('site director') ||
+      text.includes('director') ||
+      text.includes('executive')
+    ) {
+      return 3;
+    }
+
+    return 0;
+  }
+
+  function hasRoleplayManagerOrAboveFromUserDoc(user, userData) {
+    if (!user) return false;
+    if ((user.email || '').toLowerCase() === PRIMARY_ADMIN_EMAIL) return true;
+    if (userData?.isAdmin === true) return true;
+
+    const role = normalizeRole(userData?.role);
+    if (role === 'manager' || role === 'admin') return true;
+
+    const candidates = [
+      userData?.rank,
+      userData?.staffRank,
+      userData?.staffRole,
+      userData?.discordRole,
+      userData?.title
+    ];
+
+    return candidates.some(value => getStaffTierFromText(value) >= 2);
+  }
+
+  function hasRoleplayManagerOrAboveFromCharacter(characterRow) {
+    return getStaffTierFromText(characterRow?.rank) >= 2;
+  }
+
+  async function canSeeModerationLink(user, userData) {
+    if (!user) return false;
+    if (hasRoleplayManagerOrAboveFromUserDoc(user, userData)) return true;
+
+    try {
+      const charQuery = query(collection(db, 'characters'), where('linkedUID', '==', user.uid));
+      const charSnap = await getDocs(charQuery);
+      let hasAccess = false;
+
+      charSnap.forEach(docSnap => {
+        const row = docSnap.data() || {};
+        const dept = String(row.department || '').toLowerCase();
+        if (dept.includes('ia') || dept.includes('raisa') || hasRoleplayManagerOrAboveFromCharacter(row)) {
+          hasAccess = true;
+        }
+      });
+
+      return hasAccess;
+    } catch (error) {
+      console.error('Error checking moderation navbar access:', error);
+      return false;
+    }
+  }
+
+  async function setAdminNavVisibility(user, userData) {
     const adminDropdown = document.getElementById('adminNavDropdown');
     const rolesLink = document.getElementById('adminRolesNavLink');
+    const analyticsLink = document.getElementById('adminAnalyticsNavLink');
+    const bankLink = document.getElementById('adminBankNavLink');
+    const iaManagerLink = document.getElementById('adminIaManagerNavLink');
+    const moderationLink = document.getElementById('adminModerationNavLink');
     const mobileAdmin = document.getElementById('mobileAdminResources');
     const mobileRolesLink = document.getElementById('mobileAdminRolesNavLink');
+    const mobileAnalyticsLink = document.getElementById('mobileAdminAnalyticsNavLink');
+    const mobileBankLink = document.getElementById('mobileAdminBankNavLink');
+    const mobileIaManagerLink = document.getElementById('mobileAdminIaManagerNavLink');
+    const mobileModerationLink = document.getElementById('mobileAdminModerationNavLink');
 
     const showAdminTools = isManagerOrAboveUser(user, userData);
+    const showModeration = await canSeeModerationLink(user, userData);
+    const showAnyAdmin = showAdminTools || showModeration;
     const showRoles = !!user && user.email === PRIMARY_ADMIN_EMAIL;
 
-    if (adminDropdown) adminDropdown.style.display = showAdminTools ? '' : 'none';
-    if (mobileAdmin) mobileAdmin.style.display = showAdminTools ? 'block' : 'none';
+    if (adminDropdown) adminDropdown.style.display = showAnyAdmin ? '' : 'none';
+    if (mobileAdmin) mobileAdmin.style.display = showAnyAdmin ? 'block' : 'none';
+
+    if (analyticsLink) analyticsLink.style.display = showAdminTools ? '' : 'none';
+    if (bankLink) bankLink.style.display = showAdminTools ? '' : 'none';
+    if (iaManagerLink) iaManagerLink.style.display = showAdminTools ? '' : 'none';
+    if (mobileAnalyticsLink) mobileAnalyticsLink.style.display = showAdminTools ? '' : 'none';
+    if (mobileBankLink) mobileBankLink.style.display = showAdminTools ? '' : 'none';
+    if (mobileIaManagerLink) mobileIaManagerLink.style.display = showAdminTools ? '' : 'none';
+
+    if (moderationLink) moderationLink.style.display = showModeration ? '' : 'none';
+    if (mobileModerationLink) mobileModerationLink.style.display = showModeration ? '' : 'none';
+
     if (rolesLink) rolesLink.style.display = showRoles ? '' : 'none';
     if (mobileRolesLink) mobileRolesLink.style.display = showRoles ? '' : 'none';
   }
@@ -1827,7 +1494,7 @@
         userData = null;
       }
 
-      setAdminNavVisibility(user, userData);
+      await setAdminNavVisibility(user, userData);
       
       // Check if user needs orientation
       if (orientationLink) {
@@ -1844,7 +1511,7 @@
       if (logoutBtn) logoutBtn.style.display = "none";
       if (orientationLink) orientationLink.style.display = "none";
       if (meritDisplay) meritDisplay.style.display = "none";
-      setAdminNavVisibility(null, null);
+      await setAdminNavVisibility(null, null);
     }
   });
 </script>

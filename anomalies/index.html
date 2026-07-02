@@ -131,7 +131,7 @@
       <div class="ms-header">
         <div class="ms-title">
           <h1>Anomalies</h1>
-          <p class="ms-sub">Live index sourced from Firestore. Filter by class/risk/disruption, or search by SCP number and text.</p>
+          <p class="ms-sub">Live index sourced from Firestore. Search by SCP number, nickname, or entry text.</p>
         </div>
 
         <div class="ms-toolbar">
@@ -258,34 +258,6 @@
       </div>
 
       <h2 style="margin-top:1rem">Entries</h2>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
-        <select id="classFilter">
-          <option value="all">All classes</option>
-          <option>Safe</option>
-          <option>Euclid</option>
-          <option>Keter</option>
-          <option>Thaumiel</option>
-          <option>Neutralized</option>
-          <option>Explained</option>
-        </select>
-        <select id="riskFilter">
-          <option value="all">All risk</option>
-          <option>Notice</option>
-          <option>Caution</option>
-          <option>Warning</option>
-          <option>Danger</option>
-          <option>Critical</option>
-        </select>
-        <select id="disruptionFilter">
-          <option value="all">All disruption</option>
-          <option>Dark</option>
-          <option>Vlam</option>
-          <option>Keneq</option>
-          <option>Ekhi</option>
-          <option>Amida</option>
-        </select>
-      </div>
-
       <table class="ms-table" aria-describedby="anomaliesDesc">
         <thead>
           <tr><th style="width:140px">Item</th><th style="width:140px">Containment</th><th style="width:140px">Risk</th><th style="width:140px">Disruption</th><th>Nickname</th></tr>

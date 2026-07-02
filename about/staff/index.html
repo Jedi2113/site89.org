@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Staff Rank Structure — Site-89</title>
+  <title>Staff Directory — Site-89</title>
 
   <!-- SEO Meta Tags -->
-  <meta name="description" content="Explore the Site-89 staff and rank structure. Learn about Foundation roles, clearance levels, and department leadership.">
-  <meta name="keywords" content="Site-89 ranks, SCP Foundation ranks, Foundation staff, clearance levels">
+  <meta name="description" content="Meet the Site-89 staff team. Browse staff cards with roles, bios, and contact information.">
+  <meta name="keywords" content="Site-89 staff, staff directory, team bios, leadership contacts">
 
   <!-- Open Graph Meta Tags (for Discord, Facebook, etc.) -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Site-89">
-  <meta property="og:title" content="Staff Rank Structure — Site-89">
-  <meta property="og:description" content="Explore the Site-89 staff and rank structure. Learn about Foundation roles and clearance levels.">
+  <meta property="og:title" content="Staff Directory — Site-89">
+  <meta property="og:description" content="Meet the Site-89 staff team with role and bio cards.">
   <meta property="og:url" content="https://site89.github.io/about/staff/">
   <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -21,8 +21,8 @@
 
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Staff Rank Structure — Site-89">
-  <meta name="twitter:description" content="Explore the Site-89 staff and rank structure.">
+  <meta name="twitter:title" content="Staff Directory — Site-89">
+  <meta name="twitter:description" content="Meet the Site-89 staff team with role and bio cards.">
   <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
 
   <link rel="canonical" href="https://site89.github.io/about/staff/">
@@ -33,7 +33,7 @@
     .page-hero {
       padding: 3rem 1rem;
       text-align: center;
-      background: radial-gradient(circle at top left, rgba(78,250,170,0.03), transparent);
+      background: radial-gradient(circle at top left, rgba(78,250,170,0.06), transparent 60%);
       margin-bottom: 2rem;
     }
 
@@ -51,114 +51,113 @@
     }
 
     .content-wrapper {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 0 1rem;
     }
 
-    .intro-section {
-      background: var(--bg-card);
-      border: 1px solid rgba(78,250,170,0.04);
-      border-radius: 8px;
-      padding: 2rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .intro-section h2 {
-      color: var(--accent-mint);
-      font-size: 1.5rem;
-      margin: 0 0 1rem 0;
-    }
-
-    .intro-section p {
-      color: var(--text-light);
-      line-height: 1.7;
-      margin: 0.75rem 0;
-      opacity: 0.95;
-    }
-
-    .branch-section {
+    .staff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.25rem;
       margin-bottom: 3rem;
     }
 
-    .branch-title {
-      font-family: var(--font-head);
-      font-size: 1.8rem;
-      color: var(--accent-mint);
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid rgba(78,250,170,0.15);
-    }
-
-    .rank-card {
-      background: var(--bg-card);
-      border: 1px solid rgba(78,250,170,0.04);
-      border-left: 4px solid var(--accent-teal);
-      border-radius: 8px;
+    .staff-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent 35%), var(--bg-card);
+      border: 1px solid rgba(78,250,170,0.08);
+      border-radius: 10px;
       padding: 1.5rem;
-      margin-bottom: 1.25rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
     }
 
-    .rank-card h3 {
-      color: var(--accent-mint);
-      font-size: 1.3rem;
-      margin: 0 0 0.5rem 0;
-    }
-
-    .rank-number {
-      display: inline-block;
-      background: rgba(78,250,170,0.15);
-      color: var(--accent-teal);
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
+    .staff-photo {
+      height: 220px;
+      margin: -1.5rem -1.5rem 1rem;
+      border-bottom: 1px solid rgba(78,250,170,0.12);
+      background:
+        linear-gradient(140deg, rgba(62,225,163,0.24), rgba(0,163,137,0.2)),
+        repeating-linear-gradient(
+          -45deg,
+          rgba(255,255,255,0.07) 0,
+          rgba(255,255,255,0.07) 12px,
+          rgba(255,255,255,0.02) 12px,
+          rgba(255,255,255,0.02) 24px
+        );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(230, 239, 233, 0.9);
       font-family: var(--font-mono);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      text-align: center;
     }
 
-    .rank-card p {
+    .staff-name {
+      font-family: var(--font-head);
+      font-size: 1.35rem;
+      color: var(--accent-mint);
+      margin: 0;
+    }
+
+    .staff-role {
+      margin: 0.45rem 0 1rem;
+      color: var(--accent-teal);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .staff-bio {
+      margin: 0;
       color: var(--text-light);
       line-height: 1.7;
-      margin: 0.5rem 0;
       opacity: 0.95;
     }
 
-    .command-highlight {
-      background: linear-gradient(135deg, rgba(78,250,170,0.08) 0%, rgba(78,250,170,0.03) 100%);
-      border-left: 4px solid var(--accent-mint);
-      padding: 1rem;
-      border-radius: 6px;
-      margin: 1rem 0;
+    .staff-contact {
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid rgba(78,250,170,0.08);
     }
 
-    .command-highlight strong {
+    .staff-contact a {
       color: var(--accent-mint);
+      text-decoration: none;
+      word-break: break-word;
     }
 
-    .staff-highlight {
-      background: linear-gradient(135deg, rgba(0,163,137,0.08) 0%, rgba(0,163,137,0.03) 100%);
-      border-left: 4px solid var(--accent-teal);
-      padding: 1rem;
-      border-radius: 6px;
-      margin: 1rem 0;
-    }
-
-    .staff-highlight strong {
+    .staff-contact a:hover {
       color: var(--accent-teal);
+      text-decoration: underline;
     }
 
     @media (max-width: 768px) {
       .page-hero .hero-title {
         font-size: 2rem;
       }
-      
-      .branch-title {
-        font-size: 1.5rem;
+
+      .staff-grid {
+        grid-template-columns: 1fr;
       }
-      
-      .rank-card h3 {
-        font-size: 1.1rem;
+
+      .staff-card {
+        padding: 1.25rem;
+      }
+
+      .staff-photo {
+        height: 190px;
+        margin: -1.25rem -1.25rem 1rem;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .staff-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
   </style>
@@ -168,91 +167,83 @@
   <div data-include="/components/navbar.html"></div>
 
   <section class="page-hero">
-    <div class="hero-title">Site-89 Staff Rank Structure</div>
-    <div class="hero-sub">Overview of the Site-89 Staff Team and Organizational Hierarchy</div>
+    <div class="hero-title">Site-89 Staff</div>
+    <div class="hero-sub">Meet the team behind operations, programming, and community support.</div>
   </section>
 
   <section class="content-wrapper">
-    <!-- Introduction -->
-    <div class="intro-section">
-      <h2>What is This?</h2>
-      <p>This is the overview of the Site-89 Staff Team, what they do, and how they are set up in order of ranks. Site-89's staff structure consists of <strong>2 branches</strong>: High Command and Management/Server Staff.</p>
-      
-      <div class="command-highlight">
-        <strong>High Command</strong> is responsible for the overall upkeep of the server, where the server goes, and ensuring that all departments and staff members are meeting their goals.
-      </div>
-      
-      <div class="staff-highlight">
-        <strong>Management/Server Staff</strong> is the primary body that does Roleplays and observe the Discord Server. Management is split between Game and Discord, with the Chief Executive Officer and Server Administrators serving at the top as the most trusted members of the server.
-      </div>
-    </div>
+    <div class="staff-grid">
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">Bryce "Jedi" Miller</h2>
+        <p class="staff-role">Founder & Studio Director</p>
+        <p class="staff-bio">Add a short bio here. Include background, interests, and what this staff member contributes to Site-89 operations.</p>
+        <p class="staff-contact"><a href="mailto:bryce.miller@npaustin.com">bryce.miller@npaustin.com</a></p>
+      </article>
 
-    <!-- High Command Branch -->
-    <div class="branch-section">
-      <div class="branch-title">High Command</div>
-      <p style="color: var(--text-light); margin-bottom: 2rem;">Site-89 requires leadership to run, so below is the structure of High Command responsible for server oversight and direction.</p>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">Tygo "Jeannie" Rehwald</h2>
+        <p class="staff-role">Deputy Studio Director</p>
+        <p class="staff-bio">Add a short bio here. Include background, interests, and what this staff member contributes to Site-89 operations.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-      <!-- Site Director -->
-      <div class="rank-card">
-        <h3>Site Director</h3>
-        <p>The Site Director is the current owner of Site-89, and has full control over the server machine, updates, and more.</p>
-      </div>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"Redbridge"</h2>
+        <p class="staff-role">Content Manager</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-      <!-- Deputy Site Director -->
-      <div class="rank-card">
-        <h3>Deputy Site Director</h3>
-        <p>The Deputy Site Director is the second in command in-game, but effectively has the same permissions as the Site Management Board. They also step in as the Server Lead when the Site Director goes on leave.</p>
-      </div>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"USX"</h2>
+        <p class="staff-role">Community Director</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-      <!-- Site Management Board -->
-      <div class="rank-card">
-        <h3>Site Management Board</h3>
-        <p>The Site Management Board is composed of the CEO, COO, CFO, and CTO, alongside other founding members and the most trusted within the server. They are responsible for oversight of the entire server, along with shaping the future of the site.</p>
-        <p style="margin-top: 1rem; font-style: italic; opacity: 0.8;">Usually, they serve as the Director of a Department.</p>
-      </div>
-    </div>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"Unknown"</h2>
+        <p class="staff-role">Content Manager</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-    <!-- Server Staff Branch -->
-    <div class="branch-section">
-      <div class="branch-title">Management / Server Staff</div>
-      <p style="color: var(--text-light); margin-bottom: 2rem;">Server Staff are the primary body conducting roleplays and managing the Discord server, ranked by experience and trust level.</p>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"Mystic"</h2>
+        <p class="staff-role">Event Coordinator</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-      <!-- Chief Executive Officer -->
-      <div class="rank-card">
-        <h3>Chief Executive Officer</h3>
-        <p>The Chief Executive Officer has final decision authority and veto power over any and all decisions tied to the Site-89 project. For the foreseeable future, the CEO also serves as the server host, ensuring continuity and stability across all operations.</p>
-      </div>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"Max"</h2>
+        <p class="staff-role">Event Coordinator</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-      <!-- Server Administrator -->
-      <div class="rank-card">
-        <h3>Server Administrator</h3>
-        <p>Server Administrators are the highest ranking staff members, trusted by the High Command to have the server's best interests at heart. They have permission to both host roleplays, supervise Trial Roleplay Managers, and manage the Discord Server.</p>
-      </div>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"Trulyabruh"</h2>
+        <p class="staff-role">Event Coordinator</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
 
-      <!-- Board of Executives -->
-      <div class="rank-card">
-        <h3>Board of Executives</h3>
-        <p>The Board of Executives consists of the Executives of each department, serving under the Department Director. They functionally have the same permissions as a Roleplay Administrator, with the addition of being high-ranking on the in-roleplay side of the site.</p>
-        <p>They also help to shape the server in major decision-making meetings. As the second-highest rank in a department, they are some of the most trusted members on the server.</p>
-      </div>
-
-      <!-- Roleplay Administrator -->
-      <div class="rank-card">
-        <h3>Roleplay Administrator</h3>
-        <p>Roleplay Administrators are one step above the Roleplay Managers, they have more experience hosting roleplays, and have been in the server for a long time. They are some of the most trusted members on the site.</p>
-      </div>
-
-      <!-- Roleplay Manager -->
-      <div class="rank-card">
-        <h3>Roleplay Manager</h3>
-        <p>Roleplay Managers are the primary roleplay hosting members. They vary with experience, and are the primary people who should host roleplays. They are supervised by High Command and both Administrator roles.</p>
-      </div>
-
-      <!-- Trial Roleplay Manager -->
-      <div class="rank-card">
-        <h3>Trial Roleplay Manager</h3>
-        <p>Trial Roleplay Managers are the most junior of the staff team, and have just been accepted into the staff team. They are under close supervision of the Server & Roleplay Administrators until they can prove themselves trustworthy enough to remain.</p>
-      </div>
+      <article class="staff-card">
+        <div class="staff-photo">Photo Placeholder</div>
+        <h2 class="staff-name">"Sunny"</h2>
+        <p class="staff-role">Event Coordinator</p>
+        <p class="staff-bio">Add a short bio here. Keep this section to 2-4 sentences so every card stays readable on desktop and mobile.</p>
+        <p class="staff-contact"><a href="mailto:staff.member@example.com">staff.member@example.com</a></p>
+      </article>
     </div>
   </section>
 

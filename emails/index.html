@@ -1145,6 +1145,17 @@
                   <input id="composeTo" placeholder="Enter email addresses (comma-separated)" autocomplete="off">
                   <div id="composeSuggestions" class="compose-suggestions"></div>
                 </div>
+
+                <div class="compose-field" id="composeAutofillSection" style="display:none; border: 1px solid rgba(78,250,170,0.25); border-radius: 8px; padding: 0.8rem; background: rgba(78,250,170,0.05);">
+                  <label style="margin-bottom:0.6rem; display:block;">Recipient Autofill (Manager/Director)</label>
+                  <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                    <input id="composeDeptAutofill" placeholder="Department (e.g., SD, AD, DEO)" style="flex:1; min-width:180px;">
+                    <input id="composeDivisionAutofill" placeholder="Division (optional, e.g., IA, MTF)" style="flex:1; min-width:180px;">
+                    <button id="composeFillRecipientsBtn" type="button" class="btn-secondary" style="white-space:nowrap;">Autofill To</button>
+                    <button id="composeUseMyDeptBtn" type="button" class="btn-secondary" style="white-space:nowrap;">Use My Department</button>
+                  </div>
+                  <div id="composeAutofillHint" style="margin-top:0.45rem; font-size:0.82rem; opacity:0.85; color: var(--text-light);"></div>
+                </div>
                 
                 <div class="compose-field">
                   <label>Subject</label>

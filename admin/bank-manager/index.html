@@ -53,6 +53,8 @@
       transition: all 0.3s ease;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
       padding: 1.2rem;
+      pointer-events: auto;
+      user-select: none;
     }
 
     .bank-card:hover {
@@ -274,6 +276,12 @@
       cursor: pointer;
     }
 
+    .bm-panel { display: none; }
+    .bm-panel.active { display: block; }
+
+    .bm-tab.active { color: var(--accent-mint) !important; border-bottom-color: var(--accent-mint) !important; }
+    .bm-tab:not(.active):hover { color: var(--text-light) !important; }
+
     @media (max-width: 960px) {
       .bank-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -351,21 +359,52 @@
         <div id="globalScheduleFeedback" class="scheduler-feedback"></div>
       </div>
 
-      <div class="bank-toolbar">
-        <input id="searchInput" class="bank-input" type="text" placeholder="Search by name, PID, or department...">
-        <select id="sortSelect" class="bank-select">
-          <option value="name">Sort by: Name</option>
-          <option value="department">Sort by: Department</option>
-          <option value="balance">Sort by: Balance</option>
-        </select>
+      <!-- Tab bar -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:2px solid rgba(78,250,170,0.2);padding-bottom:0.5rem;">
+        <button class="bm-tab active" data-panel="panelPersonal" type="button" style="background:none;border:none;padding:0.5rem 1rem;cursor:pointer;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;">Personal Accounts</button>
+        <button class="bm-tab" data-panel="panelShared" type="button" style="background:none;border:none;padding:0.5rem 1rem;cursor:pointer;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;">Shared Accounts</button>
+        <button class="bm-tab" data-panel="panelAudit" type="button" style="background:none;border:none;padding:0.5rem 1rem;cursor:pointer;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;">Audit Log</button>
       </div>
 
-      <div id="bankGrid" class="bank-grid">
-        <div class="access-denied">Loading accounts...</div>
+      <!-- Personal accounts panel -->
+      <div id="panelPersonal" class="bm-panel" style="display:block;">
+        <div class="bank-toolbar">
+          <input id="searchInput" class="bank-input" type="text" placeholder="Search by name, PID, or department...">
+          <select id="sortSelect" class="bank-select">
+            <option value="name">Sort by: Name</option>
+            <option value="department">Sort by: Department</option>
+            <option value="balance">Sort by: Balance</option>
+          </select>
+        </div>
+        <div id="bankGrid" class="bank-grid">
+          <div class="access-denied">Loading accounts...</div>
+        </div>
+      </div>
+
+      <!-- Shared accounts panel -->
+      <div id="panelShared" class="bm-panel" style="display:none;">
+        <div class="bank-toolbar">
+          <input id="sharedSearchInput" class="bank-input" type="text" placeholder="Search by name or owner...">
+        </div>
+        <div id="sharedGrid" class="bank-grid">
+          <div class="access-denied">Loading shared accounts...</div>
+        </div>
+      </div>
+
+      <!-- Audit log panel -->
+      <div id="panelAudit" class="bm-panel" style="display:none;">
+        <div style="margin-bottom:1rem;">
+          <button id="refreshAuditBtn" class="btn-primary" type="button">Refresh Audit Log</button>
+          <span class="bank-muted" style="margin-left:1rem;font-size:0.9rem;">Last 100 entries shown</span>
+        </div>
+        <div id="auditLogList" style="max-height:600px;overflow-y:auto;">
+          <div class="access-denied">Loading audit log...</div>
+        </div>
       </div>
     </div>
   </main>
 
+  <!-- Personal account modal -->
   <div id="bankModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -374,11 +413,18 @@
       </div>
 
       <div id="modalMeta" class="bank-muted"></div>
+      <div id="modalBalDisplay"></div>
 
       <div class="modal-grid">
         <div class="modal-card">
           <h4>Balance Actions</h4>
-          <label>Set Balance</label>
+          <label>Account</label>
+          <select id="accountTypeSelect" class="modal-input">
+            <option value="checking">Checking</option>
+            <option value="savings">Savings</option>
+          </select>
+
+          <label style="margin-top:0.6rem;display:block;">Set Balance</label>
           <input id="setBalanceInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 1200.00">
           <button id="setBalanceBtn" class="btn-primary" type="button">Apply Balance</button>
 
@@ -389,10 +435,13 @@
           <label style="margin-top:0.8rem;display:block;">Withdraw</label>
           <input id="withdrawInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 100.00">
           <button id="withdrawBtn" class="btn-primary" type="button">Withdraw</button>
+
+          <label style="margin-top:0.8rem;display:block;">Note (optional)</label>
+          <input id="noteInput" class="modal-input" placeholder="Memo for this transaction">
         </div>
 
         <div class="modal-card">
-          <h4>Direct Deposit</h4>
+          <h4>Direct Deposit (Checking)</h4>
           <label>Bi-Weekly Pay Amount</label>
           <input id="payAmountInput" class="modal-input" type="text" inputmode="decimal" placeholder="e.g., $11,538">
 
@@ -437,14 +486,71 @@
         </div>
       </div>
 
-      <div class="modal-card" style="margin-top:1rem;">
-        <h4>Notes</h4>
-        <input id="noteInput" class="modal-input" placeholder="Optional memo for this transaction">
-        <div class="modal-actions">
-          <button class="btn-secondary" type="button" onclick="window.closeBankModal()">Close</button>
-        </div>
-        <div id="modalFeedback" class="feedback"></div>
+      <div class="modal-actions" style="margin-top:1rem;">
+        <button class="btn-secondary" type="button" onclick="window.closeBankModal()">Close</button>
       </div>
+      <div id="modalFeedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- Shared account modal -->
+  <div id="sharedModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="sharedModalTitle">Shared Account</h2>
+        <button class="modal-close" onclick="window.closeSharedModal()">&times;</button>
+      </div>
+
+      <div id="sharedModalMeta" class="bank-muted"></div>
+      <div style="font-size:1.6rem;font-weight:700;color:var(--accent-mint);margin:0.5rem 0 1rem 0;" id="sharedModalBalance"></div>
+
+      <div class="modal-grid">
+        <div class="modal-card">
+          <h4>Balance Actions</h4>
+          <label>Set Balance</label>
+          <input id="sharedSetBalanceInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 5000.00">
+          <button id="sharedSetBalanceBtn" class="btn-primary" type="button">Apply Balance</button>
+
+          <label style="margin-top:0.8rem;display:block;">Deposit</label>
+          <input id="sharedDepositInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 500.00">
+          <button id="sharedDepositBtn" class="btn-primary" type="button">Deposit</button>
+
+          <label style="margin-top:0.8rem;display:block;">Withdraw</label>
+          <input id="sharedWithdrawInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 200.00">
+          <button id="sharedWithdrawBtn" class="btn-primary" type="button">Withdraw</button>
+        </div>
+
+        <div class="modal-card">
+          <h4>Members</h4>
+          <div id="sharedMembersList" class="deduction-list"></div>
+
+          <label style="margin-top:0.8rem;display:block;">Invite by Email</label>
+          <input id="sharedInviteEmailInput" class="modal-input" type="email" placeholder="e.g., smith.john@site89.org">
+          <button id="sharedInviteBtn" class="btn-secondary" type="button" style="margin-top:0.4rem;">Send Invite</button>
+        </div>
+
+        <div class="modal-card">
+          <h4>Transfer from Account</h4>
+          <label>Personal Account</label>
+          <select id="sharedTransferAccountSelect" class="modal-input">
+            <option value="">-- Select Account --</option>
+          </select>
+          <label style="margin-top:0.8rem;display:block;">Amount</label>
+          <input id="sharedTransferAmountInput" class="modal-input" type="number" step="0.01" placeholder="e.g., 1000.00">
+          <label style="margin-top:0.8rem;display:block;">From (Checking/Savings)</label>
+          <select id="sharedTransferTypeSelect" class="modal-input">
+            <option value="checking">Checking</option>
+            <option value="savings">Savings</option>
+          </select>
+          <button id="sharedTransferBtn" class="btn-primary" type="button" style="margin-top:0.4rem;">Transfer to Shared</button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:1rem;">
+        <button id="sharedDeleteBtn" class="btn-danger" type="button">Delete Account</button>
+        <button class="btn-secondary" type="button" onclick="window.closeSharedModal()">Close</button>
+      </div>
+      <div id="sharedModalFeedback" class="feedback"></div>
     </div>
   </div>
 

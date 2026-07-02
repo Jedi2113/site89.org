@@ -211,6 +211,70 @@
     .dashboard-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem; }
     .chart-container { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(78, 250, 170, 0.15); border-radius: 12px; padding: 2rem; }
     .chart-title { color: var(--accent-mint); font-weight: 700; margin-bottom: 1.5rem; font-size: 1.1rem; }
+    .chart-title-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .chart-title-row .chart-title { margin-bottom: 0; }
+    .dept-chart-stage {
+      position: relative;
+      width: 100%;
+      height: 260px;
+    }
+    .dept-chart-layer {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1), opacity 620ms ease;
+      transform-origin: 50% 50%;
+      opacity: 0;
+      z-index: 1;
+      will-change: transform, opacity;
+    }
+    .dept-chart-layer.is-active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      z-index: 3;
+      pointer-events: auto;
+    }
+    .dept-chart-layer.is-behind {
+      opacity: 0;
+      transform: translateY(26px) scale(0.9);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .dept-chart-layer.roll-up {
+      opacity: 0;
+      transform: translateY(-32px) scale(0.86);
+      z-index: 4;
+      pointer-events: none;
+    }
+    .dept-chart-layer.roll-in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .dept-chart-stage.transitioning {
+      pointer-events: none;
+    }
+    .chart-reset-btn {
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.7rem;
+      background: rgba(13, 202, 240, 0.15);
+      color: var(--accent-teal);
+      border: 1px solid rgba(13, 202, 240, 0.45);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .chart-reset-btn:hover {
+      background: rgba(13, 202, 240, 0.25);
+      border-color: rgba(13, 202, 240, 0.65);
+    }
 
     /* Responsive Design */
     @media (max-width: 1400px) {
@@ -289,8 +353,14 @@
         </div>
         <div class="dashboard-charts">
           <div class="chart-container">
-            <div class="chart-title"><i class="fas fa-pie-chart"></i> Distribution by Department</div>
-            <canvas id="deptChart" width="300" height="200"></canvas>
+            <div class="chart-title-row">
+              <div class="chart-title" id="deptChartTitleText"><i class="fas fa-pie-chart"></i> Distribution by Department</div>
+              <button type="button" class="chart-reset-btn" id="deptChartResetBtn"><i class="fas fa-rotate-left"></i> Back to Departments</button>
+            </div>
+            <div class="dept-chart-stage" id="deptChartStage">
+              <canvas id="deptChartA" class="dept-chart-layer is-active"></canvas>
+              <canvas id="deptChartB" class="dept-chart-layer is-behind"></canvas>
+            </div>
           </div>
           <div class="chart-container">
             <div class="chart-title"><i class="fas fa-bar-chart"></i> Status Breakdown</div>
@@ -466,6 +536,16 @@
         <input id="editUserEmail" class="modal-detail-input" placeholder="user@example.com or Firebase UID">
         <button id="assignUserBtn" type="button" style="width: 100%; padding: 0.6rem; background: var(--accent-mint); color: var(--bg-dark); border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 0.5rem;">Assign to User</button>
         <div id="assignFeedback" style="display:none;margin-top:0.5rem;"></div>
+      </div>
+
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:2px solid rgba(78,250,170,0.2);">
+        <label style="display:block;margin-bottom:0.5rem;color:var(--accent-mint);font-weight:600;">Management Email Access</label>
+        <p style="font-size:0.85rem;color:var(--text-light);opacity:0.8;margin-bottom:0.75rem;">Grant send-as access for management addresses (example: sd.mgmt@site89.org).</p>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input id="editMgmtEmailInput" class="modal-detail-input" placeholder="division.mgmt@site89.org" style="margin:0;">
+          <button id="addMgmtEmailBtn" type="button" style="padding:0.6rem 0.9rem;background:var(--accent-teal);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;">Add</button>
+        </div>
+        <div id="editMgmtEmailList" style="margin-top:0.65rem;display:flex;flex-wrap:wrap;gap:0.45rem;"></div>
       </div>
 
       <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:2px solid rgba(78,250,170,0.2);">
@@ -654,13 +734,228 @@
     let currentEditingPID = null;
     let currentEditingDocId = null;
     let currentPhotoUrl = '';
+    let currentManagementEmails = [];
     let allPersonnel = [];
     let archivedCount = 0;
     let selectedCharacters = new Set(); // Track selected characters
     let selectedCharNames = new Map(); // Track names for bulk actions
     let deptChart = null;
+    let deptCharts = [null, null];
+    let activeDeptChartIndex = 0;
+    let deptChartTransitionTimer = null;
+    let deptChartTransitionInProgress = false;
+    let lastDeptChartMode = '';
+    const DEPT_CHART_DPR = Math.min(window.devicePixelRatio || 1, 2);
     let statusChart = null;
+    let deptDrilldownDepartment = null;
     const PRIMARY_ADMIN_EMAIL = 'jedi21132@gmail.com';
+    const DEPT_COLOR_PALETTE = [
+      '#00b894', '#ff9f1c', '#00a8ff', '#ff5d8f', '#9b5de5', '#2ec4b6',
+      '#ffd166', '#3a86ff', '#e76f51', '#8ac926', '#8338ec', '#06d6a0'
+    ];
+    const DIVISION_COLOR_PALETTE = [
+      '#118ab2', '#06d6a0', '#ef476f', '#ffd166', '#3a86ff', '#ff006e',
+      '#43aa8b', '#577590', '#f8961e', '#8d99ae', '#00bbf9', '#80ed99'
+    ];
+
+    function hexToRgb(value) {
+      const clean = String(value || '').replace('#', '').trim();
+      if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+      return [
+        parseInt(clean.slice(0, 2), 16),
+        parseInt(clean.slice(2, 4), 16),
+        parseInt(clean.slice(4, 6), 16)
+      ];
+    }
+
+    function chartColor(palette, index, alpha) {
+      const base = palette[index];
+      const rgb = hexToRgb(base);
+      if (rgb) {
+        return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+      }
+
+      // Fallback: golden-angle hue stepping keeps adjacent slices visually distinct.
+      const hue = Math.round((index * 137.508) % 360);
+      return `hsla(${hue}, 74%, 56%, ${alpha})`;
+    }
+
+    function parseDepartmentPath(departmentValue) {
+      const fullPath = String(departmentValue || '').trim();
+      if (!fullPath) {
+        return { department: 'Unassigned', division: 'Unspecified' };
+      }
+
+      const parts = fullPath.split('/').map(part => part.trim()).filter(Boolean);
+      return {
+        department: parts[0] || 'Unassigned',
+        division: parts[1] || 'Unspecified'
+      };
+    }
+
+    function updateDeptChartHeader() {
+      const titleEl = document.getElementById('deptChartTitleText');
+      const resetBtn = document.getElementById('deptChartResetBtn');
+      if (!titleEl || !resetBtn) return;
+
+      if (deptDrilldownDepartment) {
+        titleEl.innerHTML = `<i class="fas fa-pie-chart"></i> ${deptDrilldownDepartment} Division Breakdown`;
+        resetBtn.style.display = 'inline-flex';
+      } else {
+        titleEl.innerHTML = '<i class="fas fa-pie-chart"></i> Distribution by Department';
+        resetBtn.style.display = 'none';
+      }
+    }
+
+    function createDeptChartConfig(chartPoints, totalPersonnelCount, onSliceClick) {
+      return {
+        type: 'doughnut',
+        data: {
+          labels: chartPoints.map(point => point.label),
+          datasets: [{
+            data: chartPoints.map(point => point.displayValue),
+            backgroundColor: chartPoints.map(point => point.color),
+            borderColor: 'rgba(0, 0, 0, 0.2)',
+            borderWidth: 2,
+            hoverOffset: 10,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          devicePixelRatio: DEPT_CHART_DPR,
+          animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 850,
+            easing: 'easeOutCubic'
+          },
+          animations: {
+            numbers: {
+              type: 'number',
+              duration: 850,
+              easing: 'easeOutCubic'
+            },
+            colors: {
+              type: 'color',
+              duration: 600,
+              easing: 'easeOutQuad'
+            }
+          },
+          onClick: function(_event, elements) {
+            if (deptChartTransitionInProgress) return;
+            if (!elements || !elements.length) return;
+            const selected = chartPoints[elements[0].index];
+            if (!selected) return;
+            onSliceClick(selected);
+          },
+          plugins: {
+            legend: {
+              labels: { color: 'rgba(255, 255, 255, 0.8)', font: { size: 11 } },
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const point = chartPoints[context.dataIndex];
+                  const value = point ? point.rawValue : context.parsed;
+                  const pct = totalPersonnelCount > 0 ? ((value / totalPersonnelCount) * 100).toFixed(1) : 0;
+                  const suffix = point && point.type === 'department-dimmed' ? ' (dimmed)' : '';
+                  return ` ${context.label}: ${value} (${pct}% of players)${suffix}`;
+                }
+              }
+            }
+          }
+        }
+      };
+    }
+
+    function renderDeptChart(chartPoints, totalPersonnelCount, shouldRollTransition) {
+      const stage = document.getElementById('deptChartStage');
+      const canvases = [document.getElementById('deptChartA'), document.getElementById('deptChartB')];
+      if (!stage || !canvases[0] || !canvases[1]) return;
+
+      const frontIndex = activeDeptChartIndex;
+      const backIndex = frontIndex === 0 ? 1 : 0;
+      const frontCanvas = canvases[frontIndex];
+      const backCanvas = canvases[backIndex];
+
+      const handleSliceClick = (selected) => {
+        if (!deptDrilldownDepartment && selected.type === 'department') {
+          deptDrilldownDepartment = selected.dept;
+          window.updateDashboard();
+          return;
+        }
+
+        if (deptDrilldownDepartment && selected.type === 'department-dimmed') {
+          deptDrilldownDepartment = selected.dept;
+          window.updateDashboard();
+        }
+      };
+
+      const buildChartOnLayer = (layerIndex, canvas) => {
+        if (deptCharts[layerIndex]) {
+          deptCharts[layerIndex].destroy();
+          deptCharts[layerIndex] = null;
+        }
+        deptCharts[layerIndex] = new Chart(canvas, createDeptChartConfig(chartPoints, totalPersonnelCount, handleSliceClick));
+      };
+
+      if (deptChartTransitionTimer) {
+        clearTimeout(deptChartTransitionTimer);
+        deptChartTransitionTimer = null;
+      }
+
+      const noExistingFrontChart = !deptCharts[frontIndex];
+      if (noExistingFrontChart || !shouldRollTransition) {
+        buildChartOnLayer(frontIndex, frontCanvas);
+        if (deptCharts[backIndex]) {
+          deptCharts[backIndex].destroy();
+          deptCharts[backIndex] = null;
+        }
+
+        stage.classList.remove('transitioning');
+        frontCanvas.classList.remove('is-behind', 'roll-up', 'roll-in');
+        frontCanvas.classList.add('is-active');
+        backCanvas.classList.remove('is-active', 'roll-up', 'roll-in');
+        backCanvas.classList.add('is-behind');
+        deptChart = deptCharts[frontIndex];
+        deptChartTransitionInProgress = false;
+        return;
+      }
+
+      buildChartOnLayer(backIndex, backCanvas);
+      stage.classList.add('transitioning');
+      deptChartTransitionInProgress = true;
+
+      frontCanvas.classList.remove('is-behind', 'roll-in');
+      frontCanvas.classList.add('is-active');
+      backCanvas.classList.remove('is-active', 'roll-up', 'roll-in');
+      backCanvas.classList.add('is-behind');
+
+      requestAnimationFrame(() => {
+        frontCanvas.classList.add('roll-up');
+        backCanvas.classList.remove('is-behind');
+        backCanvas.classList.add('roll-in');
+      });
+
+      deptChartTransitionTimer = setTimeout(() => {
+        if (deptCharts[frontIndex]) {
+          deptCharts[frontIndex].destroy();
+          deptCharts[frontIndex] = null;
+        }
+
+        activeDeptChartIndex = backIndex;
+        deptChart = deptCharts[activeDeptChartIndex];
+        frontCanvas.classList.remove('is-active', 'roll-up', 'roll-in');
+        frontCanvas.classList.add('is-behind');
+        backCanvas.classList.remove('roll-in', 'is-behind');
+        backCanvas.classList.add('is-active');
+        stage.classList.remove('transitioning');
+        deptChartTransitionInProgress = false;
+        deptChartTransitionTimer = null;
+      }, 640);
+    }
 
     function normalizeRole(value) {
       const role = String(value || '').trim().toLowerCase();
@@ -720,6 +1015,47 @@
       const pidFeedback = document.getElementById('pidFeedback');
       const searchInput = document.getElementById('searchInput');
       const addPIDBtn = document.getElementById('addPIDBtn');
+
+      function normalizeManagementEmail(value) {
+        return String(value || '').trim().toLowerCase();
+      }
+
+      function buildManagementEmailsFromCharacter(person) {
+        const direct = Array.isArray(person.managementEmails) ? person.managementEmails : [];
+        const legacySendAs = Array.isArray(person.sendAsEmails) ? person.sendAsEmails : [];
+        const legacyDirectorOf = Array.isArray(person.directorOf)
+          ? person.directorOf.map(v => `${String(v || '').trim().toLowerCase()}.mgmt@site89.org`)
+          : [];
+
+        return [...new Set([...direct, ...legacySendAs, ...legacyDirectorOf]
+          .map(v => normalizeManagementEmail(v))
+          .filter(v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)))];
+      }
+
+      function renderManagementEmailList() {
+        const listEl = document.getElementById('editMgmtEmailList');
+        if (!listEl) return;
+
+        if (!currentManagementEmails.length) {
+          listEl.innerHTML = '<span style="opacity:0.7;font-size:0.85rem;">No management email access assigned.</span>';
+          return;
+        }
+
+        listEl.innerHTML = currentManagementEmails.map(email => `
+          <span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.55rem;background:rgba(13,202,240,0.12);border:1px solid rgba(13,202,240,0.35);border-radius:999px;font-size:0.8rem;">
+            ${email}
+            <button type="button" data-mgmt-remove="${email}" style="background:transparent;border:none;color:var(--text-light);cursor:pointer;line-height:1;padding:0;">&times;</button>
+          </span>
+        `).join('');
+
+        listEl.querySelectorAll('[data-mgmt-remove]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const email = btn.getAttribute('data-mgmt-remove');
+            currentManagementEmails = currentManagementEmails.filter(item => item !== email);
+            renderManagementEmailList();
+          });
+        });
+      }
 
       function maskPID(s) {
         if (!s) return '';
@@ -871,6 +1207,9 @@
         document.getElementById('editDept').value = person.department || '';
         document.getElementById('editClearance').value = person.clearance || '';
         document.getElementById('editUserEmail').value = '';
+        document.getElementById('editMgmtEmailInput').value = '';
+        currentManagementEmails = buildManagementEmailsFromCharacter(person);
+        renderManagementEmailList();
         document.getElementById('assignFeedback').style.display = 'none';
 
         // Load class and other data from personnel collection
@@ -1071,6 +1410,7 @@
           if (dept) updateData.department = dept;
           if (clearance !== '') updateData.clearance = Number(clearance);
           if (personClass) updateData['class'] = personClass;
+          updateData.managementEmails = [...new Set(currentManagementEmails)];
           updateData.awards = selectedAwards;
 
           await updateDoc(doc(db, 'characters', charDocId), updateData);
@@ -1605,63 +1945,79 @@
         document.getElementById('statAssignedChars').textContent = assigned;
         document.getElementById('statUnassignedChars').textContent = unassigned;
 
-        // Build department data (tracking only the division, not the subdepartment)
+        // Build department + division data from DEPARTMENT/DIVISION notation.
         const deptMap = {};
+        const divisionByDept = {};
         allPersonnel.forEach(p => {
-          const fullDept = p.department || 'Unassigned';
-          // Extract only the first part before "/" (e.g., "ScD/R&D" → "ScD")
-          const dept = fullDept.split('/')[0];
+          const { department: dept, division } = parseDepartmentPath(p.department);
           deptMap[dept] = (deptMap[dept] || 0) + 1;
+
+          if (!divisionByDept[dept]) divisionByDept[dept] = {};
+          divisionByDept[dept][division] = (divisionByDept[dept][division] || 0) + 1;
         });
-        
-        const deptLabels = Object.keys(deptMap).sort();
-        const deptData = deptLabels.map(dept => deptMap[dept]);
+
+        if (deptDrilldownDepartment && !deptMap[deptDrilldownDepartment]) {
+          deptDrilldownDepartment = null;
+        }
+        updateDeptChartHeader();
+
+        const totalPersonnelCount = allPersonnel.length;
+        const sortedDepartments = Object.keys(deptMap).sort();
+        const chartPoints = [];
+
+        if (deptDrilldownDepartment) {
+          sortedDepartments.forEach((dept, deptIndex) => {
+            if (dept === deptDrilldownDepartment) {
+              const divisionMap = divisionByDept[dept] || {};
+              const divisions = Object.keys(divisionMap)
+                .sort((a, b) => (divisionMap[b] - divisionMap[a]) || a.localeCompare(b));
+
+              divisions.forEach((division, divisionIndex) => {
+                const value = divisionMap[division] || 0;
+                chartPoints.push({
+                  label: `${dept}/${division}`,
+                  dept,
+                  type: 'division',
+                  rawValue: value,
+                  displayValue: value,
+                  color: chartColor(DIVISION_COLOR_PALETTE, divisionIndex, 0.93)
+                });
+              });
+            } else {
+              const value = deptMap[dept] || 0;
+              chartPoints.push({
+                label: dept,
+                dept,
+                type: 'department-dimmed',
+                rawValue: value,
+                displayValue: value * 0.32,
+                color: chartColor(DEPT_COLOR_PALETTE, deptIndex, 0.30)
+              });
+            }
+          });
+        } else {
+          sortedDepartments.forEach((dept, deptIndex) => {
+            const value = deptMap[dept] || 0;
+            chartPoints.push({
+              label: dept,
+              dept,
+              type: 'department',
+              rawValue: value,
+              displayValue: value,
+              color: chartColor(DEPT_COLOR_PALETTE, deptIndex, 0.90)
+            });
+          });
+        }
+
+        const nextDeptChartMode = deptDrilldownDepartment ? `drill:${deptDrilldownDepartment}` : 'root';
+        const shouldRollTransition = !!lastDeptChartMode && lastDeptChartMode !== nextDeptChartMode;
+        lastDeptChartMode = nextDeptChartMode;
         
         // Build status data
         const statusData = [active, inactive, archived];
 
         // Update charts
-        const deptCtx = document.getElementById('deptChart');
-        if (deptChart) deptChart.destroy();
-        deptChart = new Chart(deptCtx, {
-          type: 'doughnut',
-          data: {
-            labels: deptLabels,
-            datasets: [{
-              data: deptData,
-              backgroundColor: [
-                'rgba(78, 250, 170, 0.8)',   // Site-89 Mint
-                'rgba(0, 124, 107, 0.8)',    // Deep Teal
-                'rgba(217, 119, 6, 0.8)',    // Warm Amber
-                'rgba(146, 0, 0, 0.8)',      // Emergency Red
-                'rgba(30, 155, 138, 0.8)',   // Teal Sage
-                'rgba(13, 110, 102, 0.8)',   // Forest Teal
-              ],
-              borderColor: 'rgba(0, 0, 0, 0.2)',
-              borderWidth: 2,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: {
-                labels: { color: 'rgba(255, 255, 255, 0.8)', font: { size: 11 } },
-                position: 'bottom'
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                    const value = context.parsed;
-                    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                    return ` ${context.label}: ${value} (${pct}%)`;
-                  }
-                }
-              }
-            }
-          }
-        });
+        renderDeptChart(chartPoints, totalPersonnelCount, shouldRollTransition);
 
         const statusCtx = document.getElementById('statusChart');
         if (statusChart) statusChart.destroy();
@@ -1803,6 +2159,33 @@
         window.assignToUser();
       });
 
+      document.getElementById('addMgmtEmailBtn').addEventListener('click', () => {
+        const inputEl = document.getElementById('editMgmtEmailInput');
+        const rawValue = inputEl.value;
+        const email = normalizeManagementEmail(rawValue);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          window.showEditFeedback('Enter a valid management email address.', 'error');
+          return;
+        }
+        if (!email.endsWith('.mgmt@site89.org')) {
+          window.showEditFeedback('Management email must end with .mgmt@site89.org', 'error');
+          return;
+        }
+        if (!currentManagementEmails.includes(email)) {
+          currentManagementEmails.push(email);
+          currentManagementEmails.sort((a, b) => a.localeCompare(b));
+          renderManagementEmailList();
+        }
+        inputEl.value = '';
+      });
+
+      document.getElementById('editMgmtEmailInput').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          document.getElementById('addMgmtEmailBtn').click();
+        }
+      });
+
       // Event listeners
 
       pidModal.addEventListener('click', (e) => {
@@ -1814,6 +2197,13 @@
       });
 
       pidForm.addEventListener('submit', savePID);
+      const deptChartResetBtn = document.getElementById('deptChartResetBtn');
+      if (deptChartResetBtn) {
+        deptChartResetBtn.addEventListener('click', () => {
+          deptDrilldownDepartment = null;
+          window.updateDashboard();
+        });
+      }
       searchInput.addEventListener('input', () => filterAndSortPersonnel());
       document.getElementById('sortSelect').addEventListener('change', () => filterAndSortPersonnel());
       document.getElementById('statusFilter').addEventListener('change', () => filterAndSortPersonnel());

@@ -49,16 +49,17 @@
       align-items: center;
     }
 
-    .bank-balance {
-      font-size: clamp(1.8rem, 3vw, 2.6rem);
-      color: var(--accent-mint);
-      font-weight: 800;
-      margin: 0.25rem 0 0;
-    }
-
     .bank-sub {
       color: var(--muted);
       margin: 0.5rem 0 0;
+    }
+
+    .bank-routing {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      letter-spacing: 0.06em;
     }
 
     .bank-meta {
@@ -70,6 +71,302 @@
 
     .bank-meta h3 {
       margin-bottom: 0.4rem;
+    }
+
+    /* Checking / Savings account cards */
+    .bank-accounts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bank-account-card {
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.2rem 1.2rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bank-account-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .bank-account-card.checking::after { background: var(--accent-mint); }
+    .bank-account-card.savings::after  { background: #7b6cf6; }
+
+    .bank-account-label {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .bank-account-balance {
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .bank-account-card.checking .bank-account-balance { color: var(--accent-mint); }
+    .bank-account-card.savings  .bank-account-balance { color: #9d8df8; }
+
+    /* Tabs */
+    .bank-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 1.2rem;
+    }
+
+    .bank-tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+      transition: color 0.2s;
+      margin-bottom: -1px;
+      font-family: var(--font-body);
+    }
+
+    .bank-tab:hover { color: var(--text-light); }
+
+    .bank-tab.active {
+      color: var(--accent-mint);
+      border-bottom-color: var(--accent-mint);
+    }
+
+    .bank-tab-panel { display: none; }
+    .bank-tab-panel.active { display: block; }
+
+    /* Transfer form */
+    .transfer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .transfer-field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    .bank-select {
+      width: 100%;
+      padding: 0.6rem;
+      background: var(--bg-soft);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+    }
+
+    .transfer-recipient-preview {
+      padding: 0.6rem;
+      background: rgba(78, 250, 170, 0.07);
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      color: var(--accent-mint);
+      margin-bottom: 0.8rem;
+      display: none;
+    }
+
+    .transfer-recipient-preview.visible { display: block; }
+
+    /* Deductions */
+    .deduction-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .deduction-item:last-child { border-bottom: none; }
+
+    .deduction-label { font-weight: 500; }
+
+    .deduction-amount {
+      color: #f87171;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .deduction-meta { color: var(--muted); font-size: 0.8rem; }
+
+    .deductions-total {
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    /* Shared accounts */
+    .shared-account-card {
+      background: rgba(78, 250, 170, 0.04);
+      border: 1px solid rgba(78, 250, 170, 0.15);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .shared-account-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.4rem;
+    }
+
+    .shared-account-name { font-weight: 700; font-size: 1rem; }
+    .shared-account-balance { color: var(--accent-mint); font-weight: 700; }
+    .shared-account-meta { color: var(--muted); font-size: 0.82rem; margin-bottom: 0.6rem; }
+
+    /* Invite banner */
+    .bank-invite-banner {
+      background: rgba(123, 108, 246, 0.1);
+      border: 1px solid rgba(123, 108, 246, 0.35);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .bank-invite-text { font-size: 0.9rem; }
+    .bank-invite-text strong { color: #9d8df8; }
+
+    .bank-invite-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+    /* Status message */
+    .bank-status {
+      padding: 0.6rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      margin-top: 0.7rem;
+      display: none;
+    }
+
+    .bank-status.success {
+      background: rgba(78, 250, 170, 0.12);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      color: var(--accent-mint);
+      display: block;
+    }
+
+    .bank-status.error {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      color: #f87171;
+      display: block;
+    }
+
+    /* Shared modal overlay */
+    .bank-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .bank-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: min(480px, 90vw);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .bank-modal h3 { margin-bottom: 1rem; }
+
+    .bank-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 1.2rem;
+    }
+
+    .bank-btn-ghost {
+      padding: 0.6rem 1rem;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      background: none;
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+
+    .bank-btn-ghost:hover { color: var(--text-light); }
+
+    .bank-btn-sm {
+      padding: 0.35rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent-mint);
+      color: var(--bg-dark);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-family: var(--font-body);
+    }
+
+    .bank-btn-sm:hover { background: var(--accent-teal); }
+
+    .bank-btn-sm.danger {
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      color: #f87171;
+    }
+
+    .bank-btn-sm.danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+    .bank-btn-sm.ghost {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--muted);
+    }
+
+    .bank-btn-sm.ghost:hover { color: var(--text-light); }
+
+    .member-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(78, 250, 170, 0.08);
+      border: 1px solid rgba(78, 250, 170, 0.2);
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.78rem;
+      color: var(--accent-mint);
+      margin: 0.2rem;
     }
 
     .bank-grid {
@@ -85,6 +382,7 @@
       border-radius: 10px;
       padding: 1.2rem;
       box-shadow: var(--shadow-strong);
+      margin-bottom: 1.5rem;
     }
 
     .bank-card h3 {
@@ -169,6 +467,48 @@
       font-size: 0.9rem;
     }
 
+    .bank-input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
+      background: var(--bg-soft);
+      border: 1px solid rgba(78, 250, 170, 0.3);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-family: var(--font-body);
+      box-sizing: border-box;
+    }
+
+    .bank-btn {
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent-mint);
+      color: var(--bg-dark);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-body);
+    }
+
+    .bank-btn:hover { background: var(--accent-teal); }
+    .bank-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .bank-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(78, 250, 170, 0.12);
+      border: 1px solid rgba(78, 250, 170, 0.25);
+      color: var(--accent-mint);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
     .auth-required,
     .empty-state {
       text-align: center;
@@ -179,14 +519,15 @@
       margin-top: 1.5rem;
     }
 
-    @media (max-width: 900px) {
-      .bank-hero {
-        grid-template-columns: 1fr;
-      }
+    .tx-type-in  { color: var(--accent-mint); }
+    .tx-type-out { color: #f87171; }
+    .tx-type-internal { color: #9d8df8; }
 
-      .bank-grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 900px) {
+      .bank-hero { grid-template-columns: 1fr; }
+      .bank-grid { grid-template-columns: 1fr; }
+      .bank-accounts-grid { grid-template-columns: 1fr; }
+      .transfer-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -197,7 +538,7 @@
   <main class="content">
     <div class="about-box" style="margin-bottom: 1.5rem;">
       <h2>Site-89 Banking</h2>
-      <p>View your character account balance, payroll status, and transaction history.</p>
+      <p>Manage your Foundation credits — checking, savings, transfers, and shared accounts.</p>
       <p class="bank-muted" style="margin-top:0.6rem;">Note: This is fictional, in-universe currency only. It is not real money and cannot be exchanged for real-world value.</p>
     </div>
 
@@ -215,32 +556,143 @@
     </div>
 
     <div id="bankContainer" style="display:none;">
+
+      <!-- Pending shared account invites (populated by JS) -->
+      <div id="pendingInvites"></div>
+
+      <!-- Hero -->
       <section class="bank-hero">
         <div>
           <div class="bank-pill"><i class="fas fa-shield-alt"></i> Account Status: Active</div>
-          <h1 id="bankCharacterName">Character Account</h1>
+          <h1 id="bankCharacterName" style="margin:0.4rem 0 0.2rem;">Character Account</h1>
           <p class="bank-sub" id="bankCharacterMeta">PID | Department | Rank</p>
-          <div class="bank-balance" id="bankBalance">$0.00</div>
-          <p class="bank-sub" id="bankBalanceUpdated">Last updated: --</p>
+          <p class="bank-routing"><i class="fas fa-hashtag" style="opacity:0.5;margin-right:0.3rem;"></i>Routing: <span id="bankRoutingNumber">--</span></p>
+          <p class="bank-sub" id="bankBalanceUpdated" style="margin-top:0.3rem;">Last updated: --</p>
         </div>
         <div class="bank-meta">
           <h3>Direct Deposit</h3>
           <p id="bankPayAmount" class="bank-sub">Pay amount: --</p>
+          <p id="bankCreditScore" class="bank-sub">Credit score: --</p>
+          <p id="bankOverdueBalance" class="bank-sub">Overdue deductions: --</p>
           <p class="bank-sub">Bi-weekly payroll timing is set globally by Site Administration.</p>
-          <p class="bank-muted">Payroll is managed by Site Administration.</p>
+          <p class="bank-muted" style="margin-top:0.4rem;">Payroll is managed by Site Administration.</p>
         </div>
       </section>
 
+      <!-- Checking / Savings cards -->
+      <section class="bank-accounts-grid">
+        <div class="bank-account-card checking">
+          <div class="bank-account-label"><i class="fas fa-wallet" style="margin-right:0.35rem;"></i>Checking Account</div>
+          <div class="bank-account-balance" id="checkingBalance">$0.00</div>
+          <p class="bank-muted" style="margin-top:0.3rem;font-size:0.8rem;">For everyday transactions</p>
+        </div>
+        <div class="bank-account-card savings">
+          <div class="bank-account-label"><i class="fas fa-piggy-bank" style="margin-right:0.35rem;"></i>Savings Account</div>
+          <div class="bank-account-balance" id="savingsBalance">$0.00</div>
+          <p class="bank-muted" style="margin-top:0.3rem;font-size:0.8rem;">Long-term storage</p>
+        </div>
+      </section>
+
+      <!-- Actions tabs -->
+      <section class="bank-card" style="margin-bottom:1.5rem;">
+        <div class="bank-tabs">
+          <button class="bank-tab active" data-tab="transfer"><i class="fas fa-exchange-alt" style="margin-right:0.4rem;"></i>Transfer</button>
+          <button class="bank-tab" data-tab="deductions"><i class="fas fa-calendar-minus" style="margin-right:0.4rem;"></i>Deductions</button>
+          <button class="bank-tab" data-tab="shared"><i class="fas fa-users" style="margin-right:0.4rem;"></i>Shared Accounts</button>
+        </div>
+
+        <!-- Transfer panel -->
+        <div class="bank-tab-panel active" id="tabTransfer">
+          <div class="transfer-grid">
+            <div class="transfer-field">
+              <label>From Account</label>
+              <select id="transferFromAccount" class="bank-select">
+                <option value="checking">Checking</option>
+                <option value="savings">Savings</option>
+              </select>
+            </div>
+            <div class="transfer-field">
+              <label>Transfer To</label>
+              <select id="transferDestType" class="bank-select">
+                <option value="self">My Other Account</option>
+                <option value="person">Another Person</option>
+                <option value="shared">Shared Account</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Person fields (shown when destType = person) -->
+          <div id="transferPersonFields" style="display:none;">
+            <div class="transfer-grid">
+              <div class="transfer-field">
+                <label>Recipient PID or Routing Number</label>
+                <input id="transferRecipientId" class="bank-input" type="text" placeholder="e.g. A1B or A1B12345" autocomplete="off">
+              </div>
+              <div class="transfer-field">
+                <label>Recipient Account</label>
+                <select id="transferToAccount" class="bank-select">
+                  <option value="checking">Checking</option>
+                  <option value="savings">Savings</option>
+                </select>
+              </div>
+            </div>
+            <div id="transferRecipientPreview" class="transfer-recipient-preview"></div>
+          </div>
+
+          <!-- Shared account field (shown when destType = shared) -->
+          <div id="transferSharedField" style="display:none;">
+            <div class="transfer-field" style="margin-bottom:0.8rem;">
+              <label>Shared Account</label>
+              <select id="transferSharedSelect" class="bank-select">
+                <option value="">Loading...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="transfer-grid">
+            <div class="transfer-field">
+              <label>Amount ($)</label>
+              <input id="transferAmount" class="bank-input" type="number" min="0.01" step="0.01" placeholder="0.00">
+            </div>
+            <div class="transfer-field">
+              <label>Note (optional)</label>
+              <input id="transferNote" class="bank-input" type="text" maxlength="120" placeholder="e.g. Equipment reimbursement">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;margin-top:0.4rem;">
+            <button id="transferLookupBtn" class="bank-btn" style="display:none;">Look Up Recipient</button>
+            <button id="transferSubmitBtn" class="bank-btn">Transfer</button>
+          </div>
+          <div id="transferStatus" class="bank-status"></div>
+        </div>
+
+        <!-- Deductions panel -->
+        <div class="bank-tab-panel" id="tabDeductions">
+          <p class="bank-muted" style="margin-bottom:0.8rem;">Recurring monthly deductions applied to your checking account by Site Administration.</p>
+          <p id="deductionsSummary" class="bank-muted" style="margin-bottom:0.8rem;"></p>
+          <div id="deductionsList"><p class="bank-muted">Loading deductions...</p></div>
+        </div>
+
+        <!-- Shared accounts panel -->
+        <div class="bank-tab-panel" id="tabShared">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+            <span class="bank-muted" style="font-size:0.88rem;">Pooled accounts you own or are a member of.</span>
+            <button id="createSharedBtn" class="bank-btn"><i class="fas fa-plus" style="margin-right:0.4rem;"></i>Create Shared Account</button>
+          </div>
+          <div id="sharedAccountsList"><p class="bank-muted">Loading shared accounts...</p></div>
+        </div>
+      </section>
+
+      <!-- Account details + mailbox -->
       <section class="bank-grid">
-        <div class="bank-card">
+        <div class="bank-card" style="margin-bottom:0;">
           <h3>Character Mailbox</h3>
           <p class="bank-sub">Alerts are delivered to your Site-89 character email.</p>
-          <input id="bankNotifyEmail" class="bank-input" type="email" readonly>
-          <div class="bank-actions">
-            <span id="bankNotifyStatus" class="bank-muted">Assigned automatically.</span>
-          </div>
+          <input id="bankNotifyEmail" class="bank-input" type="email" readonly style="margin-top:0.5rem;">
+          <p class="bank-muted" style="margin-top:0.5rem;font-size:0.82rem;">Assigned automatically.</p>
         </div>
-        <div class="bank-card">
+        <div class="bank-card" style="margin-bottom:0;">
           <h3>Account Details</h3>
           <p id="bankAccountPid">PID: --</p>
           <p id="bankAccountDept">Department: --</p>
@@ -249,11 +701,108 @@
         </div>
       </section>
 
+      <!-- Transaction history -->
       <section class="bank-card">
-        <h3>Transaction History</h3>
-        <div id="bankTransactions" class="bank-muted" style="margin-top:1rem;">Loading transactions...</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
+          <h3 style="margin:0;">Transaction History</h3>
+          <select id="txAccountFilter" class="bank-select" style="width:auto;min-width:130px;">
+            <option value="all">All Accounts</option>
+            <option value="checking">Checking</option>
+            <option value="savings">Savings</option>
+          </select>
+        </div>
+        <div id="bankTransactions" class="bank-muted">Loading transactions...</div>
       </section>
+
+    </div><!-- /bankContainer -->
+
+    <!-- Shared account manage modal (hidden by default) -->
+    <div id="sharedManageModal" style="display:none;">
+      <div class="bank-modal-overlay" id="sharedManageOverlay">
+        <div class="bank-modal">
+          <h3 id="sharedManageTitle">Manage Shared Account</h3>
+          <p class="bank-muted" style="font-size:0.85rem;margin-bottom:0.6rem;">Balance: <strong id="sharedManageBalance">--</strong></p>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:0.4rem;">Members</label>
+            <div id="sharedManageMembers"></div>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:0.4rem;">Transfer From Personal Account</label>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+              <select id="sharedDepositAccountType" class="bank-select" style="flex:1;">
+                <option value="checking">Checking</option>
+                <option value="savings">Savings</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:0.5rem;">
+              <input id="sharedDepositAmount" class="bank-input" type="number" step="0.01" placeholder="Amount" style="flex:1;margin-top:0;">
+              <button id="sharedDepositBtn" class="bank-btn" style="flex-shrink:0;">Transfer</button>
+            </div>
+            <div id="sharedDepositStatus" class="bank-status"></div>
+          </div>
+
+          <div id="sharedInviteSection">
+            <label style="font-size:0.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:0.4rem;">Invite by Email</label>
+            <div style="display:flex;gap:0.5rem;">
+              <input id="sharedInviteEmail" class="bank-input" type="email" placeholder="email@site89.org" style="margin-top:0;">
+              <button id="sharedInviteSendBtn" class="bank-btn" style="flex-shrink:0;">Invite</button>
+            </div>
+            <div id="sharedInviteStatus" class="bank-status"></div>
+          </div>
+
+          <div class="bank-modal-footer">
+            <button class="bank-btn-ghost" id="sharedManageCloseBtn">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Create shared account modal -->
+    <div id="createSharedModal" style="display:none;">
+      <div class="bank-modal-overlay">
+        <div class="bank-modal">
+          <h3>Create Shared Account</h3>
+          <p class="bank-muted" style="margin-bottom:0.8rem;">Create a pooled account that others can transfer money into.</p>
+          <div class="transfer-field" style="margin-bottom:0.8rem;">
+            <label>Account Name</label>
+            <input id="sharedAccountName" class="bank-input" type="text" maxlength="60" placeholder="e.g. Research Division Fund">
+          </div>
+          <div id="createSharedStatus" class="bank-status"></div>
+          <div class="bank-modal-footer">
+            <button class="bank-btn-ghost" id="createSharedCancelBtn">Cancel</button>
+            <button class="bank-btn" id="createSharedConfirmBtn">Create Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Withdraw from shared account modal -->
+    <div id="sharedWithdrawModal" style="display:none;">
+      <div class="bank-modal-overlay" id="withdrawFromSharedOverlay">
+        <div class="bank-modal">
+          <h3>Withdraw from Shared Account</h3>
+          <div class="transfer-field" style="margin-bottom:0.8rem;">
+            <label>To Account</label>
+            <select id="withdrawFromSharedAccountType" class="bank-select">
+              <option value="checking">Checking</option>
+              <option value="savings">Savings</option>
+            </select>
+          </div>
+          <div class="transfer-field" style="margin-bottom:0.8rem;">
+            <label>Amount</label>
+            <input id="withdrawFromSharedAmount" class="bank-input" type="number" step="0.01" placeholder="e.g., 500.00">
+          </div>
+          <div id="withdrawFromSharedStatus" class="bank-status"></div>
+          <div class="bank-modal-footer">
+            <button class="bank-btn-ghost" id="withdrawFromSharedCancelBtn" onclick="document.getElementById('sharedWithdrawModal').style.display='none';">Cancel</button>
+            <button class="bank-btn" id="withdrawFromSharedBtn">Withdraw</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <div data-include="/components/footer.html"></div>
