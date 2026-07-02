@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Department — Site-89</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Explore the Medical Department at Site-89. Delivering healthcare, trauma response, and anomalous exposure treatment.">
+  <meta name="keywords" content="Site-89 medical, Medical Department, Foundation healthcare, anomalous exposure treatment">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Site-89">
+  <meta property="og:title" content="Medical Department — Site-89">
+  <meta property="og:description" content="Explore the Medical Department at Site-89.">
+  <meta property="og:url" content="https://site89.github.io/departments/MD/">
+  <meta property="og:image" content="https://site89.github.io/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Medical Department — Site-89">
+  <meta name="twitter:description" content="Explore the Medical Department at Site-89.">
+  <meta name="twitter:image" content="https://site89.github.io/assets/img/og-image.png">
+
+  <link rel="canonical" href="https://site89.github.io/departments/MD/">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Roboto:wght@300;400,500&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .dept-hero { padding: 3rem 1rem; text-align: left; display:flex; gap:1rem; align-items:center; background: linear-gradient(90deg, rgba(78,250,170,0.03) 0%, transparent 100%); border-bottom: 1px solid rgba(78,250,170,0.03); }
+    .dept-hero .logo { width:96px; height:auto; }
+
+    /* Dark mode logo inversion */
+    html[data-theme="dark"] .dept-hero .logo {
+      filter: invert(1);
+    }
+
+    .dept-hero .title { font-family:var(--font-head); font-size:2rem; color:var(--accent-mint); margin-bottom:0.25rem; }
+    .dept-hero .subtitle { color:var(--text-light); opacity:0.92; }
+
+    .dept-grid { display:grid; grid-template-columns: 1fr 320px; gap:1.5rem; max-width:1100px; margin:1.25rem auto; }
+    .dept-card { background:var(--bg-card); border:1px solid rgba(78,250,170,0.03); padding:1.25rem; border-radius:8px; margin-bottom:1.25rem; }
+    .dept-card h2 { color:var(--accent-mint); margin-bottom:0.5rem; font-size:1.5rem; }
+    .dept-card h3 { color:var(--accent-teal); margin-top:1.25rem; margin-bottom:0.5rem; font-size:1.2rem; }
+    .dept-card p { color:var(--text-light); line-height:1.6; opacity:0.95; margin-bottom:0.75rem; }
+    .dept-card ul { margin:0.5rem 0; padding-left:1.5rem; color:var(--text-light); opacity:0.9; }
+    .dept-card ul li { margin-bottom:0.4rem; }
+
+    .leadership-section { background: rgba(78,250,170,0.02); padding:1rem; border-radius:6px; margin:1rem 0; border-left: 3px solid var(--accent-mint); }
+    .leadership-section strong { color:var(--accent-mint); }
+
+    .division-card { background: rgba(78,250,170,0.02); padding:1.25rem; border-radius:6px; margin-bottom:1.5rem; border-left: 3px solid var(--accent-teal); }
+    .division-card h3 { margin-top:0; color:var(--accent-mint); display:flex; align-items:center; gap:0.5rem; }
+    .division-card .contact { font-family:var(--font-mono); font-size:0.9rem; color:var(--accent-teal); margin:0.5rem 0; }
+    .division-card .quote { font-style:italic; opacity:0.85; margin:0.5rem 0; padding-left:1rem; border-left:2px solid rgba(78,250,170,0.2); }
+    .division-card .status { background:rgba(78,250,170,0.1); padding:0.4rem 0.6rem; border-radius:4px; display:inline-block; font-size:0.85rem; margin-top:0.5rem; }
+    .division-card .wip-badge { background:rgba(255,200,0,0.1); color:#ffc800; padding:0.3rem 0.6rem; border-radius:4px; font-size:0.85rem; font-weight:600; display:inline-block; }
+
+    .side-box h3 { color:var(--accent-teal); margin:0 0 0.6rem 0; }
+    .side-box ul { margin:0; padding-left:1rem; }
+    .side-box .dept-card { margin-bottom:0.8rem; }
+
+    .portal-buttons { display:grid; grid-template-columns:1fr; gap:0.8rem; margin:1rem 0; }
+    .btn-portal { display:block; background:var(--accent-mint); color:var(--bg-dark); padding:0.75rem 1.5rem; border-radius:6px; text-decoration:none; font-weight:600; transition:all 0.2s; text-align:center; }
+    .btn-portal:hover { background:var(--accent-teal); transform:translateY(-2px); box-shadow: 0 4px 12px rgba(78,250,170,0.3); }
+    .btn-portal.secondary { background:rgba(78,250,170,0.15); color:var(--accent-mint); border:1px solid var(--accent-mint); }
+    .btn-portal.secondary:hover { background:rgba(78,250,170,0.25); }
+
+    @media (max-width:880px) { .dept-grid { grid-template-columns:1fr; } .dept-hero { text-align:center; flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <div data-include="/components/header.html"></div>
+  <div data-include="/components/navbar.html"></div>
+
+  <section class="dept-hero">
+    <img src="/assets/img/MD.png" alt="Site-89 Medical Department" class="logo">
+    <div>
+      <div class="title">Medical Department</div>
+      <div class="subtitle">Healthcare, emergency response, and exposure treatment for all Site-89 personnel.</div>
+    </div>
+  </section>
+
+  <section class="content" style="padding-top:1.25rem;">
+    <div class="dept-grid">
+      <div>
+        <!-- Hub Information -->
+        <div class="dept-card">
+          <h2>» Medical Department Hub «</h2>
+          <p>The Medical Department (MD) delivers comprehensive healthcare support across Site-89. Medical personnel provide emergency trauma care, routine health monitoring, and treatment for anomalous exposure incidents in coordination with Security and Scientific teams.</p>
+
+          <div class="leadership-section">
+            <strong>Medical Director:</strong> Vacant<br>
+            <strong>Deputy Medical Director:</strong> Vacant
+          </div>
+
+          <div class="portal-buttons">
+            <a href="/emails/?compose=md.mgmt@site89.org" class="btn-portal">CONTACT MEDICAL COMMAND</a>
+            <a href="/incident-reports/" class="btn-portal secondary">VIEW INCIDENT REPORTS</a>
+          </div>
+        </div>
+
+        <!-- Working in MD -->
+        <div class="dept-card">
+          <h2>Working in MD — For Medics & Specialists</h2>
+          <p>The Medical Department offers demanding and rewarding opportunities for personnel focused on clinical care, emergency response, and hazard mitigation. MD teams operate around the clock to keep Site-89 functional and safe.</p>
+
+          <h3>What You'll Do</h3>
+          <ul>
+            <li>Stabilize trauma patients during active emergency incidents</li>
+            <li>Perform routine examinations and operational fitness clearances</li>
+            <li>Treat anomalous exposure and contamination incidents</li>
+            <li>Support quarantine, decontamination, and biosecurity procedures</li>
+            <li>Coordinate with Security and Scientific teams during crises</li>
+            <li>Document patient outcomes and post-incident follow-up care</li>
+          </ul>
+
+          <h3>Skills & Experience</h3>
+          <p>Calm decision-making, strict protocol adherence, and strong communication are essential. Incoming personnel receive training in:</p>
+          <ul>
+            <li>Site emergency triage and mass-casualty response</li>
+            <li>Anomalous injury recognition and treatment protocols</li>
+            <li>Infection control, quarantine workflows, and contamination response</li>
+            <li>Cross-department crisis coordination and medical reporting</li>
+            <li>Mental health intervention and recovery monitoring</li>
+          </ul>
+
+          <h3>Getting Started</h3>
+          <p>Medical applicants should report to Medical Command for role assignment and orientation. New staff are embedded with senior medics during initial rotations before independent duty.</p>
+
+          <p style="margin-top:1rem; padding:1rem; background:rgba(78,250,170,0.05); border-left:3px solid var(--accent-mint); border-radius:4px;">
+            <strong style="color:var(--accent-mint);">Interested in joining Medical?</strong><br>
+            Contact the Medical Department at <a href="/emails/?compose=md.mgmt@site89.org" style="color:var(--accent-teal); font-family:var(--font-mono);">md.mgmt@site89.org</a>
+          </p>
+        </div>
+
+        <!-- Divisions -->
+        <div class="dept-card">
+          <h2>» Medical Department Divisions «</h2>
+
+          <div class="division-card">
+            <h3>
+              <span>Clinical Operations Division (COD)</span>
+            </h3>
+            <div class="contact">cod.mgmt@site89.org</div>
+            <p><strong>Chief Physician:</strong> Vacant</p>
+
+            <div class="quote">"When the site needs steady hands, we are already in position."</div>
+
+            <p>The Clinical Operations Division oversees routine healthcare, diagnostics, and long-term care planning for personnel. COD ensures that frontline teams remain medically fit for duty.</p>
+
+            <div class="status">
+              <strong>Location:</strong> Main Infirmary and satellite clinics<br>
+              <strong>Access:</strong> Visit any medical desk for intake and referral
+            </div>
+          </div>
+
+          <div class="division-card">
+            <h3>
+              <span>Emergency Response Unit (ERU)</span>
+            </h3>
+            <div class="contact">eru.mgmt@site89.org</div>
+            <p><strong>Lead Trauma Officer:</strong> Vacant</p>
+
+            <div class="quote">"Seconds decide outcomes. We train so those seconds never get wasted."</div>
+
+            <p>The Emergency Response Unit provides rapid trauma intervention during containment breaches, combat incidents, and high-risk operations. ERU teams deploy with mobile kits and coordinate evacuation corridors.</p>
+
+            <div class="status">
+              <strong>Location:</strong> Emergency wing and rapid deployment bays<br>
+              <strong>Access:</strong> Routed through medical dispatch channels only
+            </div>
+          </div>
+
+          <div class="division-card">
+            <h3>
+              <span>Anomalous Pathology & Exposure Unit (APEU)</span>
+              <span class="wip-badge">WIP</span>
+            </h3>
+            <div class="contact">apeu.mgmt@site89.org</div>
+            <p><strong>Unit Director:</strong> Vacant</p>
+
+            <div class="quote">"Unknown symptoms are still symptoms - and every pattern can be decoded."</div>
+
+            <p>APEU focuses on identification, containment, and treatment of anomalous pathogens, cognitohazards, and exposure syndromes. This unit partners closely with Scientific teams on difficult cases.</p>
+
+            <div class="status" style="background:rgba(255,200,0,0.1); border-left:3px solid #ffc800;">
+              <strong style="color:#ffc800;">Status:</strong> Work in Progress<br>
+              <strong>Access:</strong> Limited pilot operations and approved referrals only<br>
+              <em style="opacity:0.8;">APEU systems and staffing are currently expanding.</em>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="side-box">
+        <div class="dept-card">
+          <h3>Quick Facts</h3>
+          <ul>
+            <li><strong>Typical Duty:</strong> Clinical coverage and rapid response</li>
+            <li><strong>Training Required:</strong> Medical orientation and emergency drills</li>
+            <li><strong>Clearance:</strong> Varies by facility and assignment</li>
+            <li><strong>Contact:</strong> md.mgmt@site89.org</li>
+            <li><strong>Best For:</strong> Calm, protocol-driven, teamwork-focused staff</li>
+            <li><strong>Career Path:</strong> Medical Trainee -> Medic -> Senior Medic -> Specialist</li>
+          </ul>
+        </div>
+
+        <div class="dept-card">
+          <h3>Medical Access</h3>
+          <div style="display:flex; flex-direction:column; gap:0.6rem;">
+            <a href="/incident-reports/" class="btn-primary" style="text-align:center;">Incident Reports</a>
+            <a href="/anomalies/" class="btn-primary" style="text-align:center;">Anomaly Index</a>
+            <a href="/rules/" class="btn-primary" style="text-align:center;">Safety Rules</a>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-light); opacity:0.8; margin-top:0.75rem; margin-bottom:0;">
+            Some resources require department authorization and incident linkage.
+          </p>
+        </div>
+
+        <div class="dept-card">
+          <h3>Key Locations</h3>
+          <ul>
+            <li><strong>Main Infirmary:</strong> Primary treatment and surgery</li>
+            <li><strong>Triage Bay:</strong> Immediate emergency intake</li>
+            <li><strong>Isolation Wing:</strong> Biohazard and exposure cases</li>
+            <li><strong>Recovery Ward:</strong> Extended monitoring and rehab</li>
+          </ul>
+        </div>
+
+        <div class="dept-card">
+          <h3>Critical Protocols</h3>
+          <ul style="font-size:0.9rem;">
+            <li>Report exposure symptoms immediately</li>
+            <li>Respect quarantine and contamination zones</li>
+            <li>Record all treatment actions in patient logs</li>
+            <li>Coordinate evac routes with Security Command</li>
+            <li>Escalate unresolved anomalies to APEU and ScD</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div data-include="/components/footer.html"></div>
+
+  <script src="/assets/js/include.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script>
+    document.addEventListener("scroll", () => {
+      const nav = document.getElementById("main-nav");
+      nav.classList.toggle("is-sticky", window.scrollY > 120);
+    });
+  </script>
+</body>
+</html>

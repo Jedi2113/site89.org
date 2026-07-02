@@ -61,6 +61,47 @@
     .side-panel { background: linear-gradient(0deg, rgba(78,250,170,0.02), transparent); border: 1px solid rgba(78,250,170,0.04); padding: 1.25rem; border-radius: 8px; }
     .side-panel h3 { color: var(--accent-teal); margin: 0 0 0.5rem 0; }
     .side-panel p { opacity: 0.92; }
+
+    .staff-team-box {
+      margin-top: 1.25rem;
+    }
+
+    .staff-team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-top: 0.9rem;
+    }
+
+    .staff-team-card {
+      background: linear-gradient(180deg, rgba(78,250,170,0.05), rgba(78,250,170,0.015));
+      border: 1px solid rgba(78,250,170,0.08);
+      border-radius: 8px;
+      padding: 0.85rem 0.95rem;
+    }
+
+    .staff-team-name {
+      margin: 0;
+      color: var(--accent-mint);
+      font-family: var(--font-head);
+      font-size: 1.02rem;
+      line-height: 1.25;
+    }
+
+    .staff-team-role {
+      margin: 0.3rem 0 0;
+      color: var(--accent-teal);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+
+    @media (max-width: 620px) {
+      .staff-team-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -99,6 +140,58 @@
         <div class="about-box">
           <h2>Our Mission</h2>
           <p>Site-89 is dedicated to fostering high-quality, immersive, and long-term roleplay. We strive to create an environment where members can explore the SCP universe through meaningful stories, and collaborative character development. We ensure every participant, whether new or experienced, can contribute to and enjoy the experience.</p>
+        </div>
+
+        <div class="about-box staff-team-box">
+          <h2>Current Staff Team</h2>
+          <p>The following members currently lead Site-89 operations, community engagement, and event delivery.</p>
+
+          <div class="staff-team-grid">
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">Bryce "Jedi" Miller</h3>
+              <p class="staff-team-role">Founder & Director</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">Tygo "Jeannie" Rehwald</h3>
+              <p class="staff-team-role">Deputy Director</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">"Redbridge"</h3>
+              <p class="staff-team-role">Board Member</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">"Unknown"</h3>
+              <p class="staff-team-role">Board Member</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">"TNT"</h3>
+              <p class="staff-team-role">Board Member</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">"Sunny"</h3>
+              <p class="staff-team-role">Board Member, Social Media Team</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">Max "Sir Cheese" Cheesington</h3>
+              <p class="staff-team-role">Roleplay Manager</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">"Zenazolina"</h3>
+              <p class="staff-team-role">Roleplay Manager</p>
+            </article>
+
+            <article class="staff-team-card">
+              <h3 class="staff-team-name">"Sylvdox"</h3>
+              <p class="staff-team-role">Roleplay Manager</p>
+            </article>
+          </div>
         </div>
       </div>
 

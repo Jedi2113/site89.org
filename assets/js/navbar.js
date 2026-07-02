@@ -133,9 +133,11 @@ function formatCompactNumber(value) {
 // Account management
 onAuthStateChanged(auth, async (user) => {
   const accountsText = document.getElementById('navAccountsText');
+  const accountsBtn = document.getElementById('navAccountsBtn');
   const accountsDropdown = document.getElementById('navAccountsDropdown');
   const logoutBtn = document.getElementById('logoutBtn');
   const orientationLink = document.getElementById('orientationLink');
+  const chevron = accountsBtn?.querySelector('.nav-chevron');
   
   if (user) {
     // Check for selected character
@@ -182,26 +184,52 @@ onAuthStateChanged(auth, async (user) => {
         window.location.href = '/';
       });
     }
+    
+    // Enable dropdown functionality for logged-in users
+    if (accountsBtn && chevron) {
+      accountsBtn.style.cursor = 'pointer';
+      chevron.style.display = 'inline';
+      accountsBtn.classList.remove('login-button');
+    }
   } else {
     accountsText.textContent = 'Login';
     if (accountsDropdown) {
       accountsDropdown.classList.add('hidden');
     }
+    
+    // Convert button to simple login link for non-logged-in users
+    if (accountsBtn && chevron) {
+      accountsBtn.style.cursor = 'pointer';
+      chevron.style.display = 'none';
+      accountsBtn.classList.add('login-button');
+      accountsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = '/login/';
+      });
+    }
   }
 });
 
-// Accounts dropdown toggle
-const accountsBtn = document.getElementById('navAccountsBtn');
-const accountsDropdown = document.getElementById('navAccountsDropdown');
+// Accounts dropdown toggle (only for logged-in users)
+const accountsBtn2 = document.getElementById('navAccountsBtn');
+const accountsDropdown2 = document.getElementById('navAccountsDropdown');
 
-if (accountsBtn && accountsDropdown) {
-  accountsBtn.addEventListener('click', (e) => {
+if (accountsBtn2 && accountsDropdown2) {
+  // Initialize with check for logged-in state
+  let isLoggedIn2 = false;
+  onAuthStateChanged(auth, (user) => {
+    isLoggedIn2 = !!user;
+  });
+  
+  accountsBtn2.addEventListener('click', (e) => {
     e.stopPropagation();
-    accountsDropdown.classList.toggle('hidden');
+    if (isLoggedIn2) {
+      accountsDropdown2.classList.toggle('hidden');
+    }
   });
   
   document.addEventListener('click', () => {
-    accountsDropdown.classList.add('hidden');
+    accountsDropdown2.classList.add('hidden');
   });
 }
 
