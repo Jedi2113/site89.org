@@ -62,7 +62,7 @@ This repo is configured for Firebase Hosting + Functions (`firebase.json`, `.fir
 Common commands:
 ```bash
 firebase emulators:start
-firebase deploy --only hosting,functions,firestore:rules,storage
+firebase deploy --only hosting,functions,firestore:rules,storage:rules
 ```
 
 ## Notes
