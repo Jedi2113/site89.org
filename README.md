@@ -1,56 +1,75 @@
-# Site-89 Official Website
+# Site-89 Website
 
-The official web platform for Site-89, a community-driven SCP roleplay experience built in Minecraft.
+Official web platform for the Site-89 SCP roleplay community.
 
-## About Site-89
+## Overview
 
-Site-89 is a serious roleplay server set within the SCP Foundation universe. This website serves as the central hub for:
+This repository contains a Firebase-hosted static site with client-side modules and Firebase Cloud Functions for platform services.
 
-- **Personnel Management**: Character creation, dossiers, and accounts
-- **Anomaly Database**: Documentation of contained SCPs
-- **Department Portals**: Specialized tools for each Foundation department
-- **Communications**: In-character email system and newsletters
-- **Archives**: Research logs, incident reports, and gallery
-- **Guides**: Comprehensive documentation for new and existing members
+Core areas include:
+- Personnel and character management
+- Archive systems (anomalies, research logs, incident reports)
+- Community features (forum, events, articles, gallery, newsletter)
+- Internal tooling (analytics, moderation, role and bank management)
+- In-character mailbox and notifications
 
-## Technology Stack
+## Stack
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+)
-- **Backend**: Firebase (Authentication, Firestore, Hosting)
-- **Design**: Custom SCP Foundation-themed UI with dark/light mode
-- **Security**: Role-based access control, secure authentication flows
+- Frontend: HTML, CSS, vanilla JavaScript modules
+- Backend services: Firebase Auth, Firestore, Cloud Functions, Firebase Hosting
+- Function runtime: Node.js 20 (`/functions`)
 
-## Features
+## Repository Layout
 
-- Fully authenticated user system with Firebase Auth
-- Character-based roleplay system with clearance levels
-- Department-specific portals (AD, DEO, ScD, SD)
-- In-character email system with mailing lists
-- Rich text editors for research logs and incident reports
-- Gallery system for community screenshots
-- Responsive design for mobile and desktop
-- Theme switcher (dark/light modes)
+- `/assets/` - shared JS, CSS, images, and UI utilities
+- `/components/` - reusable page components (navbar, footer, etc.)
+- `/functions/` - Firebase Cloud Functions (HTTP endpoints, schedulers, triggers)
+- Feature directories (examples): `/accounts/`, `/anomalies/`, `/forum/`, `/events/`, `/admin/`
+- Security and platform config: `firestore.rules`, `storage.rules`, `firebase.json`
 
-## Development
+## Cloud Functions
 
-This site replaces the previous Wikidot-based platform with a modern, custom-built solution optimized for the Site-89 community.
+The functions project includes:
+- Scheduled jobs (payroll and event reminder automation)
+- Firestore triggers (email and banking workflows)
+- HTTP endpoints used by Hosting rewrites, including:
+  - `/upload` and `/image/**` → `imageApi`
+  - `/api/trigger-event-notifications` → `triggerEventNotifications`
+  - `/api/merch-products` → `getMerchProducts`
 
-### Local Development
+## Local Development
 
-1. Clone the repository
-2. Serve locally (Python, Node, or any web server)
-3. Firebase configuration required for authentication features
+### 1) Serve the website
 
-### Deployment
+Use any static file server from the repo root.
 
-The site is hosted on GitHub Pages and automatically deploys from the main branch.
+Example:
+```bash
+python3 -m http.server 8080
+```
+
+### 2) Install Cloud Functions dependencies
+
+```bash
+cd functions
+npm install
+```
+
+### 3) Firebase setup
+
+This repo is configured for Firebase Hosting + Functions (`firebase.json`, `.firebaserc`).
+
+Common commands:
+```bash
+firebase emulators:start
+firebase deploy --only hosting,functions,firestore:rules,storage
+```
+
+## Notes
+
+- Client Firebase config values in frontend code are public by design; data protection is enforced by Firebase Auth and security rules.
+- Update `firestore.rules` and `storage.rules` alongside any permission model changes.
 
 ## License
 
 © 2024-2026 Site-89 Project. All rights reserved.
-
-## Links
-
-- **Website**: https://site89.github.io
-- **Discord**: Join our community server
-- **Minecraft Server**: Contact for whitelist application
